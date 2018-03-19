@@ -1,0 +1,12 @@
+{
+  "name": "beckett-project",
+  "version": "1.0.0",
+  "description": "Beckett Letters Location Register for ECDS",
+  "main": "index.js",
+  "scripts": {},
+  "author": "Emory Libraries",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "grunt": "^1.0.2"
+  }
+}
