@@ -1,0 +1,17 @@
+<header>
+
+  <nav>
+    <ul>
+      
+      <li {{#is this.basename 'index'}}class="active"{{/is}}><a href="">Home</a></li>
+      
+      {{#each pages}}
+      {{#isnt this.basename 'index'}}
+      <li {{#is this.basename ../this.basename}}class="active"{{/is}}><a href="{{this.basename}}">{{data.title}}</a></li>
+      {{/isnt}}
+      {{/each}}
+      
+    </ul>
+  </nav>
+
+</header>

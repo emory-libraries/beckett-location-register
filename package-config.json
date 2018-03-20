@@ -11,7 +11,8 @@
       "php": "src/php/",
       "fonts": "src/fonts/",
       "images": "src/images/",
-      "partials": "src/partials/"
+      "partials": "src/partials/",
+      "md": "src/md/"
     },
     "dev": {
       "root": "dev/",

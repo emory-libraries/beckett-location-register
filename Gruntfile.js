@@ -71,12 +71,19 @@ module.exports = function( grunt ) {
         files: [path.resolve(PATHS.src.php, '**/*.php')],
         tasks: ['copy:dev']
       },
-      html: {
-        files: [path.resolve(PATHS.src.root, '*.html'), path.resolve(PATHS.src.partials, '**/*.html')],
-        tasks: ['includes:dev', 'replace:dev']
+      hbs: {
+        files: [path.resolve(PATHS.src.root, '*.hbs'), path.resolve(PATHS.src.partials, '**/*.hbs')],
+        tasks: ['assemble:dev', 'replace:dev']
+      },
+      md: {
+        files: [path.resolve(PATHS.src.md, '**/*.md')],
+        tasks: ['assemble:dev', 'replace:dev']
       },
       assets: {
-        files: [path.resolve(PATHS.src.images, '**/*'), path.resolve(PATHS.src.fonts, '**/*')],
+        files: [
+          path.resolve(PATHS.src.images, '**/*'), 
+          path.resolve(PATHS.src.fonts, '**/*')
+        ],
         tasks: ['copy:dev']
       },
       config: {
@@ -91,7 +98,7 @@ module.exports = function( grunt ) {
           '.jshintrc',
           '.todo'
         ],
-        tasks: ['dev:startup', 'includes:dev', 'replace:dev']
+        tasks: ['dev:startup', 'assemble:dev', 'replace:dev']
       },
       data: {
         options: { dot: true },
@@ -131,34 +138,6 @@ module.exports = function( grunt ) {
           js: PATHS.dist.dependencies.js,
           css: PATHS.dist.dependencies.css
         }
-      }
-    },
-    includes: {
-      dev: {
-        options: {
-          includePath: PATHS.src.partials
-        },
-        files: [
-          {
-            expand: true,
-            cwd: path.resolve(PATHS.src.root),
-            src: ['*.html'],
-            dest: path.resolve(PATHS.dev.root)
-          }
-        ]
-      },
-      dist: {
-        options: {
-          includePath: PATHS.src.partials
-        },
-        files: [
-          {
-            expand: true,
-            cwd: path.resolve(PATHS.src.root),
-            src: ['*.html'],
-            dest: path.resolve(PATHS.dist.root)
-          }
-        ]
       }
     },
     replace: {
@@ -457,6 +436,31 @@ module.exports = function( grunt ) {
           }
         ]
       }
+    },
+    assemble: {
+      options: {
+        assets: path.resolve(PATHS.src.images, '**/*'),
+        partials: [
+          path.resolve(PATHS.src.partials, '**/*.hbs'), 
+          '!' + path.resolve(PATHS.src.partials, 'layouts/**/*.hbs'),
+          path.resolve(PATHS.src.md, '**/*.md')
+        ],
+        layouts: [path.resolve(PATHS.src.partials, 'layouts/**/*.hbs')],
+        data: [path.resolve(PATHS.data.root, '**/*.sjson')],
+        helpers: ['handlebars-helper-md']
+      },
+      dev: {
+        expand: true,
+        cwd: PATHS.src.root,
+        src: ['*.hbs'],
+        dest: PATHS.dev.root
+      },
+      dist: {
+        expand: true,
+        cwd: PATHS.src.root,
+        src: ['*.hbs'],
+        dest: PATHS.dist.root
+      }
     }
   });
   
@@ -468,10 +472,10 @@ module.exports = function( grunt ) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-babel');
-  grunt.loadNpmTasks('grunt-includes');
   grunt.loadNpmTasks('grunt-replace');
   grunt.loadNpmTasks('grunt-copy-deps');
   grunt.loadNpmTasks('grunt-postcss');
+  grunt.loadNpmTasks('grunt-assemble');
   
   grunt.registerTask('default', ['dev']);
    grunt.registerTask('dev:startup', [
@@ -482,7 +486,7 @@ module.exports = function( grunt ) {
     'postcss:dev',
     'jshint:dev',
     'babel:dev',
-    'includes:dev',
+    'assemble:dev',
     'replace:dev'
   ]);
   grunt.registerTask('dev', [
@@ -500,7 +504,7 @@ module.exports = function( grunt ) {
     'babel:dist',
     'uglify:dist',
     'clean:unminjs',
-    'includes:dist',
+    'assemble:dist',
     'replace:dist' 
   ]);
   

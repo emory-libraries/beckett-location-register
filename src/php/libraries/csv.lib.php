@@ -1,23 +1,41 @@
 <?php
 
 // Parses a CSV file into an associative PHP array.
-function csv_to_array( $path ) {
+function csv_to_array( $path, $has_headers = true ) {
   
-  // Get data from CSV.
-  $csv = array_map( 'str_getcsv', file($path) ); 
+  // Open the file.
+  $handle = fopen($path, 'r');
   
-  // Combine headers with each array item.
-  array_walk( $csv, function(&item) use ($csv) {
+  // Verify that the file was opened.
+  if( $handle ) {
     
-    item = array_combine($csv[0], item);
+    // Initialize the data.
+    $csv = [];
+    $headers = [];
+    $index = 1;
     
-  });
-  
-  // Remove headers from array.
-  array_shift( $csv );
-  
-  // Return associative array.
-  return $csv;
+    // Get each line one at a time.
+    while( ($data = fgetcsv($handle)) ) { 
+      
+      if( $has_headers ) { 
+        
+        if( $index == 1 ) { $headers = $data; }
+        
+        else { $csv[] = array_combine($headers, $data); }
+      
+      }
+      
+      else { $csv[] = $data;  }
+      
+      $index++;
+      
+    }
+    
+    fclose($handle);
+    
+    return $csv;
+    
+  }
   
 }
 
