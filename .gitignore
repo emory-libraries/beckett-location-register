@@ -2,3 +2,4 @@ node_modules/
 secret.json
 .env
 .sass-cache/
+.DS_Store
