@@ -3,3 +3,5 @@ secret.json
 .env
 .sass-cache/
 .DS_Store
+dev/
+dist/
