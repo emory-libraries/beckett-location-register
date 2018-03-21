@@ -53,7 +53,7 @@ trait GET {
         // Catch dynamic endpoint data.
         if( preg_match('/:.+/', $pattern) ) {
           
-          // Get the match bindnig.
+          // Get the match binding.
           $match = $endpoint['match'];
           $filter = $given[$index];
           
@@ -229,10 +229,85 @@ trait FEATURES {
   // Enables advanced filtering.
   private function __filter( array $settings ) {
     
-    // filter[:field]=:value - Default for single values
-    // filter[:field]=:value1,:value2,...,:valueN - For multiple values
-    // filter[:field]=:value1&filter[:field]=:value2... - Alternate approach for multiple values
-    // filter[:filed]=:valueMin-:valueMax - For ranges values (i.e., dates)
+    // Continue if no errors previously occurred.
+    if( $this->error ) return;
+    
+    // Only continue if filtering should be applied.
+    if( empty($settings) ) return;
+    
+    // Filter on each field.
+    foreach( $settings as $field => $values ) {
+      
+      // Convert non-array values into arrays.
+      if( !is_array($values) ) {
+        
+        // Convert to array.
+        $values = $this->__typify(array_map('trim', preg_split('/[,:]/', $values)));
+        
+      }
+      
+      // Initialize subset of data.
+      $subset = [];
+
+      // Loop through each value.
+      foreach( $values as &$value ) {
+        
+        // Handle ranges.
+        if( preg_match('/^(.+?)-(.+)$/', $value, $range) ) {
+          
+          // Remove original value from range match.
+          array_shift( $range );
+          
+          // Add keys to the range for better interpretation.
+          $range = $this->__typify(array_combine(['min', 'max'], $range));
+          
+          // Update the value.
+          $value = $range;
+          
+          // Apply range filter to data.
+          $subset = array_merge($subset, array_filter($this->data, function($item) use ($field, $range) {
+            
+            // Flatten the item for easier comparison.
+            $flattened = array_flatten( $item );
+            
+            // Filter for matches.
+            return $flattened[$field] >= $range['min'] and $flattened[$field] <= $range['max'];
+            
+          }));
+          
+        }
+
+        // Handle all other values.
+        else {
+          
+          // Convert the data type of the value.
+          $value = $this->__typify($value);
+          
+          // Apply filter to data.
+          $subset = array_merge($subset, array_filter($this->data, function($item) use ($field, $value) {
+
+            // Flatten the item for easier comparison.
+            $flattened = array_flatten( $item );
+
+            // Filter for matches.
+            return $flattened[$field] == $value;
+
+          }));
+          
+        }
+
+      }
+      
+      // Update values.
+      $settings[$field] = $values;
+      
+      // Update data set.
+      $this->data = $subset;
+      
+    }
+    
+    // Save filter data.
+    $this->features['filter'] = $settings;
     
   }
   
@@ -313,26 +388,37 @@ class API {
     
   }
   
-  // Convert array values into their true data types.
-  private function __typify( array $array ) {
+  // Convert values into their true data types.
+  private function __typify( $values ) {
     
-    foreach( $array as $key => $value ) {
-      
-      // Convert numeric values to numbers.
-      if( is_numeric($value) ) { $array[$key] = (float) $value; }
-      
-      // Convert boolean values to `true` or `false`.
-      elseif( in_array($value, ['true', 'false']) ) { $array[$key] = $value == 'true' ? true : false; }
-      
-      // Convert null values to `null`.
-      elseif( $value == 'null' ) { $array[$key] = null; }
+    // Determine if the value passed in was an array.
+    $array = is_array($values) ? true : false;
+    
+    // Convert non-array values to an array for easier manipulation.
+    if( !is_array($values) ) $values = [$values];
+    
+    // Loop through each value.
+    foreach( $values as $key => $value ) {
       
       // Convert each value within arrays.
-      elseif( is_array($value) ) { $array[$key] = $this->__typify( $value ); }
+      if( is_array($value) ) { $values[$key] = $this->__typify( $value ); }
+      
+      // Convert numeric values to numbers.
+      elseif( is_numeric($value) ) { $values[$key] = (float) $value; }
+      
+      // Convert boolean values to `true` or `false`.
+      elseif( in_array($value, ['true', 'false']) ) { $values[$key] = $value == 'true' ? true : false; }
+      
+      // Convert null values to `null`.
+      elseif( $value == 'null' ) { $values[$key] = null; }
+      
+      // Convert date-like values to dates.
+      elseif( (bool) ($time =  strtotime($value)) ) { $values[$key] = (new DateTime())->setTimestamp($time); }
       
     }
     
-    return $array;
+    // Return new value.
+    return $array ? $values : $values[0];
     
   }
   
