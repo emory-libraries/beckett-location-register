@@ -1,2 +1,101 @@
-[
-]
+{
+  "api": {
+    "GET": [
+      {
+        "endpoint": "search/:query",
+        "model": {
+          "id": "ID",
+          "year": {
+            "start": "YearStart",
+            "end": "YearEnd"
+          },
+          "topic": "Topic",
+          "location": {
+            "name": "LocationDesc",
+            "abbr": "LocationAbbr"
+          },
+          "source": "DataSource",
+          "question": "Question",
+          "response": "Response"
+        },
+        "match": {
+          ":query": "any"
+        }
+      },
+      {
+        "endpoint": "search/location/:query",
+        "model": {
+          "id": "ID",
+          "year": {
+            "start": "YearStart",
+            "end": "YearEnd"
+          },
+          "topic": "Topic",
+          "location": {
+            "name": "LocationDesc",
+            "abbr": "LocationAbbr"
+          },
+          "source": "DataSource",
+          "question": "Question",
+          "response": "Response"
+        },
+        "match": {
+          ":query": "location.name"
+        }
+      },
+      {
+        "endpoint": "year",
+        "model": {
+          "id": "ID",
+          "start": "YearStart",
+          "end": "YearEnd"
+        }
+      },
+      {
+        "endpoint": "year/:id",
+        "model": {
+          "id": "ID",
+          "start": "YearStart",
+          "end": "YearEnd"
+        },
+        "match": {
+          ":id": "id"
+        }
+      },
+      {
+        "endpoint": "year/start",
+        "model": {
+          "id": "ID",
+          "start": "YearStart"
+        }
+      },
+      {
+        "endpoint": "year/start/:id",
+        "model": {
+          "id": "ID",
+          "start": "YearStart"
+        },
+        "match": {
+          ":id": "id"
+        }
+      },
+      {
+        "endpoint": "year/end",
+        "model": {
+          "id": "ID",
+          "end": "YearEnd"
+        }
+      },
+      {
+        "endpoint": "year/end/:id",
+        "model": {
+          "id": "ID",
+          "end": "YearEnd"
+        },
+        "match": {
+          ":id": "id"
+        }
+      }
+    ]
+  }
+}

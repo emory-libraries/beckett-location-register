@@ -1,5 +1,8 @@
 <?php
 
+// Increase memory limit to handle large files.
+ini_set('memory_limit', '1000M');
+
 // Autoload dependencies.
 include 'autoload.php';
 
