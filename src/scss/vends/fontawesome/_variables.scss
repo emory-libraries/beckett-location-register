@@ -4,7 +4,7 @@
 /// A custom variable to enable or disable loading of Font Awesome.
 /// Currently, `false` due to console errors with importing,
 /// and another instance of Font Awesome is already being used.
-$fa-load-font-face: false;
+$fa-load-font-face: true;
 
 $fa-font-path:        "../fonts/fontawesome" !default;
 $fa-font-size-base:   14px !default;

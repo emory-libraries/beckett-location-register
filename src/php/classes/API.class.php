@@ -187,7 +187,7 @@ trait FEATURES {
     // Save pagination data.
     $this->features['paging'] = [
       'limit' => $limit,
-      'currrent' => $offset < $length ? $offset : false,
+      'offset' => $offset < $length ? $offset : false,
       'next' => $limit + $offset < $length ? $limit + $offset : false,
       'previous' => $offset - $limit >= 0 ? $offset - $limit : false
     ];
@@ -262,7 +262,7 @@ trait FEATURES {
           $range = $this->__typify(array_combine(['min', 'max'], $range));
           
           // Update the value.
-          $value = $range;
+          //$value = $range;
           
           // Apply range filter to data.
           $subset = array_merge($subset, array_filter($this->data, function($item) use ($field, $range) {
@@ -299,7 +299,7 @@ trait FEATURES {
       }
       
       // Update values.
-      $settings[$field] = $values;
+      //$settings[$field] = $values;
       
       // Update data set.
       $this->data = $subset;
@@ -437,7 +437,7 @@ class API {
   private function __endpoint( $endpoint ) {
     
     // Get implemented endpoints.
-    $endpoints = $this->config->META['api'][$this->method];
+    $endpoints = $this->config->META['endpoints'][$this->method];
     
     // Initialize result.
     $result = ['valid' => false];

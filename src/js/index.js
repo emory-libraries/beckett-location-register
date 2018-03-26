@@ -4,45 +4,384 @@ const PATH = '/beckett-location-register/dev', // FOR DEVELOPMENT
 
 // Load meta data.
 $.when(
-  $.getJSON('api.json'),
-  $.getJSON('router.json')
+  $.getJSON('meta.json').then((data) => data),
+  $.getJSON('router.json').then((data) => data)
 ).done((META, ROUTER) => {
+  
+  // Extends object prototypes.
+  Array.prototype.unique = function() {
+      
+    let result = [];
+    
+    for( let i = 0; i < this.length; i++ ) {
+      
+      if( result.indexOf(this[i]) == -1 ) result.push(this[i]);
+      
+    }
+    
+    return result;
+    
+  };
 
-  // Constants
+  // Define universal filters and methods.
   const filters = {},
         methods = {};
+  
+  // Configure default paging settings.
+  const paging = {
+    limit: 20,
+    offset: 0
+  };
 
   // Classes
   class API {
 
     constructor() {
-      this.src = ROOT + ROUTER.api;
+      
+      this.src = `${ROOT}/${ROUTER.api}`;
+      this.recall = {method: null, arguments: []};
+      this.method = null;
+      this.endpoint = null;
+      this.paging = {};
+      this.filter = {};
+      this.sort = {};
+      
+    }
+    
+    request( method, endpoint, data = {} ) {
+      
+      // Capture context.
+      const self = this;
+      
+      // Validate the endpoint.
+      if( self.valid(method, endpoint) ) {
+        
+        // Save the endpoint and method.
+        self.method = method;
+        self.endpoint = endpoint;
+        
+        // Start loading.
+        event.trigger('loading', true);
+        
+        // Initialize a query string.
+        let query = '';
+        
+        // Build a query string.
+        if( self.paging || self.filter || self.sort  ) {
+          
+          query += '?';
+          
+          if( self.paging ) query += self.query('paging');
+          if( self.filter ) query += self.query('filter');
+          if( self.sort ) query += self.query('sort');
+          
+        }
+      
+        // Send the request.
+        return $.ajax({
+          dataType: 'json',
+          url: `${this.src}${endpoint}${query}`,
+          method: method,
+          data: data
+        }).always((response) => {
+          
+          // End loading.
+          event.trigger('loading', false);
+          
+          // Capture any feature feedback.
+          if( response.data.paging ) self.paging = response.data.pagining;
+          if( response.data.filter ) self.filter = response.data.filter;
+          if( response.data.sort ) self.sort = response.data.sort;
+          
+        });
+        
+      }
+      
+    }
+    
+    query( feature ) {
+      
+      // Initialize the query string.
+      let query = '';
+      
+      // Loop through each parameter.
+      for( let key in this[feature] ) {
+        
+        // Capture the value.
+        let value = this[feature][key];
+        
+        // Convert array values into comma-delimited lists.
+        if( Array.isArray(value) ) value = value.split(',');
+        
+        // Save the query parameter.
+        query += `${feature}[${key}]=${value}&`;
+        
+      }
+      
+      // Output the query string.
+      return query.slice(0, -1);
+      
+    }
+    
+    valid( method, endpoint ) {
+
+      // Capture the endpoints, and convert them into a regex.
+      const endpoints = META.endpoints[method].map((endpoint) => {
+
+        return new RegExp( endpoint.endpoint.replace(/:[^/]+/, '[^/]+?') );
+        
+      });
+   
+      // Valid endpoints should match against a regex.
+      for(let i = 0; i < endpoints.length; i++ ) {
+        
+        // Test the endpoint against the regex.
+        if( endpoints[i].test(endpoint) ) return true;
+        
+      }
+      
+      // Invalid endpoints will not match.
+      return false;
+      
+    }
+    
+    search( query, field = null ) {
+      
+      // Save the called method.
+      this.recall.method = 'search';
+      this.recall.arguments = [query, field];
+      
+      // Execute the request.
+      return this.request('GET', 'search/' + (field ? `${field}/${query}` : query));
+      
+    }
+    
+    browse() {
+      
+      // Save the called method.
+      this.recall.method = 'browse';
+      
+      // Execute the request.
+      return this.request('GET', 'browse/');
+      
     }
 
   }
+  
+  // Load plugins.
+  Vue.use(VueMarkdown);
 
   // Events
-  const events = new Vue();
+  const Events = new Vue();
+  
+  // Make event handling easier.
+  const event = {
+    
+    namespace: 'beckett',
+    
+    trigger( events, args ) {
+      
+      const self = this;
+      
+      events.split(' ').forEach((event) => {
+        
+        Events.$emit(`${this.namespace}:${event}`, args);
+        
+      });
+      
+    },
+    
+    on( events, callback ) {
+      
+      const self = this;
+      
+      events.split(' ').forEach((event) => {
+        
+        Events.$on(`${self.namespace}:${event}`, callback);
+        
+      });
+      
+    },
+    
+    off( events, callback ) {
+    
+      const self = this;
+      
+      events.split(' ').forEach((event) => {
+        
+        Events.$off(`${self.namespace}:${event}`, callback);
+        
+      });
+      
+    },
+    
+    once( events, callback ) {
+      
+      const self = this;
+      
+      events.split(' ').forEach((event) => {
+        
+        Events.$once(`${self.namespace}:${event}`, callback);
+        
+      });
+      
+    }
+    
+  };
+  
+  // About
+  const About = Vue.component('about', {
+    
+    template: '#template-about',
+    
+    props: [],
+    
+    data() {
+      return {};
+    },
+    
+    methods: $.extend({}, methods),
+    
+    filters: $.extend({}, filters),
+    
+    created() {}
+    
+  });
 
   // List
-  const list = Vue.component('list', {
+  const List = Vue.component('list', {
 
     template: '#template-list',
 
     props: [],
 
     data() {
-      return {};
+      return {
+        response: {},
+        data: [],
+        api: null,
+        error: {
+          message: null,
+          state: null
+        },
+        paging: $.extend({}, paging, {
+          previous: false,
+          next: false,
+          increments: [10, 20, 50, 100].concat([paging.limit]).unique().sort((a, b) => a - b)
+        })
+      };
     },
 
-    methods: $.extend({}, methods),
+    methods: $.extend({
+      
+      page( direction ) {
+        
+        // Capture context.
+        const self = this;
+        
+        // Initialize the page offset and limit.
+        let offset, 
+            limit = self.paging.limit;
+        
+        // Ignore invalid directions.
+        if( !self.paging.hasOwnProperty(direction) ) return;
+        
+        // Ignore invalid offsets.
+        if( (offset = self.paging[direction]) === false ) return;
 
-    filters: $.extend({}, filters)
+        // Get the last call to the API.
+        const recall = self.api.recall;
+
+        // Configure the API's paging.
+        self.api.paging = {offset: offset, limit: limit};
+
+        // Load the previous page.
+        self.api[recall.method].apply(self.api, recall.arguments).then((response) => {
+          
+          // Trigger a paging event.
+          event.trigger('paging', {direction: direction, response: response});
+          
+        });
+        
+      }
+      
+    }, methods),
+
+    filters: $.extend({}, filters),
+    
+    created() {
+      
+      // Capture context.
+      const self = this;
+      
+      // Capture any incoming data.
+      const data = self.$route.params.data,
+            response = self.$route.params.response,
+            api = self.$route.params.api;
+      
+      // Use the incoming data if available.
+      if( data ) { 
+        
+        // Save the data.
+        self.data = data; 
+        self.response = response;
+        self.api = api;
+        
+        // Handle any errors.
+        if( self.data.length == 0 ) self.error = {message: 'No Results Found', state: 'danger'};
+      
+      }
+        
+      // Otherwise, load some data.
+      else {
+        
+        // Load the API.
+        const api = self.api = new API();
+        
+        // Enable paging.
+        api.paging = paging;
+        
+        // Execute a request on the API.
+        api.browse().then((response) => {
+          
+          // Save the data.
+          self.response = response;
+          self.data = response.data;
+          
+          // Capture any paging data.
+          if( self.response.paging ) {
+          
+            self.paging.previous = self.response.paging.previous;
+            self.paging.next = self.response.paging.next;
+            
+          }
+          console.log('PAGING', self.paging);
+          // Handle any errors.
+          if( self.data.length == 0 ) self.error = {message: 'No Results Found', state: 'danger'};
+          
+        });
+        
+      }
+      
+      // Handle paging events.
+      event.on('paging', (data) => { console.log('PAGING', data);
+
+        // Save the new data.
+        self.response = data.response;
+        self.data = data.response.data;
+        
+        // Capture the new offsets.
+        self.paging.previous = self.response.paging.previous;
+        self.paging.next = self.response.paging.next;
+        
+      });
+      
+    }
 
   });
 
   // Letter
-  const letter = Vue.component('letter', {
+  const Letter = Vue.component('letter', {
 
     template: '#template-letter',
 
@@ -59,23 +398,185 @@ $.when(
   });
 
   // Search
-  const search = Vue.component('search', {
+  const Search = Vue.component('search', {
 
     template: '#template-search',
 
     props: [],
 
     data() {
-      return {};
+      return {
+        query: null,
+        field: null
+      };
     },
 
+    methods: $.extend({
+      
+      search() {
+        
+        // Load the API.
+        const api = new API();
+        
+        // Enable paging.
+        api.paging = paging;
+        
+        // Execute a request on the API.
+        api.search( this.query, this.field ).then((response) => {
+          
+          // Trigger an event with the results.
+          event.trigger('search', {response: response, api: api});
+          
+        });
+        
+      },
+      
+      clear() {
+        
+        // Clear the search form.
+        this.query = null;
+        this.field = null;
+        
+      },
+      
+      browse() {
+        
+        // Load the API.
+        const api = new API();
+        
+        // Enable paging.
+        api.paging = paging;
+        
+        // Execute a request on the API.
+        api.browse().then((response) => {
+        
+          // Trigger an event with the results.
+          event.trigger('browse', {response: response, api: api});
+          
+        });
+        
+      }
+      
+    }, methods),
+
+    filters: $.extend({}, filters),
+    
+    created() {
+      
+      // Handle search and browse events.
+      event.on('search browse', (data) => {
+
+        // Jump to list.
+        router.push({
+          path: 'list', 
+          params: {
+            response: data.response,
+            api: data.api
+          }
+        });
+        
+      });
+      
+    }
+
+  });
+  
+  // Navigation
+  const Navigation = Vue.component('navigation', {
+    
+    template: '#template-navigation',
+    
+    props: [],
+    
+    data() {
+      return {
+        active: null,
+        routes
+      };
+    },
+    
     methods: $.extend({}, methods),
-
-    filters: $.extend({}, filters)
-
+    
+    filters: $.extend({}, filters),
+    
+    created() {
+      
+      // Get the active page.
+      this.active = this.$route.path.replace(PATH, '');
+      
+      // Respond to changes in routes.
+      event.on('route', (data) => {
+        
+        // Update the active page.
+        this.active = data.to.path.replace(PATH, '');
+        
+      });
+      
+    }
+    
+  });
+  
+  // Loading
+  const Loading = Vue.component('loading', {
+    
+    template: '#template-loading',
+    
+    props: [],
+    
+    data() {
+      return {
+        loading: false
+      };
+    },
+    
+    methods: $.extend({}, methods),
+    
+    filters: $.extend({}, filters),
+    
+    created() {
+      
+      // Capture context.
+      const self = this;
+      
+      // Handle loading events.
+      event.on('loading', (loading) => {
+        
+        // Trigger loading.
+        self.loading = loading;
+        
+      });
+      
+    }
+    
+  });
+  
+    // Define routes.
+  const routes = [
+    {path: '/'},
+    {path: '/about', component: About},
+    {path: '/list', component: List},
+    {path: '/letter', component: Letter}
+  ];
+  
+  // Router
+  const router = new VueRouter({
+    mode: 'history',
+    routes,
+    base: PATH
+  });
+  
+  // Enable navigation updates.
+  router.afterEach((to, from) => {
+    
+    // Trigger a route change.
+    event.trigger('route', {to: to, from: from});
+    
   });
 
   // App
-  const app = new Vue({ el: 'main' });
+  const App = new Vue({
+    el: '#vue', 
+    router
+  });
   
 });

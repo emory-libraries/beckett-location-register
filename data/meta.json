@@ -1,6 +1,24 @@
 {
-  "api": {
+  "endpoints": {
     "GET": [
+      {
+        "endpoint": "browse",
+        "model": {
+          "id": "ID",
+          "year": {
+            "start": "YearStart",
+            "end": "YearEnd"
+          },
+          "topic": "Topic",
+          "location": {
+            "name": "LocationDesc",
+            "abbr": "LocationAbbr"
+          },
+          "source": "DataSource",
+          "question": "Question",
+          "response": "Response"
+        }
+      },
       {
         "endpoint": "search/:query",
         "model": {

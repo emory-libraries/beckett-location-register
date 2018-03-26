@@ -71,13 +71,13 @@ module.exports = function( grunt ) {
         files: [path.resolve(PATHS.src.php, '**/*.php')],
         tasks: ['copy:dev']
       },
-      hbs: {
-        files: [path.resolve(PATHS.src.root, '*.hbs'), path.resolve(PATHS.src.partials, '**/*.hbs')],
-        tasks: ['assemble:dev', 'replace:dev']
+      html: {
+        files: [path.resolve(PATHS.src.root, '*.{html,vue}'), path.resolve(PATHS.src.partials, '**/*.{html,vue}')],
+        tasks: ['includes:dev', 'replace:dev']
       },
       md: {
         files: [path.resolve(PATHS.src.md, '**/*.md')],
-        tasks: ['assemble:dev', 'replace:dev']
+        tasks: ['includes:dev', 'replace:dev']
       },
       assets: {
         files: [
@@ -98,7 +98,7 @@ module.exports = function( grunt ) {
           '.jshintrc',
           '.todo'
         ],
-        tasks: ['dev:startup', 'assemble:dev', 'replace:dev']
+        tasks: ['dev:startup', 'includes:dev', 'replace:dev']
       },
       data: {
         options: { dot: true },
@@ -437,33 +437,34 @@ module.exports = function( grunt ) {
         ]
       }
     },
-    assemble: {
-      options: {
-        assets: path.resolve(PATHS.src.images, '**/*'),
-        partials: [
-          path.resolve(PATHS.src.partials, '**/*.hbs'), 
-          '!' + path.resolve(PATHS.src.partials, 'layouts/**/*.hbs'),
-          path.resolve(PATHS.src.md, '**/*.md')
-        ],
-        layouts: [path.resolve(PATHS.src.partials, 'layouts/**/*.hbs')],
-        data: [path.resolve(PATHS.data.root, '**/*.sjson')],
-        helpers: ['handlebars-helper-md']
-      },
+    includes: {
       dev: {
-        expand: true,
-        cwd: PATHS.src.root,
-        src: ['*.hbs'],
-        dest: PATHS.dev.root
+        options: {
+          includePath: [PATHS.src.partials, PATHS.src.md],
+          wrapper: path.resolve(PATHS.src.partials, 'layouts/default.html')
+        },
+        files: [{
+          expand: true,
+          cwd: path.resolve(PATHS.src.root),
+          src: ['*.{html,vue}'],
+          dest: path.resolve(PATHS.dev.root)
+        }]
       },
       dist: {
-        expand: true,
-        cwd: PATHS.src.root,
-        src: ['*.hbs'],
-        dest: PATHS.dist.root
+        options: {
+          includePath: [PATHS.src.partials, PATHS.src.md],
+          wrapper: path.resolve(PATHS.src.partials, 'layouts/default.html')
+        },
+        files: [{
+          expand: true,
+          cwd: path.resolve(PATHS.src.root),
+          src: ['*.{html,vue}'],
+          dest: path.resolve(PATHS.dist.root)
+        }]
       }
     }
   });
-  
+
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-sass');
@@ -475,7 +476,7 @@ module.exports = function( grunt ) {
   grunt.loadNpmTasks('grunt-replace');
   grunt.loadNpmTasks('grunt-copy-deps');
   grunt.loadNpmTasks('grunt-postcss');
-  grunt.loadNpmTasks('grunt-assemble');
+  grunt.loadNpmTasks('grunt-includes');
   
   grunt.registerTask('default', ['dev']);
    grunt.registerTask('dev:startup', [
@@ -486,7 +487,7 @@ module.exports = function( grunt ) {
     'postcss:dev',
     'jshint:dev',
     'babel:dev',
-    'assemble:dev',
+    'includes:dev',
     'replace:dev'
   ]);
   grunt.registerTask('dev', [
@@ -504,7 +505,7 @@ module.exports = function( grunt ) {
     'babel:dist',
     'uglify:dist',
     'clean:unminjs',
-    'assemble:dist',
+    'includes:dist',
     'replace:dist' 
   ]);
   
