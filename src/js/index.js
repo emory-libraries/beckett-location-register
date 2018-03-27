@@ -550,12 +550,46 @@ $.when(
     
   });
   
+  // Error
+  const Error = Vue.component('error', {
+    
+    template: '#template-error',
+    
+    props: ['code'],
+    
+    data() {
+      return {
+        errors: {
+          400: 'Bad Request',
+          401: 'Unauthorized',
+          403: 'Forbidden',
+          404: 'Not Found',
+          500: 'Internal Server Error'
+        },
+        type: null
+      };
+    },
+    
+    methods: $.extend({}, methods),
+    
+    filters: $.extend({}, filters),
+    
+    created() {
+      
+      // Set type.
+      this.type = this.errors[this.code];
+      
+    }
+    
+  });
+  
     // Define routes.
   const routes = [
     {path: '/'},
     {path: '/about', component: About},
     {path: '/list', component: List},
-    {path: '/letter', component: Letter}
+    {path: '/letter', component: Letter},
+    {path: '/*', component: Error, props: {code: 404}}
   ];
   
   // Router
