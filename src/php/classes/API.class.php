@@ -145,7 +145,8 @@ trait FEATURES {
   private $defaults = [
     'paging' => [
       'limit' => 10,
-      'offset' => 0
+      'offset' => 0,
+      'pages' => 5
     ],
     'sort' => [
       'order' => SORT_ASC,
@@ -167,9 +168,13 @@ trait FEATURES {
     // Capture the length of the original data set.
     $length = count($this->data);
     
-    // Determine limit and offset.
+    // Determine settings.
     $limit = isset($settings['limit']) ? $settings['limit'] : $this->defaults['paging']['limit'];
     $offset = isset($settings['offset']) ? $settings['offset'] : $this->defaults['paging']['offset'];
+    $pages = isset($settings['pages']) ? $settings['pages'] : $this->defaults['paging']['pages'];
+    
+    // Always use an odd number for pages.
+    if( $pages % 2 == 0 ) $pages++;
 
     // Catch errors.
     if( is_bool($limit) or !is_numeric($limit) or is_bool($offset) or !is_numeric($offset) ) {
@@ -189,8 +194,68 @@ trait FEATURES {
       'limit' => $limit,
       'offset' => $offset < $length ? $offset : false,
       'next' => $limit + $offset < $length ? $limit + $offset : false,
-      'previous' => $offset - $limit >= 0 ? $offset - $limit : false
+      'previous' => $offset - $limit >= 0 ? $offset - $limit : false, 
+      'pages' => [
+        'count' => $pages,
+        'total' => ($total = ceil($length / $limit)),
+        'active' => ($active = $total - ceil(($length - $offset - $limit) / $limit)),
+        'next' => ($next = $total - $active > 0 ? $active + 1 : false),
+        'previous' => ($previous = $active - 1 > 0 ? $active - 1 : false),
+        'index' => []
+      ]
     ];
+    
+    // Determine the page split.
+    $split = ($pages - 1) / 2;
+    
+    // Initialize a counter for previous pages and next pages.
+    $p = 0;
+    $n = 0;
+    
+    // Establish a pointer to the array.
+    $pointer = &$this->features['paging']['pages']['index'];
+    
+    // Build page numbers.
+    for( $i = 0; $i < $pages; $i++ ) {
+      
+      // Get the active page.
+      if( $i === 0 ) { 
+        
+        $pointer[] = [
+          'number' => $active, 
+          'offset' => $offset, 
+          'active' => true
+        ]; 
+      
+      }
+      
+      // Get the previous pages.
+      else if( $previous > 0 and $p < $split ) { 
+        
+        array_unshift($pointer, [
+          'number' => $previous, 
+          'offset' => ($offset - ($limit * ($active - $previous))), 
+          'active' => false
+        ]); 
+        $previous--;
+        $p++; 
+        
+      }
+      
+      // Get the next pages.
+      else { 
+        
+        array_push($pointer, [
+          'number' => $next, 
+          'offset' => ($offset + ($limit * ($next - $active))), 
+          'active' => false
+        ]); 
+        $next++; 
+        $n++; 
+      
+      }
+      
+    }
       
   }
   

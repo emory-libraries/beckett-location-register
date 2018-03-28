@@ -25,11 +25,20 @@ $.when(
 
   // Define universal filters and methods.
   const filters = {},
-        methods = {};
+        methods = {
+          
+          moment() {
+            
+            return moment.apply(this, arguments);
+            
+          }
+          
+        };
   
   // Configure default paging settings.
   const paging = {
     limit: 20,
+    count: 5,
     offset: 0
   };
 
@@ -89,9 +98,13 @@ $.when(
           event.trigger('loading', false);
           
           // Capture any feature feedback.
-          if( response.data.paging ) self.paging = response.data.pagining;
-          if( response.data.filter ) self.filter = response.data.filter;
-          if( response.data.sort ) self.sort = response.data.sort;
+          if( response.data ) {
+            
+            if( response.data.paging ) self.paging = response.data.paging;
+            if( response.data.filter ) self.filter = response.data.filter;
+            if( response.data.sort ) self.sort = response.data.sort;
+            
+          }
           
         });
         
@@ -247,6 +260,78 @@ $.when(
     created() {}
     
   });
+  
+  // Paging
+  const Paging = Vue.component('paging', {
+    
+    template: '#template-paging',
+    
+    props: ['enabled'],
+    
+    data() {
+      return {
+        api: null,
+        increments: [10, 20, 50, 100].concat([paging.limit]).unique().sort((a, b) => a - b),
+        paging: $.extend({}, paging, {
+          previous: false,
+          next: false
+        })
+      };
+    },
+    
+    methods: $.extend({}, {
+      
+      page( offset ) {
+        
+        // Capture context.
+        const self = this;
+        
+        // Ignore invalid offsets.
+        if( offset === false ) return;
+        
+        // Get the paging parameters.
+        let limit = self.paging.limit,
+            count = self.paging.count;
+
+        // Get the last call to the API.
+        const recall = self.api.recall;
+
+        // Configure the API's paging.
+        self.api.paging = {offset: offset, limit: limit, count: count};
+
+        // Load the previous page.
+        self.api[recall.method].apply(self.api, recall.arguments).then((response) => {
+          
+          // Trigger a paging event.
+          event.trigger('paging', {response: response, api: self.api});
+          
+        });
+        
+      }
+      
+    }),
+    
+    filters: $.extend({}, filters),
+    
+    created() {
+      
+      // Capture context.
+      const self = this;
+      
+      // Handle paging events.
+      event.on('paging list', (data) => { 
+        
+        // Reload the API.
+        self.api = data.api;
+        
+        // Save paging data.
+        self.paging = data.response.paging;
+      
+      });
+      
+    }
+    
+  });
 
   // List
   const List = Vue.component('list', {
@@ -263,45 +348,16 @@ $.when(
         error: {
           message: null,
           state: null
-        },
-        paging: $.extend({}, paging, {
-          previous: false,
-          next: false,
-          increments: [10, 20, 50, 100].concat([paging.limit]).unique().sort((a, b) => a - b)
-        })
+        }
       };
     },
 
     methods: $.extend({
       
-      page( direction ) {
+      reset() {
         
-        // Capture context.
-        const self = this;
-        
-        // Initialize the page offset and limit.
-        let offset, 
-            limit = self.paging.limit;
-        
-        // Ignore invalid directions.
-        if( !self.paging.hasOwnProperty(direction) ) return;
-        
-        // Ignore invalid offsets.
-        if( (offset = self.paging[direction]) === false ) return;
-
-        // Get the last call to the API.
-        const recall = self.api.recall;
-
-        // Configure the API's paging.
-        self.api.paging = {offset: offset, limit: limit};
-
-        // Load the previous page.
-        self.api[recall.method].apply(self.api, recall.arguments).then((response) => {
-          
-          // Trigger a paging event.
-          event.trigger('paging', {direction: direction, response: response});
-          
-        });
+        this.error.message = null;
+        this.error.state = null;
         
       }
       
@@ -314,69 +370,26 @@ $.when(
       // Capture context.
       const self = this;
       
-      // Capture any incoming data.
-      const data = self.$route.params.data,
-            response = self.$route.params.response,
-            api = self.$route.params.api;
+      // Initialize some data by default.
+      event.trigger('force:browse');
       
-      // Use the incoming data if available.
-      if( data ) { 
+      // Handle events.
+      event.on('list', (data) => {
         
-        // Save the data.
-        self.data = data; 
-        self.response = response;
-        self.api = api;
-        
+        // Reset any errors.
+        self.reset();
+
+        // Save response data.
+        self.response = data.response;
+        self.data = data.response.data || [];
+        self.api = data.api;
+
         // Handle any errors.
         if( self.data.length == 0 ) self.error = {message: 'No Results Found', state: 'danger'};
-      
-      }
-        
-      // Otherwise, load some data.
-      else {
-        
-        // Load the API.
-        const api = self.api = new API();
-        
-        // Enable paging.
-        api.paging = paging;
-        
-        // Execute a request on the API.
-        api.browse().then((response) => {
-          
-          // Save the data.
-          self.response = response;
-          self.data = response.data;
-          
-          // Capture any paging data.
-          if( self.response.paging ) {
-          
-            self.paging.previous = self.response.paging.previous;
-            self.paging.next = self.response.paging.next;
-            
-          }
-          console.log('PAGING', self.paging);
-          // Handle any errors.
-          if( self.data.length == 0 ) self.error = {message: 'No Results Found', state: 'danger'};
-          
-        });
-        
-      }
-      
-      // Handle paging events.
-      event.on('paging', (data) => { console.log('PAGING', data);
 
-        // Save the new data.
-        self.response = data.response;
-        self.data = data.response.data;
-        
-        // Capture the new offsets.
-        self.paging.previous = self.response.paging.previous;
-        self.paging.next = self.response.paging.next;
-        
       });
       
-    }
+    },
 
   });
 
@@ -422,7 +435,7 @@ $.when(
         api.paging = paging;
         
         // Execute a request on the API.
-        api.search( this.query, this.field ).then((response) => {
+        api.search( this.query, this.field ).always((response) => {
           
           // Trigger an event with the results.
           event.trigger('search', {response: response, api: api});
@@ -448,7 +461,7 @@ $.when(
         api.paging = paging;
         
         // Execute a request on the API.
-        api.browse().then((response) => {
+        api.browse().always((response) => {
         
           // Trigger an event with the results.
           event.trigger('browse', {response: response, api: api});
@@ -463,17 +476,31 @@ $.when(
     
     created() {
       
-      // Handle search and browse events.
+      // Capture context.
+      const self = this;
+      
+      // Handle successful search and browse events.
       event.on('search browse', (data) => {
 
         // Jump to list.
-        router.push({
-          path: 'list', 
-          params: {
-            response: data.response,
-            api: data.api
-          }
-        });
+        self.$router.push({path: 'list'});
+                                           
+        // Trigger a list update.
+        event.trigger('list', data);
+        
+      });
+      
+      // Handle forced events.
+      event.on('force:browse', () => {
+        
+        self.browse(); 
+      
+      });
+      event.on('force:search', (data) => {
+        
+        self.query = data.query;
+        self.field = data.field;
+        self.search();
         
       });
       
