@@ -72,7 +72,7 @@ module.exports = function( grunt ) {
         tasks: ['copy:dev']
       },
       html: {
-        files: [path.resolve(PATHS.src.root, '*.{html,vue}'), path.resolve(PATHS.src.partials, '**/*.{html,vue}')],
+        files: [path.resolve(PATHS.src.root, '*.{html,vue,svg}'), path.resolve(PATHS.src.partials, '**/*.{html,vue,svg}')],
         tasks: ['includes:dev', 'replace:dev']
       },
       md: {
@@ -446,7 +446,7 @@ module.exports = function( grunt ) {
         files: [{
           expand: true,
           cwd: path.resolve(PATHS.src.root),
-          src: ['*.{html,vue}'],
+          src: ['*.{html,vue,svg}'],
           dest: path.resolve(PATHS.dev.root)
         }]
       },
@@ -458,7 +458,7 @@ module.exports = function( grunt ) {
         files: [{
           expand: true,
           cwd: path.resolve(PATHS.src.root),
-          src: ['*.{html,vue}'],
+          src: ['*.{html,vue,svg}'],
           dest: path.resolve(PATHS.dist.root)
         }]
       }

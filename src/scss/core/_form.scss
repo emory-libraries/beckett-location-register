@@ -1,0 +1,33 @@
+#{$all-verbage-inputs} {
+  font-size: 1em; 
+  font-family: font('body');
+  padding: 10px;
+  border: 1px solid color('semantic');
+  border-radius: 3px;
+  color: $brandy-dark-text;
+  
+  @include placeholder { color: color('grey'); }
+  
+}
+
+.select {
+  border-radius: 3px;
+  background-color: color('white');
+
+  #{$all-list-inputs} { 
+    display: block;
+    @include size( 100% );
+    background-color: transparent;
+    z-index: 1;
+  }
+
+  &::after {
+    content: $fa-var-chevron-down;
+    z-index: 0;
+    font-family: FontAwesome;
+    @include position(0 0 0, absolute);
+    @include absolute-center-contents;
+    @include size( 2.5rem );
+  }
+
+}

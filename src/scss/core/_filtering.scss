@@ -1,0 +1,107 @@
+.filtering {
+  
+  .modal {
+    
+    $width: 300px;
+    
+    width: $width;
+    @include position($header-height 0 0, fixed);
+    background-color: color('blue', 'powder');
+    transition: all .5s ease;
+    z-index: 8;
+    padding: 10px 25px;
+    overflow: auto;
+    
+    &.open { right: 0; }
+    &.closed { right: -$width; }
+    
+    .btn-close {
+      appearance: none;
+      background-color: transparent;
+      border: none;
+      @include absolute-center-contents;
+      @include position( 10px 10px, absolute );
+      pading: 0;
+      @include size( 30px );
+      @include on-hover-focus(opacity, .25, .5);
+    }
+    
+    .btn-remove { margin-bottom: 10px; }
+    
+    .fields { font-size: .9em; }
+    
+    .field {
+      display: flex;
+      @include margin-y( 10px );
+      
+      > label { 
+        min-width: 75px; 
+        margin-right: 10px;
+        @include padding-y( 10px );
+      }
+      
+      > *:not(label) { flex: 1 1; min-width: 0; }
+      
+      &.multi {
+        
+        .multi-group {
+          display: flex;
+          flex-direction: column;
+        }
+        
+        .multi-field {
+          display: flex;
+          align-items: center;
+          
+          > *:not(.multi-remove):not(.multi-add) { flex: 1 1; min-width: 0; }
+          
+          + .multi-field { margin-top: 10px; }
+          
+        }
+        
+        .multi-remove {
+          padding: 0;
+          border: none;
+          background-image: none;
+          background-color: transparent;
+          margin-left: 10px;
+          @include on-hover-focus(opacity, .25, .5);
+        }
+        
+        .multi-add { margin-top: 10px; }
+        
+      }
+      
+    }
+    
+    .group {
+      display: flex;
+      flex-direction: column;
+      
+      > .field { 
+        margin-left: 25px; 
+        margin-bottom: 0;
+        
+        > label { min-width: 50px; }
+        
+      }
+      
+    }
+    
+    .buttons {
+      @include margin-y( 25px );
+      @include absolute-center-contents;
+      
+      > * { 
+        flex-grow: 1; 
+        
+        + * { margin-left: 10px; }
+        
+      }
+      
+    }
+    
+  }
+  
+  
+}

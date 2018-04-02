@@ -8,6 +8,26 @@ $.when(
   $.getJSON('router.json').then((data) => data)
 ).done((META, ROUTER) => {
   
+  // Helper functions.
+  function isset( value, objectify = false ) {
+    
+    let result = [
+      value !== undefined,
+      value !== null,
+      value !== ''
+    ];
+    
+    if( objectify ) {
+      
+      if(value !== null && value instanceof Object) result.push(!Object.isEmpty(value));
+      if(Array.isArray(value)) result.push(!Array.isEmpty(value));
+      
+    }
+    
+    return result.every((value) => value === true);
+    
+  }
+  
   // Extends object prototypes.
   Array.prototype.unique = function() {
       
@@ -22,6 +42,43 @@ $.when(
     return result;
     
   };
+  Array.isEmpty = function( array ) { return Array.isArray( array ) && array.length === 0; };
+  Array.isMultiple = function( array ) { return Array.isArray( array ) && array.length > 1; };
+  Array.isSingle = function( array ) { return Array.isArray( array ) && array.length == 1; };
+  Object.flatten = function( object, delimiter = '.', prefix = false ) {
+    
+    let result = {};
+    
+    for(let key in object) {
+      
+      // Get the value.
+      let value = object[key];
+      
+      // Handle objects.
+      if( value !== null && value instanceof Object ) {
+          
+        result = $.extend(
+          result, 
+          Object.flatten(value, delimiter, (prefix ? `${prefix}${delimiter}${key}` : key))
+        );
+        
+      }
+      
+      // Handle arrays.
+      else if( !$.isArray(value) && typeof value != 'function' ) {
+        
+        if( prefix ) result[`${prefix}${delimiter}${key}`] = value;
+        
+        else result[key] = value;
+        
+      }
+      
+    }
+    
+    return result;
+    
+  };
+  Object.isEmpty = function( object ) { return object.constructor === Object && Object.keys(object).length === 0; };
 
   // Define universal filters and methods.
   const filters = {},
@@ -74,22 +131,16 @@ $.when(
         
         // Initialize a query string.
         let query = '';
-        
-        // Build a query string.
-        if( self.paging || self.filter || self.sort  ) {
-          
-          query += '?';
-          
-          if( self.paging ) query += self.query('paging');
-          if( self.filter ) query += self.query('filter');
-          if( self.sort ) query += self.query('sort');
-          
-        }
-      
+    
+        // Build the query string.
+        if( !Object.isEmpty(self.paging) ) query += (query === '' ? '?' : '&') + self.query('paging');
+        if( !Object.isEmpty(self.filter) ) query += (query === '' ? '?' : '&') + self.query('filter');
+        if( !Object.isEmpty(self.sort) ) query += (query === '' ? '?' : '&') + self.query('sort'); 
+
         // Send the request.
         return $.ajax({
           dataType: 'json',
-          url: `${this.src}${endpoint}${query}`,
+          url: `${self.src}${endpoint}${query}`,
           method: method,
           data: data
         }).always((response) => {
@@ -114,23 +165,26 @@ $.when(
     
     query( feature ) {
       
+      // Capture context.
+      const self = this;
+      
       // Initialize the query string.
       let query = '';
       
       // Loop through each parameter.
-      for( let key in this[feature] ) {
+      for( let key in self[feature] ) {
         
         // Capture the value.
-        let value = this[feature][key];
+        let value = self[feature][key];
         
         // Convert array values into comma-delimited lists.
-        if( Array.isArray(value) ) value = value.split(',');
+        if( Array.isArray(value) ) value = value.join(',');
         
         // Save the query parameter.
         query += `${feature}[${key}]=${value}&`;
         
       }
-      
+
       // Output the query string.
       return query.slice(0, -1);
       
@@ -176,6 +230,16 @@ $.when(
       
       // Execute the request.
       return this.request('GET', 'browse/');
+      
+    }
+      
+    index() {
+      
+      // Save the called method.
+      this.recall.method = 'index';
+      
+      // Execture the request.
+      return this.request('GET', 'index/');
       
     }
 
@@ -242,6 +306,25 @@ $.when(
     
   };
   
+  // Home
+  const Home = Vue.component('home', {
+    
+    template: '#template-home',
+    
+    props: [],
+    
+    data() {
+      return {};
+    },
+    
+    methods: $.extend({}, methods),
+    
+    filters: $.extend({}, filters),
+    
+    created() {}
+    
+  });
+  
   // About
   const About = Vue.component('about', {
     
@@ -272,6 +355,7 @@ $.when(
       return {
         api: null,
         increments: [10, 20, 50, 100].concat([paging.limit]).unique().sort((a, b) => a - b),
+        filters: {},
         paging: $.extend({}, paging, {
           previous: false,
           next: false
@@ -279,7 +363,14 @@ $.when(
       };
     },
     
-    methods: $.extend({}, {
+    methods: $.extend({
+      
+      limit() {
+        
+        // Broadcast changes to the limit value.
+        event.trigger('limit', this.paging.limit);
+        
+      },
       
       page( offset ) {
         
@@ -291,16 +382,19 @@ $.when(
         
         // Get the paging parameters.
         let limit = self.paging.limit,
-            count = self.paging.count;
+            count = self.paging.pages.count;
 
         // Get the last call to the API.
         const recall = self.api.recall;
 
         // Configure the API's paging.
         self.api.paging = {offset: offset, limit: limit, count: count};
+        
+        // Reapply any filters.
+        self.api.filter = self.filters;
 
         // Load the previous page.
-        self.api[recall.method].apply(self.api, recall.arguments).then((response) => {
+        self.api[recall.method].apply(self.api, recall.arguments).then((response) => { 
           
           // Trigger a paging event.
           event.trigger('paging', {response: response, api: self.api});
@@ -309,7 +403,7 @@ $.when(
         
       }
       
-    }),
+    }, methods),
     
     filters: $.extend({}, filters),
     
@@ -319,16 +413,269 @@ $.when(
       const self = this;
       
       // Handle paging events.
-      event.on('paging list', (data) => { 
+      event.on('list paging filtering', (data) => { 
         
         // Reload the API.
         self.api = data.api;
         
         // Save paging data.
-        self.paging = data.response.paging;
+        if( data.response.paging ) self.paging = data.response.paging;
+        
+        // Save filter data.
+        if( data.response.filter ) self.filters = data.response.filter;
       
       });
       
+    }
+    
+  });
+  
+  // Filter
+  const Filtering = Vue.component('filtering', {
+    
+    template: '#template-filtering',
+    
+    props: ['enabled'],
+    
+    data() {
+      return {
+        api: null,
+        limit: paging.limit,
+        open: false,
+        filterable: false,
+        fields: {},
+        filters: this.init(),
+        active: false
+      };
+    },
+    
+    methods: $.extend({
+      
+      init() {
+        
+        return {
+          'year.start': [
+            {min: null, max: null}
+          ],
+          'year.end': [
+            {min: null, max: null}
+          ],
+          'topic': [null],
+          'location.name': [null],
+          'source': [null]
+        };
+        
+      },
+      
+      toggle() { this.open = !this.open; },
+      
+      clear() { 
+        
+        this.filters = this.init();
+      
+      },
+      
+      remove() {
+        
+        // Capture context. 
+        const self = this;
+        
+        // Get the last call to the API.
+        const recall = self.api.recall;
+        
+        // Clear all filters.
+        self.api.filter = {};
+        
+        // Load the unfiltered data.
+        self.api[recall.method].apply(self.api, recall.arguments).then((response) => {
+          
+          // Trigger a filter event.
+          event.trigger('filtering', {response: response, api: self.api});
+          
+        });
+        
+        // Clear the filter form.
+        self.clear();
+        
+      },
+      
+      range( key ) {
+        
+        // Capture context.
+        const self = this;
+        
+        return {
+        
+          add() {
+          
+            self.filters[key].push({min: null, max: null});
+
+          },
+        
+          remove( index ) {
+          
+            self.filters[key].splice(index, 1);
+
+          },
+      
+          validate( target ) {
+
+            const {min, max} = target; 
+
+            if( min !== null && max !== null ) { 
+
+              if( min > max ) target.max = min;
+
+            }
+
+            else if( max === null ) target.max = min;
+
+          }
+          
+        };
+       
+      },
+      
+      filter() {
+        
+        // Capture context.
+        const self = this;
+        
+        // Initialize a filter set.
+        let filter = $.extend({}, self.filters);
+        
+        // Detect ranges.
+        $.each(filter, (key, value) => {
+          
+          // Remove empty values.
+          if( value === null || Array.isEmpty(value) ) delete filter[key];
+          
+          // Handle arrays values.
+          else if( Array.isArray(value) ) {
+            
+            // Look for ranges within the array.
+            value = value.map((v) => {
+              
+              // Capture ranges.
+              if( v instanceof Object && v.hasOwnProperty('min') && v.hasOwnProperty('max') ) {
+              
+                // Only keep non-empty values.
+                if( v.min === null && v.max === null ) return null;
+                else if( v.min === null && v.max !== null ) return v.max;
+                else if( v.min !== null && v.max === null ) return v.min;
+                else return `${v.min}-${v.max}`;
+                
+              }
+              
+              return v;
+              
+            });
+
+            // Remove empty ranges.
+            value = value.filter((v) => v !== null);
+            
+            // Delete invalid ranges.
+            if( Array.isEmpty(value) ) delete filter[key];
+            
+            // Otherwise, save the new value.
+            else filter[key] = value;
+            
+          }
+          
+        });
+        
+        // Exit if no filters are applied.
+        if( Object.isEmpty(filter) ) return;
+        
+        // Get the last call to the API.
+        const recall = self.api.recall;
+        
+        // Configre the API's filter.
+        self.api.filter = filter;
+        
+        // Reset the paging to go back to the first page.
+        self.api.paging = $.extend({}, paging, {limit: self.limit});
+        
+        // Load the filtered data.
+        self.api[recall.method].apply(self.api, recall.arguments).then((response) => {
+          
+          // Trigger a filter event.
+          event.trigger('filtering', {response: response, api: self.api});
+          
+        });
+        
+      },
+      
+      isFilterable() {
+  
+        return !Object.values(Object.flatten(this.filters)).every((value) => !isset(value, true) );
+        
+      },
+      
+      canFilter( key ) {
+        
+        // Capture fields.
+        const fields = this.fields;
+        
+        // Set enablers.
+        const enabled = {
+          'year.start': fields.year && fields.year.start && Array.isMultiple(fields.year.start),
+          'year.end': fields.year && fields.year.end && Array.isMultiple(fields.year.end),
+          'year'() { return this['year.start'] || this['year.end']; },
+          'topic': fields.topic && Array.isMultiple(fields.topic),
+          'location.name': fields.location && fields.location.name && Array.isMultiple(fields.location.name),
+          'location'() { return this['location.name']; },
+          'source': fields.source && Array.isMultiple(fields.source),
+          'any'() { return this.year || this.topic || this.location || this.source; }
+        };
+          
+        return $.isFunction(enabled[key]) ? enabled[key]() : enabled[key];
+        
+      }
+      
+    }, methods),
+    
+    filters: $.extend({}, filters),
+    
+    created() {
+      
+      // Initialize an API instance.
+      const api = new API();
+      
+      // Index all field data.
+      api.index().then((response) => { self.fields = response.data; });
+      
+      // Capture context.
+      const self = this;
+      
+      // Handle list updates.
+      event.on('list filtering', (data) => { 
+        
+        // Reload the API.
+        self.api = data.api; 
+        
+        // Filtering was applied.
+        self.active = data.response.filter ? true : false;
+        
+        // Hide the filter form.
+        self.open = false;
+      
+      });
+      
+      // Handle limit updates.
+      event.on('limit', (limit) => { self.limit = limit; });
+      
+    },
+    
+    watch: {
+      filters: {
+        handler() {
+          
+          this.filterable = this.isFilterable();
+      
+        },
+        deep: true
+      }
     }
     
   });
@@ -348,7 +695,8 @@ $.when(
         error: {
           message: null,
           state: null
-        }
+        },
+        filtering: false
       };
     },
 
@@ -374,7 +722,7 @@ $.when(
       event.trigger('force:browse');
       
       // Handle events.
-      event.on('list', (data) => {
+      event.on('list paging filtering', (data) => {
         
         // Reset any errors.
         self.reset();
@@ -386,6 +734,9 @@ $.when(
 
         // Handle any errors.
         if( self.data.length == 0 ) self.error = {message: 'No Results Found', state: 'danger'};
+        
+        // Recognize when filters have been applied.
+        self.filtering = self.response.filter ? true : false;
 
       });
       
@@ -518,11 +869,20 @@ $.when(
     data() {
       return {
         active: null,
-        routes
+        routes, 
+        open: false
       };
     },
     
-    methods: $.extend({}, methods),
+    methods: $.extend({
+      
+      close() {
+        
+        this.open = false;
+        
+      }
+      
+    }, methods),
     
     filters: $.extend({}, filters),
     
@@ -612,7 +972,7 @@ $.when(
   
     // Define routes.
   const routes = [
-    {path: '/'},
+    {path: '/', component: Home},
     {path: '/about', component: About},
     {path: '/list', component: List},
     {path: '/letter', component: Letter},
@@ -637,7 +997,13 @@ $.when(
   // App
   const App = new Vue({
     el: '#vue', 
-    router
+    router,
+    data: {
+      address: '201 Dowman Drive, Atlanta, Georgia 30322 USA',
+      phone: '404.727.6123'
+    },
+    filters: $.extend({}, filters),
+    methods: $.extend({}, methods)
   });
   
 });

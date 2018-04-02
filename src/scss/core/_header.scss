@@ -1,0 +1,56 @@
+header {
+  @include position(0 0 auto 0, fixed); 
+  z-index: 10;
+  width: 100%;
+  height: $header-height;
+  background-color: color('blue');
+  @include padding-x( 10px );
+  
+  .layout {
+    display: grid;
+    grid-template-areas: "logo title nav"; 
+    grid-template-rows: $header-height;
+    grid-template-columns: repeat(2, max-content) auto;
+  }
+  
+  .logo {
+    grid-area: logo;
+    height: 100%;
+    width: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    @include padding-y( 15px );
+
+    svg { 
+      width: 100%;
+      height: auto;
+      fill: color('white');
+    }
+    
+  }
+  
+  .title {
+    grid-area: title;
+    font-size: 1.5em;
+    line-height: 1;
+    font-family: font('heading');
+    height: 100%; 
+    @include on-hover-focus(color, rgba(color('white'), .75), color('white'));
+    transition: $transition-all;
+    padding: 10px;
+    @include absolute-center-contents;
+    margin-right: 10px;
+    
+    &::before {
+      content: "";
+      display: block;
+      margin-right: 10px;
+      width: 1px;
+      height: 25px;
+      background-color: color('white');
+    }
+    
+  }
+  
+}

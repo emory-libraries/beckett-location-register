@@ -1,0 +1,18 @@
+.list {
+
+  .controls {
+    @include margin-y( 10px );
+    display: flex;
+    
+    @include breakpoint( screen('large') ) {
+      height: $controls-height;
+    };
+    
+    
+    > * { align-self: stretch; }
+    
+    > * + *:not(.paging) { margin-left: 10px; }
+    
+  }
+  
+}

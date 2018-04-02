@@ -1,12 +1,16 @@
 <template id="template-list">
   
   <div class="list">
-  
-    <div class="alert" :class="error.state">{{error.message}}</div>
     
-    <div class="filter"></div>
+    <div class="controls">
     
-    <paging :enabled="data.length > 0"></paging>
+      <filtering :enabled="data.length > 0 || filtering"></filtering>
+    
+      <paging :enabled="data.length > 0"></paging>
+      
+    </div>
+    
+    <div class="alert" :class="error.state" v-if="error.message">{{error.message}}</div>
     
     <div class="items" v-if="data.length > 0">
       

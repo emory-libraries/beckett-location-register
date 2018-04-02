@@ -1,0 +1,31 @@
+@include normalize();
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: font('body');
+  color: $brandy-dark-text;
+  padding-top: $header-height;
+  line-height: 1.5;
+}
+
+* { 
+  position: relative;
+  box-sizing: border-box;
+}
+
+a { text-decoration: none; }
+
+#{$all-buttons}, a, label { cursor: pointer; }
+
+#{$all-headings} { font-family: font('heading'); }
+
+// Scale heading sizes.
+@include scale-font('h1' 'h2' 'h3' 'h4' 'h5' 'h6', 1em, 2em);
+
+main { 
+  padding: 25px; 
+  min-height: $layout-min-height;
+}
+
+#{$all-verbage-inputs} { appearance: none; }

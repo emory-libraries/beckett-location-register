@@ -2,6 +2,24 @@
   "endpoints": {
     "GET": [
       {
+        "endpoint": "index",
+        "aggregate": true,
+        "model": {
+          "year": {
+            "start": "YearStart",
+            "end": "YearEnd"
+          },
+          "topic": "Topic",
+          "location": {
+            "name": "LocationDesc",
+            "abbr": "LocationAbbr"
+          },
+          "source": "DataSource",
+          "question": "Question",
+          "response": "Response"
+        }
+      },
+      {
         "endpoint": "browse",
         "model": {
           "id": "ID",

@@ -1,0 +1,110 @@
+nav {
+  grid-area: nav;
+  height: 100%;
+  font-size: .8em;
+  margin-left: auto;
+  
+  label {
+    @include size( $header-height );
+    line-height: 1 !important;
+    font-size: 2em !important;
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    @include on-hover-focus(color, rgba(color('white'), .75), color('white'));
+    
+    @include multi-breakpoint( screen('medium'), screen('large') ) { display: none !important; }
+    
+  }
+  
+  input { display: none; }
+  
+  ul {
+    display: none;
+    justify-content: flex-start;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    list-style-type: none;
+    display: flex;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    @include position($header-height 0 auto 0, fixed);
+    background-color: color('blue', 'powder');
+    transition: all .5s $transition-timing;
+    
+    &.open { 
+      max-height: 1000px; 
+      opacity: 1;
+      border-bottom: 1px solid color('grey');
+    }
+    &.closed {
+      max-height: 0; 
+      opacity: 0; 
+    }
+      
+    li {
+      transition: $transition-all;
+      align-self: stretch;
+      @include absolute-center-contents;
+      color: color('blue');
+      @include on-hover-focus(background-color, transparent, color('white'));
+      line-height: 1;
+      min-width: 100px;
+      
+      @include multi-breakpoint( screen('medium'), screen('large') ) {
+        color: color('white');
+        @include on-hover-focus(background-color, transparent, rgba(color('white'), .25));
+      };
+
+      &.active { 
+        background-color: color('white');
+        
+        @include multi-breakpoint( screen('medium'), screen('large') ) {
+          background-color: rgba(color('white'), .25);
+        };
+        
+      }
+      
+      + li {
+        border-top: 1px solid color('grey');
+        
+        @include multi-breakpoint( screen('medium'), screen('large') ) {
+          border-top: none;
+        }
+        
+      }
+      
+    }
+      
+    a { 
+      color: inherit; 
+      width: 100%;
+      padding: 15px 20px;
+      align-self: stretch;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+    }
+    
+    @include multi-breakpoint( screen('medium'), screen('large') ) {
+      
+      &.open, 
+      &.closed { 
+        display: flex; 
+        flex-direction: row; 
+        @include position(auto, relative);
+        max-height: none;
+        background-color: transparent;
+        height: 100%;
+        opacity: 1;
+        border-bottom: none;
+      }
+      
+    };
+    
+  }
+  
+}

@@ -1,0 +1,7 @@
+@include google-font('Lato');
+@include google-font('Amiri');
+
+$fonts: (
+  'body': ('Lato', sans-serif),
+  'heading': ('Amiri', serif)
+);

@@ -1,0 +1,1 @@
+@mixin multi-breakpoint( $screens... ) { @each $screen in $screens { @include breakpoint($screen) { @content; } } }

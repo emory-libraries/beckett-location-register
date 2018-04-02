@@ -2,7 +2,7 @@
 
   <div class="loading" v-if="loading">
   
-    <span class="fa-spinner"></span>
+    <span class="icon fa-spinner"></span>
   
   </div>
 

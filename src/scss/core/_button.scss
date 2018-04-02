@@ -1,0 +1,57 @@
+.button {
+  
+  @mixin colorize( $color ) {
+    background-color: $color;
+    border-color: shade($color, 25%);
+    color: color-contrast($color);
+  }
+  
+  padding: 10px 20px;
+  border-width: 1px;
+  border-style: solid;
+  @include colorize( color('semantic') );
+  font-size: .8em;
+  font-family: font('body');
+  @include linear-gradient(to bottom, rgba(color('white'), .2), transparent);
+  border-radius: 3px;
+  transition: $transition-all;
+  
+  &.info { @include colorize(color('semantic', 'info')); }
+  &.primary { @include colorize(color('semantic', 'primary')); }
+  &.success { @include colorize(color('semantic', 'success')); }
+  &.warning { @include colorize(color('semantic', 'warning')); }
+  &.danger { @include colorize(color('semantic', 'danger')); }
+  &.disabled, &[disabled] { opacity: .25; }
+  
+  &:hover, &:focus { background-image: none; }
+  
+  &.icon {
+    
+    &-left {
+      .icon { margin-right: 10px; }
+    }
+    &-right {
+      .icon { margin-left: 10px; }
+    }
+    &-block-left {
+      padding-left: 2.5rem + rem(20px);
+      .icon { 
+        background-color: rgba(color('black'), .2);
+        @include position(0 auto 0 0, absolute);
+        width: 2.5rem;
+        @include absolute-center-contents;
+      }
+    }
+    &-block-right {
+      padding-right: 2.5rem + rem(20px);
+      .icon { 
+        background-color: rgba(color('black'), .2);
+        @include position(0 0 0 auto, absolute);
+        width: 2.5rem;
+        @include absolute-center-contents;
+      }
+    }
+    
+  }
+  
+}

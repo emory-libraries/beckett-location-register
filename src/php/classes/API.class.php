@@ -10,7 +10,13 @@ trait GET {
     
     // Capture meta data.
     $endpoint = $meta['endpoint'];
-    $regex = $meta['regex'];
+    $model = $endpoint['model'];
+    $aggregate = $endpoint['aggregate'];
+    $order = $endpoint['order'];
+    $dynamic = isset($meta['regex']);
+    
+    // Initalize the data set.
+    $data = [];
     
     // Initialize data lookup.
     $lookup = function( array $model, $source ) use (&$lookup) {
@@ -37,93 +43,153 @@ trait GET {
       
     };
     
-    // Use data model to capture data from source.
-    foreach($this->csv as $item) { $this->data[] = $lookup( $endpoint['model'], $item ); }
-
-    // Filter based on bindings.
-    if( $regex ) {
+    // Build the data set according to the data model.
+    if( $model ) {
       
-      // Interpret endpoints.
-      $target = explode('/', $endpoint['endpoint']);
-      $given = explode('/', $this->endpoint);
-      
-      // Compare endpoints.
-      foreach( $target as $index => $pattern ) {
-
-        // Catch dynamic endpoint data.
-        if( preg_match('/:.+/', $pattern) ) {
-          
-          // Get the match binding.
-          $match = $endpoint['match'];
-          $filter = $given[$index];
-          
-          // Filter the result set.
-          $this->data = array_filter($this->data, function($item) use ($match, $pattern, $filter) { 
-            
-            // Flatten the item for easier comparison.
-            $flattened = array_flatten( $item );
-
-            // Get the field on which data should be matched.
-            $field = $match[$pattern];
-            
-            // Handle matches allowed on any field.
-            if( $field == 'any' ) {
-              
-              // Initialize the result.
-              $result = false;
-              
-              // Loop through all fields within the item.
-              foreach( $flattened as $key => $value ) {
-                
-                // Look for matches.
-                if( $value == $filter ) $result = true;
-                
-              }
-              
-              // Return the result.
-              return $result;
-              
-            }
-            
-            // Otherwise, handle field-based matches.
-            else { return $flattened[$field] == $filter; }
-            
-          });
-          
-        }
-        
-      }
+      // Use the data model to extract data from the source data set.
+      foreach($this->csv as $item) { $data[] = $lookup( $model, $item ); }
       
     }
     
-    // Enable features.
-    if( !empty($this->query) ) {
+    // Otherwise, use the data set as is.
+    else {
       
-      // Initialize an ordered set of parameters.
-      $params = [];
+      $data = $this->csv;
       
-      // Sort the query parameters by order of precedence.
-      foreach( $this->precedence as $key ) {
-     
-        if( array_key_exists($key, $this->query) ) {
-          
-          $params[$key] = $this->query[$key];
-          
-          unset( $this->query[$key] );
-          
-        }
-        
-      }
+    }
+    
+    // Handle aggregate data requests.
+    if( $aggregate ) {
       
-      // Merge remaining parameters without any specific order.
-      $params = array_merge($params, $this->query);
+      // Flatten all data.
+      $data = array_map( 'array_flatten', $data );
 
-      // Loop through features.
-      foreach( $params as $feature => $settings ) { 
-        
-        // Apply each feature one by one.
-        if( method_exists($this, "__$feature") ) { $this->{"__$feature"}( $settings ); }
+      // Loop through the data set.
+      foreach($data as $item) {
+
+        // Group all values.
+        foreach($item as $key => $value) {
+
+          // Initialize a result aggregator.
+          if( !array_key_exists($key, $this->data) ) $this->data[$key] = [];
+
+          // Save the value to the aggregator.
+          $this->data[$key][] = $value;
+
+        }
+
+      }
+
+      // Only keep unique values.
+      $this->data = array_map( 'array_values', array_map( 'array_unique', $this->data ) );
       
+      // Interpret sort order.
+      $order = preg_match('/desc/', $order) ? SORT_DESC : SORT_ASC;
+      
+      // Sort all the aggregate data.
+      array_walk($this->data, function(&$values) use ($order) { 
+        
+        sort($values, $order); 
+      
+      });
+      
+      // Expand the aggregate data.
+      $this->data = array_expand($this->data);
+      
+    }
+    
+    // Handle non-aggregate data requests.
+    else {
+      
+      // Save data.
+      $this->data = $data;
+      
+      // Filter based on bindings.
+      if( $dynamic ) {
+
+        // Interpret endpoints.
+        $target = explode('/', $endpoint['endpoint']);
+        $given = explode('/', $this->endpoint);
+
+        // Compare endpoints.
+        foreach( $target as $index => $pattern ) {
+
+          // Catch dynamic endpoint data.
+          if( preg_match('/:.+/', $pattern) ) {
+
+            // Get the match binding.
+            $match = $endpoint['match'];
+            $filter = $given[$index];
+
+            // Filter the result set.
+            $data = array_filter($data, function($item) use ($match, $pattern, $filter) { 
+
+              // Flatten the item for easier comparison.
+              $flattened = array_flatten( $item );
+
+              // Get the field on which data should be matched.
+              $field = $match[$pattern];
+
+              // Handle matches allowed on any field.
+              if( $field == 'any' ) {
+
+                // Initialize the result.
+                $result = false;
+
+                // Loop through all fields within the item.
+                foreach( $flattened as $key => $value ) {
+
+                  // Look for matches.
+                  if( $value == $filter ) $result = true;
+
+                }
+
+                // Return the result.
+                return $result;
+
+              }
+
+              // Otherwise, handle field-based matches.
+              else { return $flattened[$field] == $filter; }
+
+            });
+
+          }
+
+        }
+
+      }
+    
+      // Enable features.
+      if( !empty($this->query) ) {
+      
+        // Initialize an ordered set of parameters.
+        $params = [];
+
+        // Sort the query parameters by order of precedence.
+        foreach( $this->precedence as $key ) {
+
+          if( array_key_exists($key, $this->query) ) {
+
+            $params[$key] = $this->query[$key];
+
+            unset( $this->query[$key] );
+
+          }
+
+        }
+
+        // Merge remaining parameters without any specific order.
+        $params = array_merge($params, $this->query);
+
+        // Loop through features.
+        foreach( $params as $feature => $settings ) { 
+
+          // Apply each feature one by one.
+          if( method_exists($this, "__$feature") ) { $this->{"__$feature"}( $settings ); }
+
+        }
+
       }
       
     }
@@ -156,6 +222,7 @@ trait FEATURES {
   // Set order in which features should be applied.
   private $precedence = [
     'sort',
+    'filter',
     'paging'
   ];
   
@@ -166,7 +233,7 @@ trait FEATURES {
     if( $this->error ) return;
     
     // Capture the length of the original data set.
-    $length = count($this->data);
+    $length = count($this->data); 
     
     // Determine settings.
     $limit = isset($settings['limit']) ? $settings['limit'] : $this->defaults['paging']['limit'];
@@ -199,8 +266,22 @@ trait FEATURES {
         'count' => $pages,
         'total' => ($total = ceil($length / $limit)),
         'active' => ($active = $total - ceil(($length - $offset - $limit) / $limit)),
-        'next' => ($next = $total - $active > 0 ? $active + 1 : false),
-        'previous' => ($previous = $active - 1 > 0 ? $active - 1 : false),
+        'next' => [
+          'offset' => $limit + $offset < $length ? $limit + $offset : false,
+          'number' => ($next = $total - $active > 0 ? $active + 1 : false)
+        ],
+        'previous' => [
+          'offset' => $offset - $limit >= 0 ? $offset - $limit : false,
+          'number' => ($previous = $active - 1 > 0 ? $active - 1 : false)
+        ],
+        'first' => [
+          'offset' => 0,
+          'number' => 1
+        ],
+        'last' => [
+          'offset' => ($total * $limit) - $limit,
+          'number' => $total - 1
+        ],
         'index' => []
       ]
     ];
@@ -218,19 +299,17 @@ trait FEATURES {
     // Build page numbers.
     for( $i = 0; $i < $pages; $i++ ) {
       
-      // Get the active page.
-      if( $i === 0 ) { 
+      $addActive = function() use (&$pointer, $active, $offset) {
         
         $pointer[] = [
           'number' => $active, 
           'offset' => $offset, 
           'active' => true
-        ]; 
+        ];
+        
+      };
       
-      }
-      
-      // Get the previous pages.
-      else if( $previous > 0 and $p < $split ) { 
+      $addPrevious = function() use (&$pointer, &$previous, $offset, $limit, $active, &$p) {
         
         array_unshift($pointer, [
           'number' => $previous, 
@@ -240,10 +319,9 @@ trait FEATURES {
         $previous--;
         $p++; 
         
-      }
+      };
       
-      // Get the next pages.
-      else { 
+      $addNext = function() use (&$pointer, &$next, $offset, $limit, $active, &$n) {
         
         array_push($pointer, [
           'number' => $next, 
@@ -252,7 +330,27 @@ trait FEATURES {
         ]); 
         $next++; 
         $n++; 
+        
+      };
+     
+      // Get the active page.
+      if( $i === 0 ) $addActive();
       
+      // Get the previous pages.
+      else if( $previous != false and $previous > 0 and $p < $split ) $addPrevious();
+      
+      // Get the next pages.
+      else if( $next != false and $next < $total + 1 and $n < $split ) $addNext();
+      
+      // Otherwise, fill with best available.
+      else { 
+        
+        // Add more previous pages.
+        if( $previous != false and $previous > 0 ) $addPrevious();
+        
+        // Add more next pages.
+        else if ( $next != false and $next < $total + 1 ) $addNext();
+        
       }
       
     }
@@ -326,8 +424,8 @@ trait FEATURES {
           // Add keys to the range for better interpretation.
           $range = $this->__typify(array_combine(['min', 'max'], $range));
           
-          // Update the value.
-          //$value = $range;
+          // Update the value. Enable this for "cleaner" results, or disabled this to return the input query as is.
+          $value = $range;
           
           // Apply range filter to data.
           $subset = array_merge($subset, array_filter($this->data, function($item) use ($field, $range) {
@@ -363,8 +461,8 @@ trait FEATURES {
 
       }
       
-      // Update values.
-      //$settings[$field] = $values;
+      // Update values. Enable this for "cleaner" results, or disabled this to return the input query as is.
+      $settings[$field] = $values;
       
       // Update data set.
       $this->data = $subset;
@@ -456,8 +554,8 @@ class API {
   // Convert values into their true data types.
   private function __typify( $values ) {
     
-    // Determine if the value passed in was an array.
-    $array = is_array($values) ? true : false;
+    // Catch the original format.
+    $array = is_array($values);
     
     // Convert non-array values to an array for easier manipulation.
     if( !is_array($values) ) $values = [$values];
@@ -478,7 +576,7 @@ class API {
       elseif( $value == 'null' ) { $values[$key] = null; }
       
       // Convert date-like values to dates.
-      elseif( (bool) ($time =  strtotime($value)) ) { $values[$key] = (new DateTime())->setTimestamp($time); }
+      elseif( preg_match('/\d/', $value) and (bool) ($time =  strtotime($value)) ) { $values[$key] = (new DateTime())->setTimestamp($time); }
       
     }
     
@@ -565,15 +663,15 @@ class API {
 
           // Get the requested data. 
           $this->GET( $endpoint );
-          
+
         }
-        
+
         // Handle invalid endpoints.
         else {
-          
+
           // Set the status code to 501.
           $this->__error( 501 );
-          
+
         }
         
         break;

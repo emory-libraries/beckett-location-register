@@ -1,0 +1,22 @@
+.alert {
+  
+  @mixin colorize( $color ) {
+    background-color: tint($color, 75%);
+    color: $color;
+    border-color: $color;
+  }
+  
+  padding: 10px;
+  @include margin-y( 10px );
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 3px;
+  @include colorize( color('semantic') );
+  
+  &.primary { @include colorize(color('semantic', 'primary')); }
+  &.info { @include colorize(color('semantic', 'info')); }
+  &.success { @include colorize(color('semantic', 'success')); }
+  &.warning { @include colorize(color('semantic', 'warning')); }
+  &.danger { @include colorize(color('semantic', 'danger')); }
+  
+}

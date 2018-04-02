@@ -1,0 +1,107 @@
+.paging {
+  font-size: .8em;
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  
+  @include multi-breakpoint( screen('medium'), screen('large') ) { 
+    flex-wrap: nowrap; 
+    margin-left: auto;
+    width: auto;
+  };
+  
+  .rows, .toggles { 
+    display: flex;
+    height: $controls-height;
+    width: 100%;
+    @include margin-y( 10px);
+    align-items: center;
+    
+    @include multi-breakpoint( screen('medium'), screen('large') ) {
+      width: auto;
+      @include margin-y( 0 );
+    };
+    
+  }
+  
+  .rows {
+    
+    .label { margin-right: 10px; }
+    
+    .select {
+      flex-grow: 1;
+      height: 100%;
+    
+      @include multi-breakpoint( screen('medium'), screen('large') ) { 
+        width: 2.5rem + rem($controls-height); 
+        flex-grow: unset;
+      };
+      
+    }
+    
+    @include multi-breakpoint( screen('medium'), screen('large') ) { @include margin-x( 10px ); };
+    
+  }
+  
+  .toggles {
+    
+    ul {
+      list-style-type: none;
+      padding: 0;
+      height: 100%;
+      display: flex;
+      flex-grow: 1;
+
+      li {
+        height: $controls-height;
+        flex-grow: 1;
+        transition: $transition-all;
+        border-radius: 3px;
+
+        @include multi-breakpoint( screen('medium'), screen('large') ) {
+          width: $controls-height;
+          @include on-hover-focus(background-color, color('blue', 'powder'), mix(color('white'), color('blue'), 75%));
+          border: 1px solid mix(color('white'), color('blue'), 75%);
+        };
+        
+        + li { margin-left: 10px; }
+        
+        &.active { 
+          color: color('blue');
+          font-weight: bold;
+          font-size: 1.5em;
+          
+          @include multi-breakpoint( screen('medium'), screen('large') ) {
+            background-color: mix(color('white'), color('blue'), 75%); 
+            font-weight: normal;
+            font-size: 1em;
+          };
+          
+        }
+
+      }
+
+      a { 
+        @include size( 100% );
+        @include absolute-center-contents;
+      }
+      
+      @include multi-breakpoint( screen('medium'), screen('large') ) { flex-grow: unset; };
+
+    }
+
+    #{$all-buttons} { 
+      padding: 0;
+      @include size( $controls-height ); 
+      font-size: 1.25rem;
+      @include absolute-center-contents;
+
+      &:not(:first-of-type):not(:last-of-type) { @include margin-x( 10px ); }
+      
+    }
+    
+  }
+  
+  > * { align-self: stretch; }
+  
+}

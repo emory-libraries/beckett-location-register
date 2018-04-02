@@ -1,0 +1,28 @@
+.loading {
+  width: 100%;
+  height: $layout-min-height;
+  font-size: 5em;
+  @include absolute-center-contents;
+  position: fixed;
+  top: $header-height;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9;
+  background-color: rgba(color('black'), .75);
+  
+  .icon {
+    padding: 25px;
+    background-color: color('blue', 'powder');
+    border-radius: 3px;
+    
+    &::before { display: block; animation: spin 1.5s linear forwards infinite; }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+  }
+  
+}

@@ -54,7 +54,7 @@
   $elements,
   $min: 1em, 
   $max: 1em, 
-  $export: null, 
+  $save: null, 
   $increasing: false, 
   $responsive: true, 
   $scale: $brandy-scale-map, 
@@ -109,9 +109,9 @@
 
     #{$element} { font-size: $size; }
 
-    $map: map-set($map, $element, $ratio);
+    $map: map-set($map, $element, $size);
 
-    @if( type-of($save) == 'map' ) { $save: map-set($save, $element, $ratio); }
+    @if( type-of($save) == 'map' ) { $save: map-set($save, $element, $size); }
 
   } 
   

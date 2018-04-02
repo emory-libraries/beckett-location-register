@@ -1,0 +1,3 @@
+# The Letters of Samuel Beckett
+
+*The Letters of Samuel Beckett* archive houses the transcriptions and translations of every known letter penned by the Irish writer Samuel Beckett. This project was born out of a desire to make the metadata and content of these letters accessible to researchers and to the wider public. You can browse all letters or use the below search filter to locate letters relevant to your research.

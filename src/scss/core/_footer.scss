@@ -1,0 +1,59 @@
+footer {
+  
+  $background: color('white', 'off');
+  $foreground: color('grey', 'dark');
+  
+  background-color: $background;
+  color: $foreground;
+  width: 100%;
+  font-size: .8em;
+  z-index: 10;
+  
+  .layout { 
+    padding: 25px 10px;
+    display: grid;
+    grid-template-areas: "logo" "note";
+    grid-gap: 10px;
+    text-align: center;
+    
+    @include breakpoint( screen('large') ) {
+      grid-template-areas: "note logo";
+      grid-template-columns: 1fr 200px;
+      text-align: left;
+      align-items: center;
+    };
+    
+  }
+  
+  .note { grid-area: note; }
+  
+  .copyright { 
+    grid-area: copyright; 
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+    
+    @include breakpoint( screen('large') ) {
+      display: block;
+      
+      span:nth-child(2)::before { content: "| "; }
+      
+    };
+    
+  }
+  
+  .logo {
+    grid-area: logo;
+    
+    svg {
+      display: block;
+      margin: 0 auto;
+      height: auto;
+      width: 100%;
+      max-width: 350px;
+      fill: $foreground;
+    }
+    
+  }
+  
+}
