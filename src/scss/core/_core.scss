@@ -25,7 +25,7 @@ a { text-decoration: none; }
 
 main { 
   padding: 25px; 
-  min-height: $layout-min-height;
+  //min-height: $layout-min-height;
 }
 
 #{$all-verbage-inputs} { appearance: none; }
