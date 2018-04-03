@@ -383,7 +383,7 @@ trait FEATURES {
     
     // Save sort data.
     $this->features['sort'] = [
-      'order' => $order,
+      'order' => $order == SORT_DESC ? 'DESC' : 'ASC',
       'field' => $field
     ];
     

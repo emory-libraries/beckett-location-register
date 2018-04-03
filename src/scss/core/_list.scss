@@ -21,6 +21,9 @@
   }
   
   > table {
+    
+    @import 'sort';
+    
     // DEVELOPMENT ONLY
     --date: 100%;
     --topic: 100%;

@@ -242,6 +242,13 @@ $.when(
       return this.request('GET', 'index/');
       
     }
+    
+    last() {
+      
+      // Call the last method invoked again.
+      return this[this.recall.method].apply(this, this.recall.arguments);
+      
+    }
 
   }
   
@@ -359,7 +366,8 @@ $.when(
         paging: $.extend({}, paging, {
           previous: false,
           next: false
-        })
+        }),
+        sort: {}
       };
     },
     
@@ -384,17 +392,15 @@ $.when(
         let limit = self.paging.limit,
             count = self.paging.pages.count;
 
-        // Get the last call to the API.
-        const recall = self.api.recall;
-
         // Configure the API's paging.
         self.api.paging = {offset: offset, limit: limit, count: count};
         
-        // Reapply any filters.
+        // Reapply any filters and sorting.
         self.api.filter = self.filters;
+        self.api.sort = self.sort;
 
-        // Load the previous page.
-        self.api[recall.method].apply(self.api, recall.arguments).then((response) => { 
+        // Reinvoke the last call to the API.
+        self.api.last().then((response) => { 
           
           // Trigger a paging event.
           event.trigger('paging', {response: response, api: self.api});
@@ -413,7 +419,7 @@ $.when(
       const self = this;
       
       // Handle paging events.
-      event.on('list paging filtering', (data) => { 
+      event.on('list paging filtering sort', (data) => { 
         
         // Reload the API.
         self.api = data.api;
@@ -423,6 +429,9 @@ $.when(
         
         // Save filter data.
         if( data.response.filter ) self.filters = data.response.filter;
+        
+        // Save sort data.
+        if( data.response.sort ) self.sort = data.response.sort;
       
       });
       
@@ -587,17 +596,14 @@ $.when(
         // Exit if no filters are applied.
         if( Object.isEmpty(filter) ) return;
         
-        // Get the last call to the API.
-        const recall = self.api.recall;
-        
         // Configre the API's filter.
         self.api.filter = filter;
         
         // Reset the paging to go back to the first page.
         self.api.paging = $.extend({}, paging, {limit: self.limit});
         
-        // Load the filtered data.
-        self.api[recall.method].apply(self.api, recall.arguments).then((response) => {
+        // Reinvoke the last call to the API.
+        self.api.last().then((response) => {
           
           // Trigger a filter event.
           event.trigger('filtering', {response: response, api: self.api});
@@ -649,7 +655,7 @@ $.when(
       const self = this;
       
       // Handle list updates.
-      event.on('list filtering', (data) => { 
+      event.on('list filtering paging sort', (data) => { 
         
         // Reload the API.
         self.api = data.api; 
@@ -676,6 +682,113 @@ $.when(
         },
         deep: true
       }
+    }
+    
+  });
+  
+  // Sort
+  const Sort = Vue.component('sort', {
+    
+    template: '#template-sort',
+    
+    props: ['on'],
+    
+    data() {
+      return {
+        api: null,
+        active: false,
+        ascending: true,
+        limit: paging.limit,
+        filters: {}
+      };
+    },
+    
+    methods: $.extend({
+      
+      sort() {
+        
+        // Capture context.
+        const self = this;
+        
+        // Toggle sort order if active.
+        if( self.active ) self.ascending = !self.ascending;
+        
+        // Set sorting.
+        self.api.sort = {
+          field: self.on, 
+          order: self.ascending ? 'ASC' : 'DESC'
+        };
+        
+        // Reset the paging to go back to the first page.
+        self.api.paging = $.extend({}, paging, {limit: self.limit});
+        
+        // Reapply any filters.
+        self.api.filters = self.filters;
+        
+        // Reinvoke the last call to the API.
+        self.api.last().then((response) => {
+          
+          // Trigger a filter event.
+          event.trigger('sort', {response: response, api: self.api});
+          
+        });
+        
+      }
+      
+    }, methods),
+    
+    filters: $.extend({}, filters),
+    
+    created() {
+      
+      // Capture context.
+      const self = this;
+      
+      // Use the parent's API by default.
+      self.api = self.$parent.api;
+      
+      // Handle events.
+      event.on('list paging filtering sort', (data) => { console.log(data);
+        
+        // Reload the API.
+        self.api = data.api;
+        
+        // Save paging data.
+        if( data.response.paging ) self.paging = data.response.paging;
+        
+        // Save filter data.
+        if( data.response.filter ) self.filters = data.response.filter;
+        
+        // Save sort data.
+        if( data.response.sort ) {
+          
+          if( data.response.sort.field == self.on ) {
+          
+            self.active = true;
+            self.ascending = data.response.sort.order == 'DESC' ? false : true;
+            
+          }
+          
+          // Otherwise, reset sorting.
+          else {
+            
+            self.active = false;
+            self.ascending = true;
+            
+          }
+          
+        }
+        
+        // Otherwise, no sorting occurred.
+        else {
+          
+          self.active = false;
+          self.ascending = true;
+          
+        }
+        
+      });
+      
     }
     
   });
@@ -737,7 +850,7 @@ $.when(
       event.trigger('force:browse');
       
       // Handle events.
-      event.on('list paging filtering', (data) => {
+      event.on('list paging filtering sort', (data) => {
         
         // Reset any errors.
         self.reset();

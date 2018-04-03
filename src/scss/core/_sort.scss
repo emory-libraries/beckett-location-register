@@ -1,0 +1,9 @@
+.sort {
+  margin-left: 10px;
+  background-image: none;
+  background-color: transparent;
+  border: none;
+  transition: $transition-all;
+  @include on-hover-focus(opacity, .25, .5);
+  &.active { opacity: .75; }
+}

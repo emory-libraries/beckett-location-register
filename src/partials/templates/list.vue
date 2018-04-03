@@ -47,10 +47,22 @@
            class="striped highlight">
       
       <thead>
-        <th class="date">Date</th>
-        <th class="topic">Topic</th>
-        <th class="location">Location</th>
-        <th class="source">Source</th>
+        <th class="date">
+          Date
+          <sort :on="'year.start'"></sort>
+        </th>
+        <th class="topic">
+          Topic
+          <sort :on="'topic'"></sort>
+        </th>
+        <th class="location">
+          Location
+          <sort :on="'location'"></sort>
+        </th>
+        <th class="source">
+          Source
+          <sort :on="'source'"></sort>
+        </th>
       </thead>
       
       <tbody>
