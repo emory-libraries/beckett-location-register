@@ -3,15 +3,41 @@
   .controls {
     @include margin-y( 10px );
     display: flex;
+    flex-wrap: wrap;
     
-    @include breakpoint( screen('large') ) {
-      height: $controls-height;
+    @include breakpoint( $controls-breakpoint ) { 
+      height: $controls-height; 
+      flex-wrap: nowrap;
     };
-    
     
     > * { align-self: stretch; }
     
-    > * + *:not(.paging) { margin-left: 10px; }
+    #{$all-buttons} { height: $controls-height; }
+    
+    @import 'density';
+    @import 'paging';
+    @import 'filtering';
+    
+  }
+  
+  > table {
+    // DEVELOPMENT ONLY
+    --date: 100%;
+    --topic: 100%;
+    --source: 100%;
+    --location: 100%;
+    
+    .date { width: var(--date); }
+    .topic { width: var(--topic); }
+    .source { width: var(--source); }
+    .location { width: var(--location); }
+
+    @include breakpoint( $controls-breakpoint ) {
+      --date: 200px;
+      --topic: 200px;
+      --source: 150px;
+      --location: calc(100% - var(--date) - var(--topic) - var(--source));
+    };
     
   }
   

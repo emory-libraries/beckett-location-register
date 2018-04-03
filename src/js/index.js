@@ -696,7 +696,8 @@ $.when(
           message: null,
           state: null
         },
-        filtering: false
+        filtering: false,
+        density: 'medium'
       };
     },
 
@@ -706,6 +707,20 @@ $.when(
         
         this.error.message = null;
         this.error.state = null;
+        
+      },
+      
+      open( letter ) {
+        
+        // Trigger a letter event.
+        event.trigger('letter', letter);
+        
+      },
+      
+      close() {
+        
+        // Trigger a letter event.
+        event.trigger('letter', false);
         
       }
       
@@ -752,12 +767,29 @@ $.when(
     props: [],
 
     data() {
-      return {};
+      return {
+        letter: false
+      };
     },
 
     methods: $.extend({}, methods),
 
-    filters: $.extend({}, filters)
+    filters: $.extend({}, filters),
+    
+    created() {
+      
+      // Capture context.
+      const self = this;
+      
+      // Toggle letters.
+      event.on('letter', (letter) => {
+        
+        // Save any data.
+        self.letter = letter;
+        
+      });
+      
+    }
 
   });
 
@@ -975,7 +1007,6 @@ $.when(
     {path: '/', component: Home},
     {path: '/about', component: About},
     {path: '/list', component: List},
-    {path: '/letter', component: Letter},
     {path: '/*', component: Error, props: {code: 404}}
   ];
   

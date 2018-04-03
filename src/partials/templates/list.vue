@@ -3,6 +3,36 @@
   <div class="list">
     
     <div class="controls">
+      
+      <div class="density">
+        
+        <button class="btn-density light"
+                :class="{active: density == 'light'}"
+                @click="density = 'light'">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </button>
+        <button class="btn-density medium"
+                :class="{active: density == 'medium'}"
+                @click="density = 'medium'">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </button>
+        
+        <button class="btn-density heavy"
+                :class="{active: density == 'heavy'}"
+                @click="density = 'heavy'">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </button>
+      
+      </div>
     
       <filtering :enabled="data.length > 0 || filtering"></filtering>
     
@@ -12,27 +42,36 @@
     
     <div class="alert" :class="error.state" v-if="error.message">{{error.message}}</div>
     
-    <div class="items" v-if="data.length > 0">
+    <table :density="density" 
+           v-if="data.length > 0"
+           class="striped highlight">
       
-      <div class="item" v-for="item in data">
+      <thead>
+        <th class="date">Date</th>
+        <th class="topic">Topic</th>
+        <th class="location">Location</th>
+        <th class="source">Source</th>
+      </thead>
       
-        <!-- DEVELOPING WITH TEST DATA -->
-        <div class="date">{{item.year.start}} &ndash; {{item.year.end}}</div>
-        <div class="topic">{{item.topic}}</div>
-        <div class="location">{{item.location.name}}</div>
-        <div class="source">{{item.source}}</div>
-        
-        <!-- PLACEHOLDER FOR REAL DATA 
-        <div class="date">{{item.date}}</div>
-        <div class="recipient">{{item.recipient}}</div>
-        <div class="repository">{{item.repository}}</div>
-        <div class="origin">{{item.origin}}</div>
-        <div class="destination">{{item.destination}}</div>
-        -->
+      <tbody>
+        <tr v-for="item in data" @click="open(item)">
+          <td class="date">{{item.year.start}} &ndash; {{item.year.end}}</td>
+          <td class="topic">{{item.topic}}</td>
+          <td class="location">{{item.location.name}}</td>
+          <td class="source">{{item.source}}</td>
+          <!-- PLACEHOLDER FOR REAL DATA 
+          <td class="date">{{item.date}}</td>
+          <td class="recipient">{{item.recipient}}</td>
+          <td class="repository">{{item.repository}}</td>
+          <td class="origin">{{item.origin}}</div>
+          <td class="destination">{{item.destination}}</td>
+          -->
+        </tr>
+      </tbody>
       
-      </div>
-      
-    </div>
+    </table>
+    
+    <letter></letter>
   
   </div>
 

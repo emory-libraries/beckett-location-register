@@ -1,0 +1,76 @@
+table {
+  $border: 1px solid color('grey');
+  
+  width: 100%;
+  border-collapse: collapse;
+  
+  thead, tbody, tfoot { display: block; width: 100%; }
+  
+  tr { 
+    display: flex; 
+    flex-wrap: wrap; 
+    width: 100%; 
+    align-items: center;
+  }
+
+  thead { 
+    text-align: left;
+    color: color('grey', 'dark');
+    font-size: 1.1em;
+    background-color: color('grey', 'light');
+    border: $border;
+    border-bottom: 0;
+  }
+
+  tbody {
+    max-height: 500px;
+    overflow: auto; 
+    border: $border;
+    tr {
+      transition: $transition-all;
+      border-bottom: $border;
+      &:last-child { border-bottom: 0; }
+    }
+    th { 
+      background-color: rgba(color('black'), .05); 
+      text-align: left;
+    }
+  }
+  
+  tfoot { 
+    border: $border;
+    border-top: 0;
+  }
+  
+  thead + tbody {
+    tr:first-child {
+      td, th { border-top: 0; }
+    }
+  }
+
+  td, th { 
+    padding: 10px; 
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    @include breakpoint( $controls-breakpoint ) { 
+      justify-content: flex-start; 
+      text-align: left;
+    }
+  }
+
+  &[density="light"] { td, th { @include padding-y(15px); } }
+  &[density="medium"] { td, th { @include padding-y(10px); } }
+  &[density="heavy"] { td, th { @include padding-y(5px); } }
+  
+  &.striped tbody tr {
+    @include even { background-color: color('white', 'off'); }; 
+  }
+  &.highlight tbody tr {
+    &:hover, &:focus { background-color: color('blue', 'powder'); }
+    cursor: pointer;
+  }
+
+}

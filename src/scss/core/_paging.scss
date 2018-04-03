@@ -4,7 +4,7 @@
   flex-wrap: wrap;
   width: 100%;
   
-  @include multi-breakpoint( screen('medium'), screen('large') ) { 
+  @include breakpoint( $controls-breakpoint ) { 
     flex-wrap: nowrap; 
     margin-left: auto;
     width: auto;
@@ -17,7 +17,7 @@
     @include margin-y( 10px);
     align-items: center;
     
-    @include multi-breakpoint( screen('medium'), screen('large') ) {
+    @include breakpoint( $controls-breakpoint ) {
       width: auto;
       @include margin-y( 0 );
     };
@@ -32,18 +32,20 @@
       flex-grow: 1;
       height: 100%;
     
-      @include multi-breakpoint( screen('medium'), screen('large') ) { 
+      @include breakpoint( $controls-breakpoint ) { 
         width: 2.5rem + rem($controls-height); 
         flex-grow: unset;
       };
       
     }
     
-    @include multi-breakpoint( screen('medium'), screen('large') ) { @include margin-x( 10px ); };
+    @include breakpoint( $controls-breakpoint ) { @include margin-x( 10px ); };
     
   }
   
   .toggles {
+    
+    $border: 1px solid color('grey');
     
     ul {
       list-style-type: none;
@@ -56,27 +58,18 @@
         height: $controls-height;
         flex-grow: 1;
         transition: $transition-all;
-        border-radius: 3px;
 
-        @include multi-breakpoint( screen('medium'), screen('large') ) {
+        @include breakpoint( $controls-breakpoint ) {
           width: $controls-height;
-          @include on-hover-focus(background-color, color('blue', 'powder'), mix(color('white'), color('blue'), 75%));
-          border: 1px solid mix(color('white'), color('blue'), 75%);
+          @include on-hover-focus(background-color, color('white'), color('white', 'off'));
         };
         
-        + li { margin-left: 10px; }
-        
-        &.active { 
-          color: color('blue');
-          font-weight: bold;
-          font-size: 1.5em;
-          
-          @include multi-breakpoint( screen('medium'), screen('large') ) {
-            background-color: mix(color('white'), color('blue'), 75%); 
-            font-weight: normal;
-            font-size: 1em;
-          };
-          
+        &.active {
+          $color: mix(color('blue'), color('white'), 75%);
+          background-color: $color;
+          color: color-contrast($color);
+          font-weight: normal;
+          font-size: 1em;
         }
 
       }
@@ -86,19 +79,32 @@
         @include absolute-center-contents;
       }
       
-      @include multi-breakpoint( screen('medium'), screen('large') ) { flex-grow: unset; };
+      @include breakpoint( $controls-breakpoint ) { flex-grow: unset; };
 
     }
 
     #{$all-buttons} { 
+      $normal: color('grey', 'light');
+      $hover: color('grey');
       padding: 0;
       @include size( $controls-height ); 
       font-size: 1.25rem;
       @include absolute-center-contents;
-
-      &:not(:first-of-type):not(:last-of-type) { @include margin-x( 10px ); }
-      
+      background-image: none;
+      border-radius: 0;
+      border: 0;
+      @include on-hover-focus(background-color, $normal, $hover);
+      @include on-hover-focus(color, color-contrast($normal), color-contrast($hover));
     }
+    
+    li, #{$all-buttons} {
+      @include border-y( $border );
+      border-left: $border;
+      transition: $transition-all;
+    }
+    
+    > :first-child { @include border-left-radius( 3px ); }
+    > :last-child { @include border-right-radius( 3px ); border-right: $border; }
     
   }
   

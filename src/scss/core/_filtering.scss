@@ -1,14 +1,14 @@
 .filtering {
+  margin-left: 10px;
   
   .modal {
-    
     $width: 300px;
-    
     width: $width;
     @include position($header-height 0 0, fixed);
     background-color: color('blue', 'powder');
-    transition: all .5s ease;
-    z-index: 8;
+    transition: all .5s $transition-timing;
+    border-left: 1px solid color('grey');
+    z-index: 7;
     padding: 10px 25px;
     overflow: auto;
     
@@ -92,16 +92,12 @@
       @include margin-y( 25px );
       @include absolute-center-contents;
       
-      > * { 
-        flex-grow: 1; 
-        
-        + * { margin-left: 10px; }
-        
-      }
+      #{$all-buttons} { flex-grow: 1; }
+      
+      > * + * { margin-left: 10px; }
       
     }
     
   }
-  
   
 }

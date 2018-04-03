@@ -1,0 +1,69 @@
+.density {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-grow: 1;
+  
+  @include breakpoint( $controls-breakpoint ) { 
+    flex-grow: unset;
+    margin-bottom: 0;
+  }
+
+  #{$all-buttons} { 
+
+    $border: 1px solid color('grey');
+
+    padding: 5px 10px;
+    flex-grow: 1;
+    border-radius: 0;
+    border: 0;
+    @include border-y( $border );
+    border-left: $border;
+    @include on-hover-focus(background-color, color('white'), color('white', 'off'));
+    transition: $transition-all;
+    
+    @include breakpoint( $controls-breakpoint ) { 
+      @include size( $controls-height ); 
+      flex-grow: unset; 
+    };
+
+    $base: 18px;
+    $spacing: 2px;
+    $count: 3, 4, 5;
+
+    $light: ($base - ($spacing * (nth($count, 1) - 1))) / nth($count, 1);
+    $medium: ($base - ($spacing * (nth($count, 2) - 1))) / nth($count, 2);
+    $heavy: ($base - ($spacing * (nth($count, 3) - 1))) / nth($count, 3);
+
+    &.light {
+      @include border-left-radius( 3px );
+      .bar { height: $light; }
+    }
+    &.medium {
+      .bar { height: $medium; }
+    }
+    &.heavy {
+      @include border-right-radius( 3px );
+      .bar { height: $heavy; }
+    }
+
+    .bar {
+      display: block;
+      width: $controls-height - (10px * 2);
+      background-color: color('black', 'off');
+      @include margin-x( auto );
+      + .bar { margin-top: $spacing; }
+    }
+
+    &.active {
+      $color: color('grey', 'light');
+      background-color: $color;
+      color: color-contrast($color);
+      .bar { background-color: color-contrast($color); }
+    }
+
+    @include last-child { border-right: $border; }
+
+  }
+
+}
