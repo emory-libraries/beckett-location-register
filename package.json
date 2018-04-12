@@ -24,8 +24,7 @@
     "grunt-copy-deps": "^1.2.3",
     "grunt-includes": "github:laurenhamel/grunt-includes",
     "grunt-postcss": "^0.9.0",
-    "grunt-replace": "^1.0.1",
-    "handlebars-helper-md": "^0.2.0"
+    "grunt-replace": "^1.0.1"
   },
   "repository": "github:emory-libraries/beckett-location-register",
   "bugs": "https://github.com/emory-libraries/beckett-location-register/issues",
