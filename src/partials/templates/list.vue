@@ -49,28 +49,28 @@
       <thead>
         <th class="date">
           Date
-          <sort :on="'year.start'"></sort>
+          <sort :on="['date.year', 'date.month', 'date.day']"></sort>
         </th>
-        <th class="topic">
-          Topic
-          <sort :on="'topic'"></sort>
+        <th class="recipient">
+          Recipient
+          <sort :on="'recipient'"></sort>
         </th>
-        <th class="location">
-          Location
-          <sort :on="'location'"></sort>
+        <th class="origin">
+          Origin
+          <sort :on="'location.origin.city'"></sort>
         </th>
-        <th class="source">
-          Source
-          <sort :on="'source'"></sort>
+        <th class="destination">
+          Destination
+          <sort :on="'location.destination.city'"></sort>
         </th>
       </thead>
       
       <tbody>
-        <tr v-for="item in data" @click="open(item)">
-          <td class="date">{{item.year.start}} &ndash; {{item.year.end}}</td>
-          <td class="topic">{{item.topic}}</td>
-          <td class="location">{{item.location.name}}</td>
-          <td class="source">{{item.source}}</td>
+        <tr v-for="letter in data" @click="read(letter)">
+          <td class="date">{{letter.date.month}}-{{letter.date.day}}-{{letter.date.year}}</td>
+          <td class="recipient">{{letter.recipient}}</td>
+          <td class="origin">{{letter.location.origin.city}}</td>
+          <td class="destination">{{letter.location.destination.city}}</td>
           <!-- PLACEHOLDER FOR REAL DATA 
           <td class="date">{{item.date}}</td>
           <td class="recipient">{{item.recipient}}</td>
@@ -82,8 +82,6 @@
       </tbody>
       
     </table>
-    
-    <letter></letter>
   
   </div>
 

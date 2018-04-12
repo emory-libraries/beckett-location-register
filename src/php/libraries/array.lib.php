@@ -23,30 +23,38 @@ function array_every( array $array, callable $condition ) {
 }
 
 function array_flatten( array $array, $delimiter = '.', $prefix = '' ) {
-  
+    
   // Initialize the result.
   $result = [];
 
   // Flatten the array.
-  foreach( $array as $key => $value ) {
-    
+  foreach( $array as $key => $value ) { 
+
     // Catch nested arrays.
-    if( is_array($value) ) { $result = array_merge($result, array_flatten($value, $delimiter, $key)); }
-    
+    if( is_array($value) ) {
+
+      // Handle arrays with prefixes.
+      if( $prefix != '' ) { $result = array_merge($result, array_flatten($value, $delimiter, $prefix.$delimiter.$key)); }
+      
+      // Handle arrays without prefixes.
+      else { $result = array_merge($result, array_flatten($value, $delimiter, $key)); }
+
+    }
+
     // Otherwise, handle values.
     else { 
-      
+
       // Handle values with a prefix.
       if( $prefix != '' ) { $result[$prefix.$delimiter.$key] = $value; }
-      
+
       // Handle values without a prefix.
       else { $result[$key] = $value; }
-      
+
     }
-    
+
   }
   
-  // Return the array.
+  // Return the flattened array.
   return $result;
   
 }

@@ -27,189 +27,277 @@
       
       <div class="fields">
         
-        <!-- DEVELOPMENT ONLY -->
-        <div class="group" v-if="canFilter('year')">
+        <div class="group" v-if="canFilter('date')">
           
-          <label>Year</label>
-        
-          <div class="field multi" v-if="canFilter('year.start')">
-            
-            <label>Start</label>
-            
-            <div class="multi-group">
-                 
-              <div class="multi-field" v-for="(year, index) in filters['year.start']">
-                
-                <input type="number" 
-                       v-model="year.min"
-                       :min="fields.year.start[0]"
-                       :max="fields.year.start[fields.year.start.length - 1]"
-                       @change="range('year.start').validate(year)"
-                       placeholder="Min"
-                       length="4">
-                &ndash;
-                <input type="number" 
-                       v-model="year.max"
-                       :min="year.min"
-                       :max="fields.year.start[fields.year.start.length - 1]"
-                       placeholder="Max"
-                       length="4">
-
-                <button class="button icon multi-remove" @click="range('year.start').remove(index)">
-                  <span class="icon fa-close"></span>
-                </button>
-                
-              </div>
-              
-              <button class="button icon multi-add" @click="range('year.start').add()">
-                <span class="icon fa-plus"></span>
-              </button>
-              
-            </div>
-              
-          </div>
-          
-          <div class="field multi" v-if="canFilter('year.end')">
-            
-            <label>End</label>
-            
-            <div class="multi-group">
-                 
-              <div class="multi-field" v-for="(year, index) in filters['year.end']">
-                
-                <input type="number" 
-                       v-model="year.min"
-                       :min="fields.year.end[0]"
-                       :max="fields.year.end[fields.year.end.length - 1]"
-                       @change="range('year.end').validate(year)"
-                       placeholder="Min"
-                       length="4">
-                &ndash;
-                <input type="number" 
-                       v-model="year.max"
-                       :min="year.min"
-                       :max="fields.year.end[fields.year.end.length - 1]"
-                       placeholder="Max"
-                       length="4">
-
-                <button class="button icon multi-remove" @click="range('year.end').remove(index)">
-                  <span class="icon fa-close"></span>
-                </button>
-                
-              </div>
-              
-              <button class="button icon icon-block-left multi-add" @click="range('year.end').add()">
-                <span class="icon fa-plus"></span>
-                Add
-              </button>
-              
-            </div>
-              
-          </div>
-          
-        </div>
-        
-        <div class="field" v-if="canFilter('topic')">
-          
-          <label>Topic</label>
-          
-          <div class="select">
-            <select v-model="filters.topic" multiple>
-              <option :value="null">Any</option>
-              <option :value="topic" v-for="topic in fields.topic">{{topic}}</option>
-            </select>
-          </div>
-          
-        </div>
-        
-        <div class="field" v-if="canFilter('location.name')">
-          
-          <label>Location</label>
-          
-          <div class="select">
-            <select v-model="filters['location.name']" multiple>
-              <option :value="null">Any</option>
-              <option :value="location" v-for="location in fields.location.name">
-                {{location}}
-              </option>
-            </select>
-          </div>
-          
-        </div>
-        
-        <div class="field" v-if="canFilter('source')">
-          
-          <label>Source</label>
-          
-          <div class="select">
-            <select v-model="filters.source" multiple>
-              <option :value="null">Any</option>
-              <option :value="source" v-for="source in fields.source">
-                {{source}}
-              </option>
-            </select>
-          </div>
-          
-        </div>
-      
-        <!-- PLACEHOLDER FOR REAL DATA 
-        <div class="field range" v-if="fields.date">
           <label>Date</label>
-          <input type="date" 
-                 v-model="filters.date.min" 
-                 :max="filters.date.max && !filters.date.min ? filters.date.max : false"
-                 @change="filters.date.max = filters.date.min > filters.date.max ? null : filters.date.max"> &ndash;
-          <input type="date" 
-                 v-model="filters.date.max" 
-                 :min="filters.date.min || false">
-        </div>
-      
-        <div class="field list" v-if="fields.recipient">
-          <label>Recipient</label>
-          <div class="select">
-            <select v-model="filters.recipient">
-              <option :value="null">Any</option>
-              <option :value="recipient" 
-                      v-for="recipient in fields.recipient">{{recipient}}</option>
-            </select>
+        
+          <div class="field multi" v-if="canFilter('date.month')">
+            
+            <label>Month</label>
+            
+            <div class="multi-group">
+                 
+              <div class="multi-field" v-for="(month, index) in filters['date.month']">
+                
+                <div class="select">
+                  <select v-model="month.min"
+                          @change="range('date.month').validate(month)">
+                    <option :value="undefined">Any</option>
+                    <option :value="value" v-for="value in fields.date.month">{{value}}</option>
+                  </select>
+                </div>
+                &ndash;
+                <div class="select">
+                  <select v-model="month.max">
+                    <option v-if="month.min === undefined" :value="undefined">Any</option>
+                    <option :value="value" v-for="value in subset(fields.date.month, month.min)">
+                      {{value}}
+                    </option>
+                  </select>
+                </div>
+
+                <button class="button icon multi-remove" @click="range('date.month').remove(index)">
+                  <span class="icon fa-close"></span>
+                </button>
+                
+              </div>
+              
+              <button class="button icon multi-add" @click="range('date.month').add()">
+                <span class="icon fa-plus"></span>
+              </button>
+              
+            </div>
+              
           </div>
+          
+          <div class="field multi" v-if="canFilter('date.day')">
+            
+            <label>Day</label>
+            
+            <div class="multi-group">
+                 
+              <div class="multi-field" v-for="(day, index) in filters['date.day']">
+                
+                <div class="select">
+                  <select v-model="day.min"
+                          @change="range('date.day').validate(day)">
+                    <option :value="undefined">Any</option>
+                    <option :value="value" v-for="value in fields.date.day">{{value}}</option>
+                  </select>
+                </div>
+                &ndash;
+                <div class="select">
+                  <select v-model="day.max">
+                    <option v-if="day.min === undefined" :value="undefined">Any</option>
+                    <option :value="value" v-for="value in subset(fields.date.day, day.min)">
+                      {{value}}
+                    </option>
+                  </select>
+                </div>
+
+                <button class="button icon multi-remove" @click="range('date.day').remove(index)">
+                  <span class="icon fa-close"></span>
+                </button>
+                
+              </div>
+              
+              <button class="button icon multi-add" @click="range('date.day').add()">
+                <span class="icon fa-plus"></span>
+              </button>
+              
+            </div>
+              
+          </div>
+          
+          <div class="field multi" v-if="canFilter('date.year')">
+            
+            <label>Year</label>
+            
+            <div class="multi-group">
+                 
+              <div class="multi-field" v-for="(year, index) in filters['date.year']">
+                
+                <div class="select">
+                  <select v-model="year.min"
+                          @change="range('date.year').validate(year)">
+                    <option :value="undefined">Any</option>
+                    <option :value="value" v-for="value in fields.date.year">{{value}}</option>
+                  </select>
+                </div>
+                &ndash;
+                <div class="select">
+                  <select v-model="year.max">
+                    <option v-if="year.min === undefined" :value="undefined">Any</option>
+                    <option :value="value" v-for="value in subset(fields.date.year, year.min)">
+                      {{value}}
+                    </option>
+                  </select>
+                </div>
+
+                <button class="button icon multi-remove" @click="range('date.year').remove(index)">
+                  <span class="icon fa-close"></span>
+                </button>
+                
+              </div>
+              
+              <button class="button icon multi-add" @click="range('date.year').add()">
+                <span class="icon fa-plus"></span>
+              </button>
+              
+            </div>
+              
+          </div>
+          
         </div>
         
-        <div class="field list" v-if="fields.repository">
-          <label>Repository</label>
-          <div class="select">
-            <select v-model="filters.repository">
-              <option :value="null">Any</option>
-              <option :value="repository" 
-                      v-for="repository in fields.repository">{{repository}}</option>
-            </select>
-          </div>
-        </div>
-        
-        <div class="field list" v-if="fields.origin">
+        <div class="group" v-if="canFilter('location.origin')">
+          
           <label>Origin</label>
-          <div class="select">
-            <select v-model="filters.origin">
-              <option :value="null">Any</option>
-              <option :value="origin" 
-                      v-for="origin in fields.origin">{{origin}}</option>
-            </select>
+        
+          <div class="field" v-if="canFilter('location.origin.address')">
+
+            <label>Address</label>
+
+            <div class="select">
+              <select v-model="filters['location.origin.address']" multiple>
+                <option :value="undefined">Any</option>
+                <option :value="value" v-for="value in fields.location.origin.address">
+                  {{value === null ? '(Blank)' : value}}
+                </option>
+              </select>
+            </div>
+
           </div>
+          
+          <div class="field" v-if="canFilter('location.origin.city')">
+
+            <label>City</label>
+
+            <div class="select">
+              <select v-model="filters['location.origin.city']" multiple>
+                <option :value="undefined">Any</option>
+                <option :value="value" v-for="value in fields.location.origin.city">
+                  {{value === null ? '(Blank)' : value}}
+                </option>
+              </select>
+            </div>
+
+          </div>
+          
+          <div class="field" v-if="canFilter('location.origin.country')">
+
+            <label>Country</label>
+
+            <div class="select">
+              <select v-model="filters['location.origin.country']" multiple>
+                <option :value="undefined">Any</option>
+                <option :value="value" v-for="value in fields.location.origin.country">
+                  {{value === null ? '(Blank)' : value}}
+                </option>
+              </select>
+            </div>
+
+          </div>
+          
         </div>
         
-        <div class="field list" v-if="fields.destination">
+        <div class="group" v-if="canFilter('location.destination')">
+          
           <label>Destination</label>
+        
+          <div class="field" v-if="canFilter('location.destination.address')">
+
+            <label>Address</label>
+
+            <div class="select">
+              <select v-model="filters['location.destination.address']" multiple>
+                <option :value="undefined">Any</option>
+                <option :value="value" v-for="value in fields.location.destination.address">
+                  {{value === null ? '(Blank)' : value}}
+                </option>
+              </select>
+            </div>
+
+          </div>
+          
+          <div class="field" v-if="canFilter('location.destination.city')">
+
+            <label>City</label>
+
+            <div class="select">
+              <select v-model="filters['location.destination.city']" multiple>
+                <option :value="undefined">Any</option>
+                <option :value="value" v-for="value in fields.location.destination.city">
+                  {{value === null ? '(Blank)' : value}}
+                </option>
+              </select>
+            </div>
+
+          </div>
+          
+          <div class="field" v-if="canFilter('location.destination.country')">
+
+            <label>Country</label>
+
+            <div class="select">
+              <select v-model="filters['location.destination.country']" multiple>
+                <option :value="undefined">Any</option>
+                <option :value="value" v-for="value in fields.location.destination.country">
+                  {{value === null ? '(Blank)' : value}}
+                </option>
+              </select>
+            </div>
+
+          </div>
+          
+        </div>
+        
+        <div class="field" v-if="canFilter('recipient')">
+
+          <label>Recipient</label>
+
           <div class="select">
-            <select v-model="filters.destination">
-              <option :value="null">Any</option>
-              <option :value="destination" 
-                      v-for="destination in fields.destination">{{destination}}</option>
+            <select v-model="filters['recipient']" multiple>
+              <option :value="undefined">Any</option>
+              <option :value="value" v-for="value in fields.recipient">
+                {{value === null ? '(Blank)' : value}}
+              </option>
             </select>
           </div>
+
         </div>
-        -->
-             
-      </div>
+        
+        <div class="field" v-if="canFilter('repository')">
+
+          <label>Repository</label>
+
+          <div class="select">
+            <select v-model="filters['repository']" multiple>
+              <option :value="undefined">Any</option>
+              <option :value="value" v-for="value in fields.repository">
+                {{value === null ? '(Blank)' : value}}
+              </option>
+            </select>
+          </div>
+
+        </div>
+        
+        <div class="field" v-if="canFilter('language')">
+
+          <label>Language</label>
+
+          <div class="select">
+            <select v-model="filters['language']" multiple>
+              <option :value="undefined">Any</option>
+              <option :value="value" v-for="value in fields.language">
+                {{value === null ? '(Blank)' : value}}
+              </option>
+            </select>
+          </div>
+
+        </div>
+  
+      </div> 
       
       <div class="buttons">
         <button class="button icon icon-block-left btn-apply primary" 

@@ -15,7 +15,7 @@ function csv_to_array( $path, $has_headers = true ) {
     $index = 1;
     
     // Get each line one at a time.
-    while( ($data = fgetcsv($handle)) ) { 
+    while( ($data = fgetcsv($handle)) ) { var_dump($data);
       
       if( $has_headers ) { 
         

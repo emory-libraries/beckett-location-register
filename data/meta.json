@@ -1,133 +1,183 @@
 {
+  "models": {
+    "default": {
+      "id": "ID",
+      "date": {
+        "day": "Day",
+        "month": "Month",
+        "year": "Year"
+      },
+      "location": {
+        "origin": {
+          "address": "Reg. Place written",
+          "city": "Reg. Place written city",
+          "country": "Reg. Place written country"
+        },
+        "destination": {
+          "address": "Reg place sent",
+          "city": "Reg. PlaceSent City",
+          "country": "Reg. PlaceSent Country"
+        }
+      },
+      "recipient": "Reg. recipient",
+      "repository": "Repository",
+      "collection": "Collection",
+      "language": "PrimaryLang",
+      "public": "Public? | public",
+      "autographed": "Autograph or Typed",
+      "description": "PhysDes",
+      "signed": "initialed or signed | S",
+      "initialed": "initialed or signed | I",
+      "leaves": "leaves",
+      "sides": "sides",
+      "envelope": "Envelope | E | 2 E"
+    },
+    "summary": {
+      "id": "ID",
+      "date": {
+        "day": "Day",
+        "month": "Month",
+        "year": "Year"
+      },
+      "location": {
+        "origin": {
+          "address": "Reg. Place written",
+          "city": "Reg. Place written city",
+          "country": "Reg. Place written country"
+        },
+        "destination": {
+          "address": "Reg place sent",
+          "city": "Reg. PlaceSent City",
+          "country": "Reg. PlaceSent Country"
+        }
+      },
+      "recipient": "Reg. recipient",
+      "repository": "Repository",
+      "language": "PrimaryLang"
+    }
+  },
   "endpoints": {
     "GET": [
       {
         "endpoint": "index",
-        "aggregate": true,
         "model": {
-          "year": {
-            "start": "YearStart",
-            "end": "YearEnd"
+          "date": {
+            "day": "Day",
+            "month": "Month",
+            "year": "Year"
           },
-          "topic": "Topic",
           "location": {
-            "name": "LocationDesc",
-            "abbr": "LocationAbbr"
+            "origin": {
+              "address": "Reg. Place written",
+              "city": "Reg. Place written city",
+              "country": "Reg. Place written country"
+            },
+            "destination": {
+              "address": "Reg place sent",
+              "city": "Reg. PlaceSent City",
+              "country": "Reg. PlaceSent Country"
+            }
           },
-          "source": "DataSource",
-          "question": "Question",
-          "response": "Response"
-        }
+          "recipient": "Reg. recipient",
+          "repository": "Repository",
+          "language": "PrimaryLang"
+        },
+        "aggregate": true
       },
       {
         "endpoint": "browse",
-        "model": {
-          "id": "ID",
-          "year": {
-            "start": "YearStart",
-            "end": "YearEnd"
-          },
-          "topic": "Topic",
-          "location": {
-            "name": "LocationDesc",
-            "abbr": "LocationAbbr"
-          },
-          "source": "DataSource",
-          "question": "Question",
-          "response": "Response"
-        }
+        "model": "summary"
       },
       {
         "endpoint": "search/:query",
-        "model": {
-          "id": "ID",
-          "year": {
-            "start": "YearStart",
-            "end": "YearEnd"
-          },
-          "topic": "Topic",
-          "location": {
-            "name": "LocationDesc",
-            "abbr": "LocationAbbr"
-          },
-          "source": "DataSource",
-          "question": "Question",
-          "response": "Response"
-        },
+        "model": "default",
         "match": {
           ":query": "any"
-        }
+        },
+        "strict": false
       },
       {
         "endpoint": "search/location/:query",
-        "model": {
-          "id": "ID",
-          "year": {
-            "start": "YearStart",
-            "end": "YearEnd"
-          },
-          "topic": "Topic",
-          "location": {
-            "name": "LocationDesc",
-            "abbr": "LocationAbbr"
-          },
-          "source": "DataSource",
-          "question": "Question",
-          "response": "Response"
-        },
+        "model": "default",
         "match": {
-          ":query": "location.name"
-        }
-      },
-      {
-        "endpoint": "year",
-        "model": {
-          "id": "ID",
-          "start": "YearStart",
-          "end": "YearEnd"
-        }
-      },
-      {
-        "endpoint": "year/:id",
-        "model": {
-          "id": "ID",
-          "start": "YearStart",
-          "end": "YearEnd"
+          ":query": [
+            "location.origin.address",
+            "location.origin.city",
+            "location.origin.country",
+            "location.destination.address",
+            "location.destination.city",
+            "location.destination.country"
+          ]
         },
+        "strict": false
+      },
+      {
+        "endpoint": "search/location/origin/:query",
+        "model": "default",
         "match": {
-          ":id": "id"
-        }
-      },
-      {
-        "endpoint": "year/start",
-        "model": {
-          "id": "ID",
-          "start": "YearStart"
-        }
-      },
-      {
-        "endpoint": "year/start/:id",
-        "model": {
-          "id": "ID",
-          "start": "YearStart"
+          ":query": [
+            "location.origin.address",
+            "location.origin.city",
+            "location.origin.country"
+          ]
         },
+        "strict": false
+      },
+      {
+        "endpoint": "search/location/destination/:query",
+        "model": "default",
         "match": {
-          ":id": "id"
-        }
-      },
-      {
-        "endpoint": "year/end",
-        "model": {
-          "id": "ID",
-          "end": "YearEnd"
-        }
-      },
-      {
-        "endpoint": "year/end/:id",
-        "model": {
-          "id": "ID",
-          "end": "YearEnd"
+          ":query": [
+            "location.destination.address",
+            "location.destination.city",
+            "location.destination.country"
+          ]
         },
+        "strict": false
+      },
+      {
+        "endpoint": "search/recipient/:query",
+        "model": "default",
+        "match": {
+          ":query": "recipient"
+        },
+        "strict": false
+      },
+      {
+        "endpoint": "search/repository/:query",
+        "model": "default",
+        "match": {
+          ":query": "repository"
+        },
+        "strict": false
+      },
+      {
+        "endpoint": "search/language/:query",
+        "model": "default",
+        "match": {
+          ":query": "language"
+        },
+        "strict": false
+      },
+      {
+        "endpoint": "search/description/:query",
+        "model": "default",
+        "match": {
+          ":query": "description"
+        },
+        "strict": false
+      },
+      {
+        "endpoint": "search/date/:query",
+        "model": "default",
+        "match": {
+          ":query": "{date.month}-{date.day}-{date.year}"
+        },
+        "strict": false
+      },
+      {
+        "endpoint": "letter/:id",
+        "model": "default",
         "match": {
           ":id": "id"
         }

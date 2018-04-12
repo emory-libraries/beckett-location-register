@@ -1,32 +1,9 @@
 .letter {
   
-  $width: 400px;
-  
-  @include position( $header-height 0 0, fixed );
-  z-index: 8;
-  width: 100%;
-  max-width: $width;
-  border-left: 1px solid color('grey');
-  transition: all .5s $transition-timing;
-  background-color: white;
-  padding: 10px 25px;
-  
-  .btn-close {
-    appearance: none;
-    background-color: transparent;
-    border: none;
-    @include absolute-center-contents;
-    @include position( 10px 10px, absolute );
-    pading: 0;
-    @include size( 30px );
-    @include on-hover-focus(opacity, .25, .5);
-  }
-  
-  &.open { right: 0; }
-  &.closed { right: -$width; }
-  
   > table {
-    // DEVELOPMENT ONLY
+    
+    tbody { max-height: 800px; }
+    
     --th: 100%;
     --td: 100%;
     

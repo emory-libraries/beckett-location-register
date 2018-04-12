@@ -14,12 +14,19 @@ trait GET {
     $aggregate = $endpoint['aggregate'];
     $order = $endpoint['order'];
     $dynamic = isset($meta['regex']);
+    $loose = $endpoint['strict'] === false ? true : false;
+    
+    // Look for a set of named data models.
+    $models = $this->config->META['models'];
     
     // Initalize the data set.
     $data = [];
     
     // Initialize data lookup.
     $lookup = function( array $model, $source ) use (&$lookup) {
+      
+      // Set the delimiter.
+      $delimiter = ";";
       
       // Initialize a result.
       $result = [];
@@ -30,8 +37,55 @@ trait GET {
       // Loop through all items in the model.
       foreach( $flattened as $target => $src ) {
         
-        // Retrieve the data from the source.
-        $result[$target] = $source[$src];
+        // Remove any whitespace from the source data.
+        $src = trim($src);
+
+        // Extract any boolean filters.
+        if( preg_match_all('/\| *(.+?(?=\||$))/', $src, $filters) ) {
+  
+          // Remove the matched data.
+          array_shift($filters);
+          
+          // Clean up matched data.
+          $filters = array_map('trim', $filters[0]);
+          
+          // Remove the filter data from the source string.
+          $src = trim(preg_replace('/\| *(.+?(?=\||$))/', '', $src));
+          
+        }
+        
+        // Otherwise, clear filter data.
+        else { $filters = false; }
+
+        // Handle data interpolation.
+        if( preg_match_all('/\{(.+?)\}/', $src, $bindings) ) {
+          
+          // Extract the raw data.
+          array_shift($bindings);
+          
+          // Interpolate each binding.
+          foreach( $bindings[0] as $binding ) {
+            
+            // Bind the source data.
+            $src = str_replace("{{$binding}}", $source[$binding], $src);
+            
+          }
+          
+          // Save the interpolated data.
+          $result[$target] = $src;
+          
+        }
+        
+        // Otherwise, handle simple data.
+        else { $result[$target] = $source[$src]; }
+
+        // Apply any boolean filters.
+        if( $filters ) {
+
+          // Decipher the boolean result.
+          $result[$target] = array_search($result[$target], $filters) !== false ? true : false;
+          
+        }
         
       }
 
@@ -42,6 +96,15 @@ trait GET {
       return $result;
       
     };
+    
+    // Use named models when applicable.
+    if( is_string($model) ) {
+      
+      if( array_key_exists($model, $models) ) $model = $models[$model];
+      
+      else $model = false;
+      
+    }
     
     // Build the data set according to the data model.
     if( $model ) {
@@ -119,10 +182,13 @@ trait GET {
 
             // Get the match binding.
             $match = $endpoint['match'];
-            $filter = $given[$index];
+            $filter = urldecode($given[$index]);
 
             // Filter the result set.
-            $data = array_filter($data, function($item) use ($match, $pattern, $filter) { 
+            $this->data = array_values(array_filter($this->data, function($item) use ($match, $pattern, $filter) { 
+              
+              // Initialize a result.
+              $result = false;
 
               // Flatten the item for easier comparison.
               $flattened = array_flatten( $item );
@@ -133,26 +199,160 @@ trait GET {
               // Handle matches allowed on any field.
               if( $field == 'any' ) {
 
-                // Initialize the result.
-                $result = false;
-
                 // Loop through all fields within the item.
                 foreach( $flattened as $key => $value ) {
-
-                  // Look for matches.
-                  if( $value == $filter ) $result = true;
+                  
+                  // Permit loose matching.
+                  if( $loose ) {
+                    
+                    // Look for near matches.
+                    if( strpos($value, $filter) !== false ) $result = true;
+                    
+                  }
+                  
+                  // Otherwise, permit only strict matching.
+                  else {
+                    
+                    // Look for exact matches.
+                    if( $value == $filter ) $result = true;
+                    
+                  }
+                  
 
                 }
 
-                // Return the result.
-                return $result;
+              }
+              
+              // Otherwise, handle matches allowed on multiple fields.
+              else if( is_array($field) ) {
+                
+                // Loop through the permitted fields.
+                foreach( $field as $key ) {
+                  
+                  // Handle any data interpolations.
+                  if( preg_match_all('/\{(.+?)\}/', $key, $bindings) ) {
 
+                    // Extract the raw data.
+                    array_shift($bindings);
+
+                    // Interpolate each binding.
+                    foreach( $bindings[0] as $binding ) {
+
+                      // Bind the data.
+                      if( array_key_exists($binding, $flattened) ) { $key = str_replace("{{$binding}}", $flattened[$binding], $key); }
+                      
+                      // Otherwise, remove invalid bindings.
+                      else { $key = str_replace("{{$binding}}", '', $key); }
+
+                    }
+                    
+                    // Permit loose matching.
+                    if( $loose ) {
+
+                      // Loosly compare interpolated data.
+                      if( strpos($key, $filter) !== false ) $result = true;
+
+                    }
+
+                    // Otherwise, strictly compare of interpolated data.
+                    else {
+
+                      // Look for exact matches.
+                      if( $key == $filter ) $result = true;
+
+                    }
+
+                  }
+                  
+                  // Handle simple data comparisons.
+                  else {
+                    
+                    // Permit loose matching.
+                    if( $loose ) {
+
+                      // Look for near matches.
+                      if( array_key_exists($key, $flattened) and strpos($flattened[$key], $filter) ) $result = true;
+
+                    }
+
+                    // Otherwise, permit only strict matching.
+                    else {
+
+                      // Look for exact matches.
+                      if( array_key_exists($key, $flattened) and $flattened[$key] == $filter ) $result = true;
+
+                    }
+                    
+                  }
+                  
+                }
+                
               }
 
               // Otherwise, handle field-based matches.
-              else { return $flattened[$field] == $filter; }
+              else { 
+                
+                // Handle any data interpolations.
+                if( preg_match_all('/\{(.+?)\}/', $field, $bindings) ) {
 
-            });
+                  // Extract the raw data.
+                  array_shift($bindings);
+
+                  // Interpolate each binding.
+                  foreach( $bindings[0] as $binding ) {
+
+                    // Bind the data.
+                    if( array_key_exists($binding, $flattened) ) { $field = str_replace("{{$binding}}", $flattened[$binding], $field); }
+
+                    // Otherwise, remove invalid bindings.
+                    else { $field = str_replace("{{$binding}}", '', $field); }
+
+                  }
+                  
+                  // Permit loose matching.
+                  if( $loose ) {
+                    
+                    // Loosly compare the interpolated data.
+                    if( strpos($field, $filter) !== false ) $result = true;
+                    
+                  }
+                  
+                  // Otherwise, strictly compare the interpolated data.
+                  else {
+                    
+                    // Look for exact matches.
+                    if( $field == $filter ) $result = true;
+                    
+                  }
+
+                }
+                
+                else {
+                  
+                  // Permit loose matching.
+                  if( $loose ) {
+                    
+                    // Look for near matches.
+                    $result = strpos($flattened[$field], $filter) !== false;
+                    
+                  }
+                  
+                  // Otherwise, permit only strict matching.
+                  else {
+                    
+                    // Look for exact matches.
+                    $result = $flattened[$field] == $filter;
+                    
+                  }
+                  
+                }
+              
+              }
+              
+              // Return the result.
+              return $result;
+
+            }));
 
           }
 
@@ -363,29 +563,42 @@ trait FEATURES {
     // Continue if no errors previously occurred.
     if( $this->error ) return;
     
-    // Determine the sort order.
-    $order = isset($settings['order']) ?  
-             preg_match('/desc/', strtolower($settings['order'])) ? SORT_DESC : SORT_ASC : 
-             $this->defaults['sort']['order'];
+    // Get the sort fields.
+    $fields = array_keys($settings);
     
-    // Initialize the sort field.
-    $field = isset($settings['field']) ? $settings['field'] : array_keys($this->data[0])[0];
+    // Handle sorting on each field in the order given.
+    if( $fields ) {
       
-    // Extract field data.
-    $comps = array_map(function($item) use ($field) {
-
-      return $item[$field];
-
-    }, $this->data);
-
-    // Sort the data.
-    array_multisort($comps, $order, $this->data);
+      // Initialize parameter array for sorting.
+      $params = [];
+      
+      foreach( $settings as $field => $order ) {
+        
+        // Determine sort order.
+        $order = isset($order) ? preg_match('/desc/', strtolower($order)) ? SORT_DESC : SORT_ASC : $this->defaults['sort']['order'];
+        
+        // Extract the field data.
+        $comps = array_map(function($item) use($field) {
+          
+          return array_flatten($item)[$field];
+          
+        }, $this->data);
+        
+        // Save params.
+        $params = array_merge($params, [$comps, $order]);
+        
+      }
+      
+      // Capture data to be sorted.
+      $params[] = &$this->data;
     
-    // Save sort data.
-    $this->features['sort'] = [
-      'order' => $order == SORT_DESC ? 'DESC' : 'ASC',
-      'field' => $field
-    ];
+      // Sort the data on the fields.
+      call_user_func_array('array_multisort', $params);
+      
+      // Save sort data.
+      $this->features['sort'] = $settings;
+      
+    }
     
   }
   
@@ -543,11 +756,62 @@ class API {
     // Send initial headers.
     foreach( $this->headers as $key => $value ) { header("$key: $value"); }
     
-    // Load CSV data.
-    $this->csv = csv_to_array("{$config->ROOT}/{$config->ROUTER['csv']}"); 
+    // Load data from file.
+    $this->csv = $this->__load();
     
     // Handle the request.
     $this->__request();
+    
+  }
+  
+  // Load the CSV/XLSX data from file.
+  private function __load( $has_headers = true ) {
+    
+    // Get the path to the file.
+    $path = "{$this->config->ROOT}/{$this->config->ROUTER['csv']}";
+    
+    // Determine the file type.
+    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    
+    // Prepare to capture the data.
+    $data = [];
+    
+    // Handle CSV files.
+    if( array_search($ext, ['csv']) !== false ) { $data = csv_to_array($path, $has_headers); }
+    
+    // Otherwise, handle XLSX files.
+    else if( array_search($ext, ['xlsx', 'xlsm', 'xls', 'xlm']) !== false ) {
+      
+      // Read the XLSX file.
+      $xlsx = new XLSXReader($path); 
+      
+      // Extract the first sheet name.
+      $sheet = $xlsx->getSheetNameByNumber(1); 
+      
+      // Get the sheet data as an array.
+      $array = $xlsx->getSheetData($sheet);
+      
+      // Handle headers.
+      if( $has_headers ) {
+        
+        $headers = array_shift($array);
+        
+        // Map headers to the array data.
+        $array = array_map(function($row) use ($headers) {
+          
+          return array_combine($headers, $row);
+          
+        }, $array);
+        
+      }
+      
+      // Save the array without index data.
+      $data = array_values($array);
+      
+    }
+      
+    // Return the data.
+    return $data;
     
   }
   

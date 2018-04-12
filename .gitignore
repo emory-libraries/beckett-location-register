@@ -5,3 +5,4 @@ secret.json
 .DS_Store
 dev/
 dist/
+~$*.*

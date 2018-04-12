@@ -25,22 +25,23 @@
     
     @import 'sort';
     
-    // DEVELOPMENT ONLY
+    tbody{ max-height: 500px; }
+    
     --date: 100%;
-    --topic: 100%;
-    --source: 100%;
-    --location: 100%;
+    --recipient: 100%;
+    --origin: 100%;
+    --destination: 100%;
     
     .date { width: var(--date); }
-    .topic { width: var(--topic); }
-    .source { width: var(--source); }
-    .location { width: var(--location); }
+    .recipient { width: var(--recipient); }
+    .origin { width: var(--origin); }
+    .destination { width: var(--destination); }
 
     @include breakpoint( $controls-breakpoint ) {
-      --date: 200px;
-      --topic: 200px;
-      --source: 150px;
-      --location: calc(100% - var(--date) - var(--topic) - var(--source));
+      --date: 150px;
+      --recipient: calc(100% - var(--date) - var(--origin) - var(--destination));
+      --origin: 150px;
+      --destination: 150px;
     };
     
   }
