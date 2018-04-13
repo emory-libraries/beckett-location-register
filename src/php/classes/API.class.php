@@ -34,7 +34,7 @@ trait GET {
       $flattened = array_flatten( $model );
       
       // Loop through all items in the model.
-      foreach( $flattened as $target => $src ) {
+      foreach( $flattened as $target => $src ) {  
         
         // Remove any whitespace from the source data.
         $src = trim($src);
@@ -56,7 +56,7 @@ trait GET {
         // Otherwise, clear filter data.
         else { $filters = false; }
 
-        // Handle data interpolation.
+        // Handle data interpolations.
         if( preg_match_all('/\{(.+?)\}/', $src, $bindings) ) {
           
           // Extract the raw data.
@@ -756,7 +756,11 @@ class API {
     $data = [];
     
     // Handle CSV files.
-    if( array_search($ext, ['csv']) !== false ) { $data = csv_to_array($path, $has_headers); }
+    if( array_search($ext, ['csv']) !== false ) { 
+      
+      $data = csv_to_array($path, $has_headers);
+  
+    }
     
     // Otherwise, handle XLSX files.
     else if( array_search($ext, ['xlsx', 'xlsm', 'xls', 'xlm']) !== false ) {
@@ -773,6 +777,7 @@ class API {
       // Handle headers.
       if( $has_headers ) {
         
+        // Extract headers.
         $headers = array_shift($array);
         
         // Map headers to the array data.
@@ -788,7 +793,7 @@ class API {
       $data = array_values($array);
       
     }
-      
+ 
     // Return the data.
     return $data;
     
