@@ -1487,6 +1487,19 @@ $.when(
         
       });
       
+      // Handle route changes.
+      event.on('route', (route) => {
+        
+        // Reset the search form if not showing list or letter.
+        if( ['List', 'Letter'].indexOf(route.to.name) < 0 ) {
+          
+          // Clear the form.
+          self.clear();
+          
+        }
+        
+      });
+      
     }
 
   });
