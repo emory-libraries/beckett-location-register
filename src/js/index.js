@@ -182,7 +182,7 @@ $.when(
         // Save the endpoint and method.
         self.method = method;
         self.endpoint = endpoint;
- console.log(method, endpoint);       
+      
         // Start loading.
         event.trigger('loading', true);
         
