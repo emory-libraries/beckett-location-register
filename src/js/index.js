@@ -182,7 +182,7 @@ $.when(
         // Save the endpoint and method.
         self.method = method;
         self.endpoint = endpoint;
-        
+ console.log(method, endpoint);       
         // Start loading.
         event.trigger('loading', true);
         
@@ -1346,8 +1346,11 @@ $.when(
         // Enable paging.
         api.paging = paging;
         
+        // Convert fields to appropriate form.
+        const field = isset(this.field) ? this.field.replace('.', '/') : null;
+        
         // Execute a request on the API.
-        api.search( this.query, this.field ).always((response) => {
+        api.search( this.query, field ).always((response) => {
           
           // Trigger an event with the results.
           event.trigger('search', {response: response, api: api});

@@ -10,8 +10,8 @@
         <option :value="'recipient'">Recipient</option>
         <option :value="'repository'">Repository</option>
         <option :value="'language'">Language</option>
-        <option :value="'origin'">Origin</option>
-        <option :value="'destination'">Destination</option>
+        <option :value="'location.origin'">Origin</option>
+        <option :value="'location.destination'">Destination</option>
       </select>
     </div>
     

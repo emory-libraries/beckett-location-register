@@ -14,7 +14,6 @@ trait GET {
     $aggregate = $endpoint['aggregate'];
     $order = $endpoint['order'];
     $dynamic = isset($meta['regex']);
-    $loose = $endpoint['strict'] === false ? true : false;
     
     // Look for a set of named data models.
     $models = $this->config->META['models'];
@@ -169,6 +168,46 @@ trait GET {
       
       // Filter based on bindings.
       if( $dynamic ) {
+        
+        // Initialize a comparison method.
+        $compare = function( $a, $b, &$flag ) use ( $endpoint ) {
+          
+          // Get and/or set endpoint modes.
+          $strict = $endpoint['strict'] === false ? false : true;
+          $insensitive = $endpoint['insensitive'] === false ? false : true;
+          $literal = $endpoint['literal'] === true ? true : false;
+          
+          // Make non-literal if applicable.
+          if( !$literal ) {
+            
+            $a = str_romanize($a);
+            $b = str_romanize($b);
+            
+          }
+          
+          // Make case insensitive if applicable. 
+          if( $insensitive ) {
+            
+            $a = strtolower($a);
+            $b = strtolower($b);
+            
+          }
+  
+          // Handle strict comparisons.
+          if( $strict ) {
+            
+            if( $b == $a ) $flag = true;
+            
+          }
+          
+          // Otherwise, handle loose comparisons.
+          else {
+            
+            if( strpos($a, $b) !== false ) $flag = true;
+            
+          }
+          
+        };
 
         // Interpret endpoints.
         $target = explode('/', $endpoint['endpoint']);
@@ -185,7 +224,7 @@ trait GET {
             $filter = urldecode($given[$index]);
 
             // Filter the result set.
-            $this->data = array_values(array_filter($this->data, function($item) use ($match, $pattern, $filter) { 
+            $this->data = array_values(array_filter($this->data, function($item) use ($match, $pattern, $filter, $compare) { 
               
               // Initialize a result.
               $result = false;
@@ -202,22 +241,8 @@ trait GET {
                 // Loop through all fields within the item.
                 foreach( $flattened as $key => $value ) {
                   
-                  // Permit loose matching.
-                  if( $loose ) {
-                    
-                    // Look for near matches.
-                    if( strpos($value, $filter) !== false ) $result = true;
-                    
-                  }
-                  
-                  // Otherwise, permit only strict matching.
-                  else {
-                    
-                    // Look for exact matches.
-                    if( $value == $filter ) $result = true;
-                    
-                  }
-                  
+                  // Compare the values.
+                  $compare( $value, $filter, $result );
 
                 }
 
@@ -246,41 +271,20 @@ trait GET {
 
                     }
                     
-                    // Permit loose matching.
-                    if( $loose ) {
-
-                      // Loosly compare interpolated data.
-                      if( strpos($key, $filter) !== false ) $result = true;
-
-                    }
-
-                    // Otherwise, strictly compare of interpolated data.
-                    else {
-
-                      // Look for exact matches.
-                      if( $key == $filter ) $result = true;
-
-                    }
+                    // Compare the values.
+                    $compare( $key, $filter, $result );
 
                   }
                   
                   // Handle simple data comparisons.
                   else {
                     
-                    // Permit loose matching.
-                    if( $loose ) {
-
-                      // Look for near matches.
-                      if( array_key_exists($key, $flattened) and strpos($flattened[$key], $filter) ) $result = true;
-
-                    }
-
-                    // Otherwise, permit only strict matching.
-                    else {
-
-                      // Look for exact matches.
-                      if( array_key_exists($key, $flattened) and $flattened[$key] == $filter ) $result = true;
-
+                    // Verify that the key exists.
+                    if( array_key_exists($key, $flattened) ) {
+                      
+                      // Compare the values.
+                      $compare( $flattened[$key], $filter, $result );
+                      
                     }
                     
                   }
@@ -309,41 +313,16 @@ trait GET {
 
                   }
                   
-                  // Permit loose matching.
-                  if( $loose ) {
-                    
-                    // Loosly compare the interpolated data.
-                    if( strpos($field, $filter) !== false ) $result = true;
-                    
-                  }
-                  
-                  // Otherwise, strictly compare the interpolated data.
-                  else {
-                    
-                    // Look for exact matches.
-                    if( $field == $filter ) $result = true;
-                    
-                  }
+                  // Compare the values.
+                  $compare( $field, $filter, $result );
 
                 }
                 
+                // Otherwise, handle simple data.
                 else {
                   
-                  // Permit loose matching.
-                  if( $loose ) {
-                    
-                    // Look for near matches.
-                    $result = strpos($flattened[$field], $filter) !== false;
-                    
-                  }
-                  
-                  // Otherwise, permit only strict matching.
-                  else {
-                    
-                    // Look for exact matches.
-                    $result = $flattened[$field] == $filter;
-                    
-                  }
+                  // Compare the values.
+                  $compare( $flattened[$field], $filter, $result );
                   
                 }
               
