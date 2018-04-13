@@ -956,7 +956,7 @@ $.when(
         if( data.response.filter ) self.filters = data.response.filter;
         
         // Save sort data.
-        if( data.response.sort ) {
+        if( data.response.sort ) { 
           
           // Handle matches on sort fields.
           if( Object.isEqual(data.response.sort, self.fields) ) { 

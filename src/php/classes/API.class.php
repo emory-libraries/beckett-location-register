@@ -338,9 +338,9 @@ trait GET {
         }
 
       }
-    
+
       // Enable features.
-      if( !empty($this->query) ) {
+      if( !empty($this->query) ) { 
       
         // Initialize an ordered set of parameters.
         $params = [];
@@ -359,7 +359,7 @@ trait GET {
         }
 
         // Merge remaining parameters without any specific order.
-        $params = array_merge($params, $this->query);
+        $this->query = $params = array_merge($params, $this->query); 
 
         // Loop through features.
         foreach( $params as $feature => $settings ) { 
@@ -698,6 +698,9 @@ class API {
     503 => 'Service Unavailable'
   ];
   
+  private $caching = true;
+  
+  protected $cache;
   protected $config;
   protected $path = '';
   protected $csv = [];
@@ -735,6 +738,9 @@ class API {
     // Send initial headers.
     foreach( $this->headers as $key => $value ) { header("$key: $value"); }
     
+    // Initialize the cache.
+    if( $this->caching ) $this->cache = new Cache();
+
     // Load data from file.
     $this->csv = $this->__load();
     
@@ -745,6 +751,13 @@ class API {
   
   // Load the CSV/XLSX data from file.
   private function __load( $has_headers = true ) {
+    
+    // Ignore cached data.
+    if( $this->caching and $this->cache->def('__DATABASE__') !== null ) {
+      
+      return $this->cache->def('__DATABASE__');
+      
+    }
     
     // Get the path to the file.
     $path = "{$this->config->ROOT}/{$this->config->ROUTER['csv']}";
@@ -793,7 +806,10 @@ class API {
       $data = array_values($array);
       
     }
- 
+    
+    // Cache the data.
+    if( $this->caching ) $this->cache->def('__DATABASE__', $data);
+
     // Return the data.
     return $data;
     
@@ -806,7 +822,7 @@ class API {
     $array = is_array($values);
     
     // Convert non-array values to an array for easier manipulation.
-    if( !is_array($values) ) $values = [$values];
+    if( !$array ) $values = [$values];
     
     // Loop through each value.
     foreach( $values as $key => $value ) {
@@ -827,7 +843,7 @@ class API {
       elseif( preg_match('/\d/', $value) and (bool) ($time =  strtotime($value)) ) { $values[$key] = (new DateTime())->setTimestamp($time); }
       
     }
-    
+
     // Return new value.
     return $array ? $values : $values[0];
     
@@ -896,40 +912,52 @@ class API {
 
     // Handle invalid requests (missing method or endpoint).
     if( !$this->method or !$this->endpoint ) { return; }
-    
-    // Handle methods.
-    switch( $this->method ) {
+
+    // Use cached data when possible.
+    if( $this->caching and $this->cache->get($this->method, $this->endpoint, $this->query) !== null ) {
       
-      // Permit `GET` requests.
-      case 'GET': 
-        
-        // Get the endpoint configuration.
-        $endpoint = $this->__endpoint( $this->endpoint );
+      $this->__restore();
+      
+    }
+    
+    // Otherwise, complete the request.
+    else {
+    
+      // Handle methods.
+      switch( $this->method ) {
 
-        // Handle valid endpoints.
-        if( $endpoint['valid'] ) {
+        // Permit `GET` requests.
+        case 'GET': 
 
-          // Get the requested data. 
-          $this->GET( $endpoint );
+          // Get the endpoint configuration.
+          $endpoint = $this->__endpoint( $this->endpoint );
 
-        }
+          // Handle valid endpoints.
+          if( $endpoint['valid'] ) {
 
-        // Handle invalid endpoints.
-        else {
+            // Get the requested data. 
+            $this->GET( $endpoint );
 
-          // Set the status code to 501.
-          $this->__error( 501 );
+          }
 
-        }
-        
-        break;
-        
-      // All other requests are not currently implemented.
-      default: 
-        
-        // Set the status code to 405.
-        $this->__error( 405 );
-        
+          // Handle invalid endpoints.
+          else {
+
+            // Set the status code to 501.
+            $this->__error( 501 );
+
+          }
+
+          break;
+
+        // All other requests are not currently implemented.
+        default: 
+
+          // Set the status code to 405.
+          $this->__error( 405 );
+
+      }
+      
     }
     
   }
@@ -942,6 +970,31 @@ class API {
     
     // Set the status.
     $this->__status( $code );
+    
+  }
+  
+  // Enable caching of data.
+  private function __cache() { 
+    
+    // Save the data to the cache.
+    $this->cache->set($this->method, $this->endpoint, $this->query, [
+      'status'    => $this->status,
+      'data'      => $this->data,
+      'features'  => $this->features
+    ]);
+    
+  }
+  
+  // Restore data from cache.
+  private function __restore() {
+    
+    // Fetch the cached data.
+    $data = $this->cache->get($this->method, $this->endpoint, $this->query);
+
+    // Restore the results.
+    $this->data = $data['data'];
+    $this->status = $data['status'];
+    $this->features = $data['features'];
     
   }
   
@@ -958,6 +1011,9 @@ class API {
       if( !empty($this->features) ) { $output = array_merge($output, $this->features); }
       
     }
+    
+    // Save the data to the cache.
+    if( $this->caching ) $this->__cache();
     
     // Set response code.
     http_response_code( $this->status['code'] );
