@@ -388,7 +388,7 @@ $.when(
     
     namespace: 'beckett',
     
-    trigger( events, args ) { 
+    trigger( events, args ) {
       
       const self = this;
       
@@ -906,6 +906,7 @@ $.when(
     
     data() {
       return {
+        sortable: false,
         api: null,
         active: false,
         ascending: true,
@@ -950,11 +951,24 @@ $.when(
     created() {
       
       // Capture context.
-      const self = this;
+      let self = this;
       
       // Use the parent's API by default.
       self.api = self.$parent.api;
       
+      // Handle ready state changes.
+      event.on('sortable', (state) => {
+        
+        // Update the context.
+        if( Array.isEqual(self.fieldset, state.fieldset) ) {
+        
+          self = state.context;
+          self.sortable = state.sortable;
+          
+        }
+        
+      });
+               
       // Handle events.
       event.on('sort', () => {
         
@@ -973,68 +987,106 @@ $.when(
         // Save filter data.
         if( data.response.filter ) self.filters = data.response.filter;
         
+        // Load methods for toggling the active state.
+        const activate = function( state ) {
+
+          if( self.sortable ) {
+
+            if( state ) {
+
+              self.active = true;
+              self.ascending = Object.values(data.response.sort)[0] == 'DESC' ? false : true;
+
+            }
+
+            else {
+
+              self.active = false;
+              self.ascending = true;
+
+            } 
+
+          }
+
+          else {
+
+            setTimeout(function() { 
+              
+              activate( state ); 
+            
+            }, 100);
+
+          }
+
+        };
+        
         // Save sort data.
         if( data.response.sort ) { 
           
-          // Handle matches on sort fields.
-          if( Object.isEqual(data.response.sort, self.fields) ) { 
+          // Handle backward navigation.
+          if( data.back === true && Array.isEqual(self.fieldset, Object.keys(data.response.sort)) ) activate(true);
           
-            self.active = true;
-            self.ascending = Object.values(data.response.sort)[0] == 'DESC' ? false : true;
-            
-          }
+          // Handle matches on sort fields.
+          else if( Object.isEqual(data.response.sort, self.fields) ) activate(true);
           
           // Otherwise, reset sorting.
-          else {
-            
-            self.active = false;
-            self.ascending = true;
-            
-          }
+          else activate(false);
           
         }
         
         // Otherwise, no sorting occurred.
-        else {
-          
-          self.active = false;
-          self.ascending = true;
-          
-        }
+        else activate(false);
         
       });
       
     },
     
+    mounted() {
+      
+      // Set the ready state.
+      event.trigger('sortable', {sortable: true, fieldset: this.fieldset, context: this}); 
+      
+    },
+    
+    beforeDestroy() {
+      
+      // Set the ready state.
+      event.trigger('sortable', {sortable: false, fieldset: this.fieldset, context: this}); 
+      
+    },
+    
     computed: {
+      
+      fieldset() {
+        
+        return Array.isArray(this.on) ? this.on : [this.on];
+        
+      },
       
       fields() {
         
         // Capture context.
         const self = this;
-        
+
         // Get the sort fields.
-        let fields = self.on;
-        
-        // Convert non-array sort fields to an array for easier manipulation.
-        if( !Array.isArray(fields) ) fields = [fields];
-        
+        let fields = self.fieldset;
+
         // Convert array values to an object.
         if( Array.isArray(fields) ) {
-          
+
           fields = fields.reduce((accumulator, current) => {
-          
+
             accumulator[current] = self.ascending ? 'ASC' : 'DESC';
 
             return accumulator;
 
           }, {});
-          
+
         }
-        
+
         // Return the fields as an object.
         return fields;
-        
+
       }
       
     }
@@ -1455,7 +1507,7 @@ $.when(
         self.$router.push({name: 'List', params: {autoload: false}});
         
       });
-      event.on('search browse back', (data) => {
+      event.on('search browse', (data) => {
 
         // Initialize a check for the list's ready state.
         const ready = function() {
@@ -1465,6 +1517,32 @@ $.when(
 
             // Set the list data.
             event.trigger('list', data);
+
+          }
+          
+          // Otherwise, wait for the list to become ready.
+          else {
+            
+            setTimeout(ready, 100);
+            
+          }
+
+        };
+        
+        // Check for the list's ready state, then send over the list data.
+        ready();
+        
+      });
+      event.on('back', (data) => {
+        
+        // Initialize a check for the list's ready state.
+        const ready = function() {
+          
+          // Check if the list is ready.
+          if( self.ready ) {
+
+            // Set the list data.
+            event.trigger('list', $.extend({}, data, {back: true}));
 
           }
           
