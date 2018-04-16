@@ -113,4 +113,46 @@ function array_expand( array $array, $delimiter = '.' ) {
   
 }
 
+function array_colsort( array $array, array $cols = [] ) { 
+                                                          
+  $result = $array;
+  
+  usort($result, function( array $a, array $b) use( $cols ) { 
+    
+    foreach( $cols as $col => $order ) {
+      
+      if( $a[$col] != $b[$col] ) {
+        
+        if( $order === SORT_DESC or strpos($order, 'DESC') !== false ) {
+          
+          if( is_numeric($a[$col]) and is_numeric($b[$col]) ) return $a[$col] < $b[$col] ? 1 : -1;
+          
+          elseif( is_string($a[$col]) and is_string($b[$col]) ) return strcmp($a[$col], $b[$col]) * -1;
+          
+          else return strnatcmp($a[$col], $b[$col]) * -1;
+          
+        }
+        
+        else {
+          
+          if( is_numeric($a[$col]) and is_numeric($b[$col]) ) return $a[$col] < $b[$col] ? -1 : 1;
+          
+          elseif( is_string($a[$col]) and is_string($b[$col]) ) return strcmp($a[$col], $b[$col]);
+          
+          else return strnatcmp($a[$col], $b[$col]);
+          
+        }
+        
+      }
+      
+    }
+    
+    return 0;
+    
+  });
+                                                          
+  return $result;
+  
+}
+
 ?>

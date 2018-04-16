@@ -145,6 +145,12 @@ $.when(
             
             return moment.apply(this, arguments);
             
+          },
+          
+          isset( value ) {
+            
+            return isset(value);
+            
           }
           
         };
@@ -850,13 +856,25 @@ $.when(
         event.trigger('loading', false);
         
       });
-      event.on('list filtering paging sort', (data) => { 
+      event.on('list filtering paging sort', (data) => {
         
         // Reload the API.
         self.api = data.api; 
         
         // Filtering was applied.
-        self.active = data.response.filter ? true : false;
+        if( data.response.filter ) {
+          
+          self.active = true;
+          
+        }
+            
+        // Filtering was not applied.
+        else {
+          
+          self.active = false;
+          self.clear();
+          
+        }
         
         // Hide the filter form.
         self.open = false;
@@ -914,7 +932,7 @@ $.when(
         
         // Reapply any filters.
         self.api.filter = self.api.filters( self.filters );
-        
+
         // Reinvoke the last call to the API.
         self.api.last().then((response) => {
           

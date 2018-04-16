@@ -162,7 +162,7 @@
               <select v-model="filters['location.origin.address']" multiple>
                 <option :value="undefined">Any</option>
                 <option :value="value" v-for="value in fields.location.origin.address">
-                  {{value === null ? '(Blank)' : value}}
+                  {{!isset(value) ? '(Blank)' : value}}
                 </option>
               </select>
             </div>
@@ -177,7 +177,7 @@
               <select v-model="filters['location.origin.city']" multiple>
                 <option :value="undefined">Any</option>
                 <option :value="value" v-for="value in fields.location.origin.city">
-                  {{value === null ? '(Blank)' : value}}
+                  {{!isset(value) ? '(Blank)' : value}}
                 </option>
               </select>
             </div>
@@ -192,7 +192,7 @@
               <select v-model="filters['location.origin.country']" multiple>
                 <option :value="undefined">Any</option>
                 <option :value="value" v-for="value in fields.location.origin.country">
-                  {{value === null ? '(Blank)' : value}}
+                  {{!isset(value) ? '(Blank)' : value}}
                 </option>
               </select>
             </div>
@@ -213,7 +213,7 @@
               <select v-model="filters['location.destination.address']" multiple>
                 <option :value="undefined">Any</option>
                 <option :value="value" v-for="value in fields.location.destination.address">
-                  {{value === null ? '(Blank)' : value}}
+                  {{!isset(value) ? '(Blank)' : value}}
                 </option>
               </select>
             </div>
@@ -228,7 +228,7 @@
               <select v-model="filters['location.destination.city']" multiple>
                 <option :value="undefined">Any</option>
                 <option :value="value" v-for="value in fields.location.destination.city">
-                  {{value === null ? '(Blank)' : value}}
+                  {{!isset(value) ? '(Blank)' : value}}
                 </option>
               </select>
             </div>
@@ -243,7 +243,7 @@
               <select v-model="filters['location.destination.country']" multiple>
                 <option :value="undefined">Any</option>
                 <option :value="value" v-for="value in fields.location.destination.country">
-                  {{value === null ? '(Blank)' : value}}
+                  {{!isset(value) ? '(Blank)' : value}}
                 </option>
               </select>
             </div>
@@ -260,7 +260,7 @@
             <select v-model="filters['recipient']" multiple>
               <option :value="undefined">Any</option>
               <option :value="value" v-for="value in fields.recipient">
-                {{value === null ? '(Blank)' : value}}
+                {{!isset(value) ? '(Blank)' : value}}
               </option>
             </select>
           </div>
@@ -275,7 +275,7 @@
             <select v-model="filters['repository']" multiple>
               <option :value="undefined">Any</option>
               <option :value="value" v-for="value in fields.repository">
-                {{value === null ? '(Blank)' : value}}
+                {{!isset(value) ? '(Blank)' : value}}
               </option>
             </select>
           </div>
@@ -290,7 +290,7 @@
             <select v-model="filters['language']" multiple>
               <option :value="undefined">Any</option>
               <option :value="value" v-for="value in fields.language">
-                {{value === null ? '(Blank)' : value}}
+                {{!isset(value) ? '(Blank)' : value}}
               </option>
             </select>
           </div>

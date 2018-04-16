@@ -155,8 +155,8 @@ trait GET {
       
       });
       
-      // Expand the aggregate data.
-      $this->data = array_expand($this->data);
+      // Expand and typify the aggregate data.
+      $this->data = $this->__typify( array_expand($this->data) );
       
     }
     
@@ -338,6 +338,9 @@ trait GET {
         }
 
       }
+      
+      // Convert data types for all data.
+      $this->data = $this->__typify( $this->data );
 
       // Enable features.
       if( !empty($this->query) ) { 
@@ -373,9 +376,6 @@ trait GET {
       
     }
     
-    // Convert data types for all data.
-    $this->data = $this->__typify( $this->data );
-    
     // Set the status code to 200.
     if( !$this->error ) $this->__status( 200 );
     
@@ -400,12 +400,145 @@ trait FEATURES {
   
   // Set order in which features should be applied.
   private $precedence = [
-    'sort',
     'filter',
+    'sort',
     'paging'
   ];
   
-  // Enables pagination of data.
+  // Enables sorting of data.
+  private function __sort( array $settings ) {
+    
+    // Continue if no errors previously occurred.
+    if( $this->error ) return;
+    
+    // Get the sort fields.
+    $fields = array_keys($settings);
+    
+    // Handle sorting on each field in the order given.
+    if( $fields ) {
+      
+      // Initialize an ordered set of fields.
+      $ordered = [];
+
+      // Rearrange the order of any date fields: year -> month -> day.
+      $years = array_filter($settings, function($value, $field) {
+
+        return strpos($field, 'year') !== false;
+
+      }, ARRAY_FILTER_USE_BOTH);
+      $months = array_filter($settings, function($value, $field) {
+
+        return strpos($field, 'month') !== false;
+
+      }, ARRAY_FILTER_USE_BOTH);
+      $days = array_filter($settings, function($value, $field) {
+          
+        return strpos($field, 'day') !== false;
+
+      }, ARRAY_FILTER_USE_BOTH);
+      
+      // Apply the new order.
+      $ordered = array_merge($ordered, $years);
+      $ordered = array_merge($ordered, $months);
+      $ordered = array_merge($ordered, $days);
+      $ordered = array_merge($ordered, array_diff($settings, $ordered));
+      
+      // Sort the array on the given keys.
+      $this->data = array_map('array_expand', array_colsort(array_map('array_flatten', $this->data), $ordered));
+
+      // Save sort data.
+      $this->features['sort'] = $settings;
+      
+    }
+    
+  }
+  
+  // Enables advanced filtering.
+  private function __filter( array $settings ) { 
+    
+    // Continue if no errors previously occurred.
+    if( $this->error ) return;
+    
+    // Only continue if filtering should be applied.
+    if( empty($settings) ) return;
+    
+    // Filter on each field.
+    foreach( $settings as $field => $values ) {
+      
+      // Convert non-array values into arrays.
+      if( !is_array($values) ) {
+        
+        // Convert to array.
+        $values = $this->__typify(array_map('trim', preg_split('/[,:]/', $values)));
+        
+      }
+      
+      // Initialize subset of data.
+      $subset = [];
+
+      // Loop through each value.
+      foreach( $values as &$value ) {
+        
+        // Handle ranges.
+        if( preg_match('/^(.+?)-(.+)$/', $value, $range) ) {
+          
+          // Remove original value from range match.
+          array_shift( $range );
+          
+          // Add keys to the range for better interpretation.
+          $range = $this->__typify(array_combine(['min', 'max'], $range));
+          
+          // Update the value. Enable this for "cleaner" results, or disabled this to return the input query as is.
+          $value = $range;
+          
+          // Apply range filter to data.
+          $subset = array_merge(
+            $subset, 
+            array_map('array_expand', array_filter(array_map('array_flatten', $this->data), function($item) use ($field, $range) {
+            
+              // Filter for matches.
+              return $item[$field] >= $range['min'] and $item[$field] <= $range['max'];
+            
+            }))
+          );
+          
+        }
+
+        // Handle all other values.
+        else {
+          
+          // Convert the data type of the value.
+          $value = $this->__typify($value);
+          
+          // Apply filter to data.
+          $subset = array_merge(
+            $subset, 
+            array_map('array_expand', array_filter(array_map('array_flatten', $this->data), function($item) use ($field, $value) {
+
+              // Filter for matches.
+              return $item[$field] == $value;
+
+            }))
+          );
+          
+        }
+
+      }
+      
+      // Update values. Enable this for "cleaner" results, or disabled this to return the input query as is.
+      $settings[$field] = $values;
+      
+      // Update data set.
+      $this->data = $subset;
+      
+    }
+    
+    // Save filter data.
+    $this->features['filter'] = $settings;
+    
+  }
+  
+    // Enables pagination of data.
   private function __paging( array $settings ) {
     
     // Continue if no errors previously occurred.
@@ -534,136 +667,6 @@ trait FEATURES {
       
     }
       
-  }
-  
-  // Enables sorting of data.
-  private function __sort( array $settings ) {
-    
-    // Continue if no errors previously occurred.
-    if( $this->error ) return;
-    
-    // Get the sort fields.
-    $fields = array_keys($settings);
-    
-    // Handle sorting on each field in the order given.
-    if( $fields ) {
-      
-      // Initialize parameter array for sorting.
-      $params = [];
-      
-      foreach( $settings as $field => $order ) {
-        
-        // Determine sort order.
-        $order = isset($order) ? preg_match('/desc/', strtolower($order)) ? SORT_DESC : SORT_ASC : $this->defaults['sort']['order'];
-        
-        // Extract the field data.
-        $comps = array_map(function($item) use($field) {
-          
-          return array_flatten($item)[$field];
-          
-        }, $this->data);
-        
-        // Save params.
-        $params = array_merge($params, [$comps, $order]);
-        
-      }
-      
-      // Capture data to be sorted.
-      $params[] = &$this->data;
-    
-      // Sort the data on the fields.
-      call_user_func_array('array_multisort', $params);
-      
-      // Save sort data.
-      $this->features['sort'] = $settings;
-      
-    }
-    
-  }
-  
-  // Enables advanced filtering.
-  private function __filter( array $settings ) {
-    
-    // Continue if no errors previously occurred.
-    if( $this->error ) return;
-    
-    // Only continue if filtering should be applied.
-    if( empty($settings) ) return;
-    
-    // Filter on each field.
-    foreach( $settings as $field => $values ) {
-      
-      // Convert non-array values into arrays.
-      if( !is_array($values) ) {
-        
-        // Convert to array.
-        $values = $this->__typify(array_map('trim', preg_split('/[,:]/', $values)));
-        
-      }
-      
-      // Initialize subset of data.
-      $subset = [];
-
-      // Loop through each value.
-      foreach( $values as &$value ) {
-        
-        // Handle ranges.
-        if( preg_match('/^(.+?)-(.+)$/', $value, $range) ) {
-          
-          // Remove original value from range match.
-          array_shift( $range );
-          
-          // Add keys to the range for better interpretation.
-          $range = $this->__typify(array_combine(['min', 'max'], $range));
-          
-          // Update the value. Enable this for "cleaner" results, or disabled this to return the input query as is.
-          $value = $range;
-          
-          // Apply range filter to data.
-          $subset = array_merge($subset, array_filter($this->data, function($item) use ($field, $range) {
-            
-            // Flatten the item for easier comparison.
-            $flattened = array_flatten( $item );
-            
-            // Filter for matches.
-            return $flattened[$field] >= $range['min'] and $flattened[$field] <= $range['max'];
-            
-          }));
-          
-        }
-
-        // Handle all other values.
-        else {
-          
-          // Convert the data type of the value.
-          $value = $this->__typify($value);
-          
-          // Apply filter to data.
-          $subset = array_merge($subset, array_filter($this->data, function($item) use ($field, $value) {
-
-            // Flatten the item for easier comparison.
-            $flattened = array_flatten( $item );
-
-            // Filter for matches.
-            return $flattened[$field] == $value;
-
-          }));
-          
-        }
-
-      }
-      
-      // Update values. Enable this for "cleaner" results, or disabled this to return the input query as is.
-      $settings[$field] = $values;
-      
-      // Update data set.
-      $this->data = $subset;
-      
-    }
-    
-    // Save filter data.
-    $this->features['filter'] = $settings;
-    
   }
   
 }
