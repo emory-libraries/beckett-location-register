@@ -5,6 +5,9 @@ class Cache {
   protected $id;
   protected $cache;
   
+  // FOR DEVELOPMENT USE ONLY.
+  private $development = true;
+  
   // Constructor
   function __construct( $id = 'cache' ) {
     
@@ -14,8 +17,8 @@ class Cache {
     // Start a session.
     session_start();
     
-    // FOR DEVELOPMENT
-    //unset($_SESSION);
+    // FOR DEVELOPMENT USE ONLY.
+    if( $this->development ) unset($_SESSION);
 
     // Reload the cache if it already exists.
     if( isset($_SESSION[$this->id]) ) $this->cache = &$_SESSION[$this->id];
