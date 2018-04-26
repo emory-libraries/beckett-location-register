@@ -11,8 +11,8 @@ trait GET {
     // Capture meta data.
     $endpoint = $meta['endpoint'];
     $model = $endpoint['model'];
-    $aggregate = $endpoint['aggregate'];
-    $order = $endpoint['order'];
+    $aggregate = isset($endpoint['aggregate']) ? (bool) $endpoint['aggregate'] : false;
+    $order = isset($endpoint['order']) ? preg_match('/desc/', $endpoint['order']) ? SORT_DESC : SORT_ASC : SORT_ASC;
     $dynamic = isset($meta['regex']);
     
     // Look for a set of named data models.
@@ -144,9 +144,6 @@ trait GET {
 
       // Only keep unique values.
       $this->data = array_map( 'array_values', array_map( 'array_unique', $this->data ) );
-      
-      // Interpret sort order.
-      $order = preg_match('/desc/', $order) ? SORT_DESC : SORT_ASC;
       
       // Sort all the aggregate data.
       array_walk($this->data, function(&$values) use ($order) { 

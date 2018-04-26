@@ -100,14 +100,16 @@ class Cache {
                           
   // Get some cache data.
   function get( $method, $endpoint, $query ) {
-
-    return array_filter($this->cache, function($data) use($method, $endpoint, $query) {
+    
+    $match = array_filter($this->cache, function($data) use($method, $endpoint, $query) {
       
       return isset($data['method']) and $data['method'] == $method and
              isset($data['endpoint']) and $data['endpoint'] == $endpoint and
              isset($data['query']) and $data['query'] == $query;
       
-    })[0];
+    });
+    
+    if( isset($match) and !empty($match) ) return $match[0];
 
   }
   
