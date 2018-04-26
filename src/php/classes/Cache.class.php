@@ -37,9 +37,9 @@ class Cache {
   }
   
   // Define a cache value.
-  function def( $key, $value = false ) {
+  function def( $key, $value = false ) { 
     
-    if( $value ) {
+    if( $value !== false ) {
       
       $this->cache[$key] = $value;
       
@@ -47,7 +47,11 @@ class Cache {
     
     else {
       
-      return $this->cache[$key];
+      $defined = array_key_exists($key, $this->cache) and isset($this->cache[$key]);
+      
+      if( $defined ) return $this->cache[$key];
+      
+      return null;
       
     }
     
@@ -111,8 +115,10 @@ class Cache {
              isset($data['query']) and $data['query'] == $query;
       
     });
-    
+
     if( isset($match) and !empty($match) ) return $match[0];
+    
+    return null;
 
   }
   
