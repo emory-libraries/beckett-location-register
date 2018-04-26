@@ -1495,13 +1495,13 @@ $.when(
         self.ready = ready;
         
       });
-      event.on('browse', (data) => { 
+      event.on('browse', () => { 
 
         // Jump to list.
         self.$router.push({name: 'List'});
         
       });
-      event.on('search back', (data) => {
+      event.on('search back', () => {
         
         // Jump to list.
         self.$router.push({name: 'List', params: {autoload: false}});
