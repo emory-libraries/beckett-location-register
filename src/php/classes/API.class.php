@@ -33,6 +33,12 @@ trait GET {
       // Flatten the model.
       $flattened = array_flatten( $model );
       
+      // Initialize regular expressions.
+      $regex = [
+        'boolean'       => '/\| *(.+?(?=\||$))/',
+        'interpolation' => '/\{(.+?)\}/'
+      ];
+      
       // Loop through all items in the model.
       foreach( $flattened as $target => $src ) {  
         
@@ -40,7 +46,7 @@ trait GET {
         $src = trim($src);
 
         // Extract any boolean filters.
-        if( preg_match_all('/\| *(.+?(?=\||$))/', $src, $filters) ) {
+        if( preg_match_all($regex['boolean'], $src, $filters) ) {
   
           // Remove the matched data.
           array_shift($filters);
@@ -49,7 +55,7 @@ trait GET {
           $filters = array_map('trim', $filters[0]);
           
           // Remove the filter data from the source string.
-          $src = trim(preg_replace('/\| *(.+?(?=\||$))/', '', $src));
+          $src = trim(preg_replace($regex['boolean'], '', $src));
           
         }
         
@@ -57,7 +63,7 @@ trait GET {
         else { $filters = false; }
 
         // Handle data interpolations.
-        if( preg_match_all('/\{(.+?)\}/', $src, $bindings) ) {
+        if( preg_match_all($regex['interpolation'], $src, $bindings) ) {
           
           // Extract the raw data.
           array_shift($bindings);
@@ -114,12 +120,8 @@ trait GET {
     }
     
     // Otherwise, use the data set as is.
-    else {
-      
-      $data = $this->csv;
-      
-    }
-    
+    else { $data = $this->csv; }
+
     // Handle aggregate data requests.
     if( $aggregate ) {
       
@@ -166,62 +168,60 @@ trait GET {
       // Filter based on bindings.
       if( $dynamic ) {
         
-        // Initialize a comparison method.
-        $compare = function( $a, $b, &$flag ) use ( $endpoint ) {
+        // Set default search modes.
+        $mode = [
+          'strict'      => false,
+          'literal'     => false,
+          'approximate' => false,
+          'insensitive' => true
+        ];
+
+        // Configure search modes based on endpoint.
+        if( array_key_exists('strict', $endpoint) and isset($endpoint['strict']) ) {
           
-          // Get and/or set endpoint modes.
-          $strict = $endpoint['strict'] === false ? false : true;
-          $insensitive = $endpoint['insensitive'] === false ? false : true;
-          $literal = $endpoint['literal'] === true ? true : false;
+          $mode['strict'] = $endpoint['strict'] === true ? true : $mode['strict'];
           
-          // Make non-literal if applicable.
-          if( !$literal ) {
-            
-            $a = str_romanize($a);
-            $b = str_romanize($b);
-            
-          }
+        }
+        if( array_key_exists('insensitive', $endpoint) and isset($endpoint['insensitive']) ) {
           
-          // Make case insensitive if applicable. 
-          if( $insensitive ) {
-            
-            $a = strtolower($a);
-            $b = strtolower($b);
-            
-          }
-  
-          // Handle strict comparisons.
-          if( $strict ) {
-            
-            if( $b == $a ) $flag = true;
-            
-          }
+          $mode['insensitive'] = $endpoint['insensitive'] === false ? false : $mode['insensitive'];
           
-          // Otherwise, handle loose comparisons.
-          else {
-            
-            if( strpos($a, $b) !== false ) $flag = true;
-            
-          }
+        }
+        if( array_key_exists('approximate', $endpoint) and isset($endpoint['approximate']) ) {
           
-        };
+          $mode['approximate'] = $endpoint['approximate'] === false ? false : $mode['approximate'];
+          
+        }
+        if( array_key_exists('literal', $endpoint) and isset($endpoint['literal']) ) {
+          
+          $mode['literal'] = $endpoint['literal'] === true ? true : $mode['literal'];
+          
+        }
 
         // Interpret endpoints.
         $target = explode('/', $endpoint['endpoint']);
         $given = explode('/', $this->endpoint);
+        
+        // Initialize regular expressions.
+        $regex = [
+          'dynamic'       => '/:.+/',
+          'interpolation' => '/\{(.+?)\}/'
+        ];
 
         // Compare endpoints.
         foreach( $target as $index => $pattern ) {
 
           // Catch dynamic endpoint data.
-          if( preg_match('/:.+/', $pattern) ) {
+          if( preg_match($regex['dynamic'], $pattern) ) {
 
-            // Get the match binding.
+            // Get the match bindings.
             $match = $endpoint['match'];
-            $filter = urldecode($given[$index]);
+            
+            // Filter out the appropriate data from the given endpoint.
+            $filter = urldecode( $given[$index] );
 
             // Filter the result set.
-            $this->data = array_values(array_filter($this->data, function($item) use ($match, $pattern, $filter, $compare) { 
+            $this->data = array_values(array_filter($this->data, function($item) use ($match, $pattern, $filter, $regex, $mode) { 
               
               // Initialize a result.
               $result = false;
@@ -231,17 +231,15 @@ trait GET {
 
               // Get the field on which data should be matched.
               $field = $match[$pattern];
+    
+              // Initialize the set of fields that should be compared.
+              $comps = [];
 
               // Handle matches allowed on any field.
               if( $field == 'any' ) {
-
-                // Loop through all fields within the item.
-                foreach( $flattened as $key => $value ) {
-                  
-                  // Compare the values.
-                  $compare( $value, $filter, $result );
-
-                }
+                
+                // Capture the data for comparison.
+                $comps = array_merge($comps, array_values($flattened));
 
               }
               
@@ -249,10 +247,10 @@ trait GET {
               else if( is_array($field) ) {
                 
                 // Loop through the permitted fields.
-                foreach( $field as $key ) {
+                foreach( $field as &$key ) {
                   
                   // Handle any data interpolations.
-                  if( preg_match_all('/\{(.+?)\}/', $key, $bindings) ) {
+                  if( preg_match_all($regex['interpolation'], $key, $bindings) ) {
 
                     // Extract the raw data.
                     array_shift($bindings);
@@ -267,9 +265,6 @@ trait GET {
                       else { $key = str_replace("{{$binding}}", '', $key); }
 
                     }
-                    
-                    // Compare the values.
-                    $compare( $key, $filter, $result );
 
                   }
                   
@@ -279,14 +274,20 @@ trait GET {
                     // Verify that the key exists.
                     if( array_key_exists($key, $flattened) ) {
                       
-                      // Compare the values.
-                      $compare( $flattened[$key], $filter, $result );
+                      // Replace the key with the data.
+                      $key = $flattened[$key];
                       
                     }
+                    
+                    // Otherwise, ignore invalid keys.
+                    else { unset($field[$key]); }
                     
                   }
                   
                 }
+                  
+                // Capture the data for comparison.
+                $comps = array_merge($comps, array_values($field));
                 
               }
 
@@ -294,7 +295,7 @@ trait GET {
               else { 
                 
                 // Handle any data interpolations.
-                if( preg_match_all('/\{(.+?)\}/', $field, $bindings) ) {
+                if( preg_match_all($regex['interpolation'], $field, $bindings) ) {
 
                   // Extract the raw data.
                   array_shift($bindings);
@@ -309,21 +310,28 @@ trait GET {
                     else { $field = str_replace("{{$binding}}", '', $field); }
 
                   }
-                  
-                  // Compare the values.
-                  $compare( $field, $filter, $result );
 
                 }
                 
                 // Otherwise, handle simple data.
-                else {
-                  
-                  // Compare the values.
-                  $compare( $flattened[$field], $filter, $result );
-                  
-                }
+                else { $field = $flattened[$field]; }
+                
+                // Capture the data for comparison.
+                $comps[] = $field;
               
               }
+          
+              // Load the search utility.
+              $search = new Search( $comps );
+              
+              // Set search modes.
+              $search->insensitive = $mode['insensitive'];
+              $search->literal = $mode['literal'];
+              $search->strict = $mode['strict'];
+              $search->approximate = $mode['approximate'];
+              
+              // Compare all of the data.
+              $result = $search->search( $filter );
               
               // Return the result.
               return $result;
@@ -678,7 +686,7 @@ class API {
     'Access-Control-Allow-Methods' => '*',
     'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
     'Pragma' => 'no-cache',
-    'Content-Type' => 'application/json; charset=utf-8'
+    //'Content-Type' => 'application/json; charset=utf-8'
   ];
   
   private $codes = [
@@ -771,8 +779,13 @@ class API {
     // Handle CSV files.
     if( array_search($ext, ['csv']) !== false ) { 
       
-      $data = csv_to_array($path, $has_headers);
-  
+      $data = array_filter(csv_to_array($path, $has_headers), function($item) {
+        
+        // Only load public data.
+        return $item['Public?'] == 'public';
+        
+      });
+ 
     }
     
     // Otherwise, handle XLSX files.
@@ -791,7 +804,7 @@ class API {
       if( $has_headers ) {
         
         // Extract headers.
-        $headers = array_shift($array);
+        $headers = array_map( 'trim', array_shift($array) );
         
         // Map headers to the array data.
         $array = array_map(function($row) use ($headers) {
@@ -803,7 +816,12 @@ class API {
       }
       
       // Save the array without index data.
-      $data = array_values($array);
+      $data = array_filter(array_values($array),function($item) {
+        
+        // Only load public data.
+        return $item['Public?'] == 'public';
+        
+      });
       
     }
     

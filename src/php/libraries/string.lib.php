@@ -92,9 +92,14 @@ function str_romanize( $string ) {
     /*'Zh'  => ['Ж'],*/
     /*'zh'  => ['ж']*/
   ];
-  
-  // Replace foreign characters.
-  $string = str_replace(array_values($transliterations), array_keys($transliterations), $string);
+
+  // Loop through replacements.
+  foreach( $transliterations as $to => $from ) {
+    
+    // Replace foreign characters.
+    $string = strtr($string, implode('', $from), $to);
+    
+  }
 
   // Return the transliterated string.
   return $string;

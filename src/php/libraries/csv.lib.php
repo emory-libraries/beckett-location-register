@@ -15,6 +15,7 @@ function csv_to_array( $path, $has_headers = true ) {
     // Get each line one at a time.
     while( ($data = fgetcsv($handle)) ) { $csv[] = $data; }
     
+    // Close the file.
     fclose($handle);
     
     // Handle headers.
@@ -23,7 +24,7 @@ function csv_to_array( $path, $has_headers = true ) {
       // Extract headers.
       $headers = array_map(function($header) {
         
-        return iconv('UTF-8', 'ASCII//IGNORE', $header);
+        return trim(iconv('UTF-8', 'ASCII//IGNORE', $header));
         
       }, array_shift($csv)); 
 

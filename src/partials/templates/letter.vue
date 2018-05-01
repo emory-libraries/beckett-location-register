@@ -32,6 +32,13 @@
           </td>
         </tr>
         
+         <tr>
+          <th scope="row">Addressed</th>
+          <td>
+            {{letter.addressed}}
+          </td>
+        </tr>
+        
         <tr>
           <th scope="row">Origin</th>
           <td>

@@ -1,4 +1,12 @@
 {
+  "modes": {
+    "default": {
+      "strict": false,
+      "literal": false,
+      "approximate": false,
+      "insensitive": true
+    }
+  },
   "models": {
     "default": {
       "id": "ID",
@@ -22,6 +30,10 @@
       "recipient": "Reg. recipient",
       "repository": "Repository",
       "collection": "Collection",
+      "addressed": {
+        "to": "Addressed to (Actual)",
+        "from": "Addressed from (Actual)"
+      },
       "language": "PrimaryLang",
       "public": "Public? | public",
       "autographed": "Autograph or Typed",
@@ -93,8 +105,7 @@
         "model": "default",
         "match": {
           ":query": "any"
-        },
-        "strict": false
+        }
       },
       {
         "endpoint": "search/location/:query",
@@ -108,8 +119,7 @@
             "location.destination.city",
             "location.destination.country"
           ]
-        },
-        "strict": false
+        }
       },
       {
         "endpoint": "search/location/origin/:query",
@@ -120,8 +130,7 @@
             "location.origin.city",
             "location.origin.country"
           ]
-        },
-        "strict": false
+        }
       },
       {
         "endpoint": "search/location/destination/:query",
@@ -132,48 +141,45 @@
             "location.destination.city",
             "location.destination.country"
           ]
-        },
-        "strict": false
+        }
       },
       {
         "endpoint": "search/recipient/:query",
         "model": "default",
         "match": {
-          ":query": "recipient"
-        },
-        "strict": false
+          ":query": [
+            "recipient",
+            "addressed.to"
+          ]
+        }
       },
       {
         "endpoint": "search/repository/:query",
         "model": "default",
         "match": {
           ":query": "repository"
-        },
-        "strict": false
+        }
       },
       {
         "endpoint": "search/language/:query",
         "model": "default",
         "match": {
           ":query": "language"
-        },
-        "strict": false
+        }
       },
       {
         "endpoint": "search/description/:query",
         "model": "default",
         "match": {
           ":query": "description"
-        },
-        "strict": false
+        }
       },
       {
         "endpoint": "search/date/:query",
         "model": "default",
         "match": {
           ":query": "{date.month}-{date.day}-{date.year}"
-        },
-        "strict": false
+        }
       },
       {
         "endpoint": "letter/:id",
