@@ -220,6 +220,7 @@ $.when(
       this.filter = {};
       this.sort = {};
       this.index = true;
+      this.loading = true;
       
     }
     
@@ -236,7 +237,7 @@ $.when(
         self.endpoint = endpoint;
       
         // Start loading.
-        event.trigger('loading', true);
+        if( this.loading ) event.trigger('loading', true);
         
         // Initialize a query string.
         let query = '';
@@ -270,6 +271,8 @@ $.when(
           method: method,
           data: data
         }).always((response) => {
+          
+          
           
           // Capture any feature feedback.
           if( response.data ) {
@@ -434,14 +437,28 @@ $.when(
       
     }
     
-    index( field = '' ) {
+    aggregate( field = '' ) {
+      
+      // Capture context.
+      const self = this;
       
       // Save the called method.
-      this.recall.method = 'index';
-      this.recall.arguments.push( field );
+      self.recall.method = 'index';
+      self.recall.arguments.push( field );
+      
+      // Capture initial loading value.
+      const loading = self.loading;
+      
+      // Temporarily disable loading.
+      if( loading ) self.loading = false;
       
       // Execute the request.
-      return this.request('GET', `index/${field}`);
+      return self.request('GET', `index/${field}`).always(() => {
+        
+        // Reset the loading value.
+        self.loading = loading;
+        
+      });
       
     }
 
@@ -1547,6 +1564,8 @@ $.when(
           data: [],
           type: null,
           suggestions: [],
+          suggesting: false,
+          autofills: [],
           tooltip: false
         },
         field: null
@@ -1584,6 +1603,77 @@ $.when(
       },
       
       autofill() {
+        
+        // Capture context.
+        const self = this;
+        
+        // Disable autofill when the field is set to `Any`.
+        if( !isset(self.field) ) return;
+        
+        // Disable autofill if no input is given.
+        if( !isset(self.query.input) ) return;
+        
+        // Capture everytime an autofill event is fired.
+        self.query.autofills.push( true );
+        
+        // Initialize a suggestion method.
+        const suggest = function() { 
+          
+          // Ignore repeat suggests.
+          if( self.query.suggesting ) return;
+          
+          // Set suggesting flag.
+          self.query.suggesting = true;
+          
+          // Initialize the API.
+          const api = new API();
+
+          // Load some suggestions.
+          api.aggregate( self.field ).then((response) => {
+
+            // Desensitize the input.
+            const input = self.query.input.toLowerCase();
+
+            // Build a regex for word breaks.
+            const words = /[-_ ]/g;
+
+            // Save the list of suggestions.
+            self.query.suggestions = Object.get(response.data, self.field).filter((data) => {
+
+              // Desensitize the data.
+              const comp = data.toLowerCase();
+
+              return comp.indexOf(input) > -1 || 
+                     comp.split(words).intersection(input.split(words)).length > 0;
+
+            });
+
+          }).catch(() => {
+
+            // Clear the list of suggestions.
+            self.query.suggestions = [];
+
+          }).always(() => {
+            
+            // Reset the suggesting flag.
+            self.query.suggesting = false;
+            
+          });
+          
+        };
+        
+        // Wait until the user pauses.
+        setTimeout(() => {
+          
+          self.query.autofills.pop(); 
+          
+          setTimeout(() => { 
+            
+            if( self.query.autofills.length === 0 ) suggest();
+            
+          }, 250);
+          
+        }, 250);
         
       },
       

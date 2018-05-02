@@ -24,8 +24,16 @@
           <input type="search" 
                  placeholder="Search" 
                  v-model="query.input"
-                 @keypress.enter="save" 
-                 @keyup="tooltip"/>
+                 @keypress.enter="save()" 
+                 @keyup="tooltip(); autofill()"
+                 list="autofill"/>
+          
+          <datalist id="autofill">
+            <option v-for="suggestion in query.suggestions"
+                    :value="suggestion">
+              {{suggestion}}
+            </option>
+          </datalist>
 
         </li>
       </ul>

@@ -110,7 +110,7 @@
     }
     
     .tooltip {
-      @include position(100% 0 0 0, absolute);
+      @include position(auto 0 100% 0, absolute);
       background-color: color('grey', 'light');
       font-size: .8em;
       height: 40px;

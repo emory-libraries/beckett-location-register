@@ -96,32 +96,6 @@
         "aggregate": true
       },
       {
-        "endpoint": "index",
-        "model": {
-          "date": {
-            "day": "Day",
-            "month": "Month",
-            "year": "Year"
-          },
-          "location": {
-            "origin": {
-              "address": "Reg. Place written",
-              "city": "Reg. Place written city",
-              "country": "Reg. Place written country"
-            },
-            "destination": {
-              "address": "Reg place sent",
-              "city": "Reg. PlaceSent City",
-              "country": "Reg. PlaceSent Country"
-            }
-          },
-          "recipient": "Reg. recipient",
-          "repository": "Repository",
-          "language": "PrimaryLang"
-        },
-        "aggregate": true
-      },
-      {
         "endpoint": "index/location",
         "model": {
           "location": {
