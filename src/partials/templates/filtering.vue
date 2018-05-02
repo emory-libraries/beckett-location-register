@@ -41,16 +41,21 @@
                 
                 <div class="select">
                   <select v-model="month.min"
-                          @change="range('date.month').validate(month)">
+                          @change="validate('date.month').range(month, 'min')">
                     <option :value="undefined">Any</option>
-                    <option :value="value" v-for="value in fields.date.month">{{value}}</option>
+                    <option :value="value" 
+                            v-for="value in fields.date.month">
+                      {{value}}
+                    </option>
                   </select>
                 </div>
                 &ndash;
                 <div class="select">
-                  <select v-model="month.max">
+                  <select v-model="month.max"
+                          @change="validate('date.month').range(month, 'max')">
                     <option v-if="month.min === undefined" :value="undefined">Any</option>
-                    <option :value="value" v-for="value in subset(fields.date.month, month.min)">
+                    <option :value="value" 
+                            v-for="value in subset(fields.date.month, month.min)">
                       {{value}}
                     </option>
                   </select>
@@ -80,16 +85,21 @@
                 
                 <div class="select">
                   <select v-model="day.min"
-                          @change="range('date.day').validate(day)">
+                          @change="validate('date.day').range(day, 'min')">
                     <option :value="undefined">Any</option>
-                    <option :value="value" v-for="value in fields.date.day">{{value}}</option>
+                    <option :value="value" 
+                            v-for="value in fields.date.day">
+                      {{value}}
+                    </option>
                   </select>
                 </div>
                 &ndash;
                 <div class="select">
-                  <select v-model="day.max">
+                  <select v-model="day.max"
+                          @change="validate('date.day').range(day, 'max')">
                     <option v-if="day.min === undefined" :value="undefined">Any</option>
-                    <option :value="value" v-for="value in subset(fields.date.day, day.min)">
+                    <option :value="value" 
+                            v-for="value in subset(fields.date.day, day.min)">
                       {{value}}
                     </option>
                   </select>
@@ -119,16 +129,21 @@
                 
                 <div class="select">
                   <select v-model="year.min"
-                          @change="range('date.year').validate(year)">
+                          @change="validate('date.year').range(year, 'min')">
                     <option :value="undefined">Any</option>
-                    <option :value="value" v-for="value in fields.date.year">{{value}}</option>
+                    <option :value="value" 
+                            v-for="value in fields.date.year">
+                      {{value}}
+                    </option>
                   </select>
                 </div>
                 &ndash;
                 <div class="select">
-                  <select v-model="year.max">
+                  <select v-model="year.max"
+                          @change="validate('date.year').range(year, 'max')">
                     <option v-if="year.min === undefined" :value="undefined">Any</option>
-                    <option :value="value" v-for="value in subset(fields.date.year, year.min)">
+                    <option :value="value" 
+                            v-for="value in subset(fields.date.year, year.min)">
                       {{value}}
                     </option>
                   </select>
@@ -159,7 +174,8 @@
             <label>Address</label>
 
             <div class="select">
-              <select v-model="filters['location.origin.address']" multiple>
+              <select v-model="filters['location.origin.address']" multiple
+                      @change="validate('location.origin.address').multiselect()">
                 <option :value="undefined">Any</option>
                 <option :value="value" v-for="value in fields.location.origin.address">
                   {{!isset(value) ? '(Blank)' : value}}
@@ -174,9 +190,13 @@
             <label>City</label>
 
             <div class="select">
-              <select v-model="filters['location.origin.city']" multiple>
-                <option :value="undefined">Any</option>
-                <option :value="value" v-for="value in fields.location.origin.city">
+              <select v-model="filters['location.origin.city']" multiple
+                      @change="validate('location.origin.city').multiselect()">
+                <option :value="undefined">
+                  Any
+                </option>
+                <option :value="value" 
+                        v-for="value in fields.location.origin.city">
                   {{!isset(value) ? '(Blank)' : value}}
                 </option>
               </select>
@@ -189,7 +209,8 @@
             <label>Country</label>
 
             <div class="select">
-              <select v-model="filters['location.origin.country']" multiple>
+              <select v-model="filters['location.origin.country']" multiple
+                      @change="validate('location.origin.country').multiselect()">
                 <option :value="undefined">Any</option>
                 <option :value="value" v-for="value in fields.location.origin.country">
                   {{!isset(value) ? '(Blank)' : value}}
@@ -210,7 +231,8 @@
             <label>Address</label>
 
             <div class="select">
-              <select v-model="filters['location.destination.address']" multiple>
+              <select v-model="filters['location.destination.address']" multiple
+                      @change="validate('location.destination.address').multiselect()">
                 <option :value="undefined">Any</option>
                 <option :value="value" v-for="value in fields.location.destination.address">
                   {{!isset(value) ? '(Blank)' : value}}
@@ -225,7 +247,8 @@
             <label>City</label>
 
             <div class="select">
-              <select v-model="filters['location.destination.city']" multiple>
+              <select v-model="filters['location.destination.city']" multiple
+                      @change="validate('location.destination.city').multiselect()">
                 <option :value="undefined">Any</option>
                 <option :value="value" v-for="value in fields.location.destination.city">
                   {{!isset(value) ? '(Blank)' : value}}
@@ -240,7 +263,8 @@
             <label>Country</label>
 
             <div class="select">
-              <select v-model="filters['location.destination.country']" multiple>
+              <select v-model="filters['location.destination.country']" multiple
+                      @change="validate('location.destination.country').multiselect()">
                 <option :value="undefined">Any</option>
                 <option :value="value" v-for="value in fields.location.destination.country">
                   {{!isset(value) ? '(Blank)' : value}}
@@ -257,7 +281,8 @@
           <label>Recipient</label>
 
           <div class="select">
-            <select v-model="filters['recipient']" multiple>
+            <select v-model="filters['recipient']" multiple
+                    @change="validate('recipient').multiselect()">
               <option :value="undefined">Any</option>
               <option :value="value" v-for="value in fields.recipient">
                 {{!isset(value) ? '(Blank)' : value}}
@@ -272,7 +297,8 @@
           <label>Repository</label>
 
           <div class="select">
-            <select v-model="filters['repository']" multiple>
+            <select v-model="filters['repository']" multiple
+                    @change="validate('repository').multiselect()">
               <option :value="undefined">Any</option>
               <option :value="value" v-for="value in fields.repository">
                 {{!isset(value) ? '(Blank)' : value}}
@@ -287,7 +313,8 @@
           <label>Language</label>
 
           <div class="select">
-            <select v-model="filters['language']" multiple>
+            <select v-model="filters['language']" multiple
+                    @change="validate('language').multiselect()">
               <option :value="undefined">Any</option>
               <option :value="value" v-for="value in fields.language">
                 {{!isset(value) ? '(Blank)' : value}}

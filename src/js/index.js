@@ -42,6 +42,21 @@ $.when(
     return result;
     
   };
+  Array.prototype.intersection = function( comp ) {
+    
+    // Initialize the result set.
+    let result = [];
+    
+    // Exit for non-arrays.
+    if( !Array.isArray(comp) ) return result;
+    
+    // Get intersections.
+    result = this.filter((value) => comp.indexOf(value) > -1 );
+    
+    // Return the intersection.
+    return result;
+    
+  };
   Array.isEmpty = function( array ) { return Array.isArray( array ) && array.length === 0; };
   Array.isMultiple = function( array ) { return Array.isArray( array ) && array.length > 1; };
   Array.isEqual = function( array1, array2 ) {
@@ -134,6 +149,36 @@ $.when(
     
     // Finally, nothing failed.
     return true;
+    
+  };
+  Object.get = function( object, key, delimiter = '.' ) {
+    
+    // Split with the delimiter.
+    const keys = key.split(delimiter);
+    
+    // Initialize a counter.
+    let found = 0;
+    
+    // Loop through the keys.
+    keys.forEach((key) => {
+      
+      if( object.hasOwnProperty(key) ) {
+        
+        // Move up one level in the object.
+        object = object[key];
+        
+        // Increment the counter.
+        found++;
+        
+      }
+      
+    });
+    
+    // All keys were found.
+    if( found == keys.length ) return object;
+    
+    // Return undefined by default.
+    return undefined;
     
   };
 
@@ -667,6 +712,51 @@ $.when(
         
       },
       
+      validate( key ) {
+        
+        // Capture context.
+        const self = this;
+        
+        return {
+          
+          // Validate range inputs.
+          range( range, trigger ) {
+            
+            const {min, max} = range;
+
+            switch( trigger) {
+                
+              case 'min':
+                if( min === undefined || max === undefined || min > max ) range.max = min;
+                break;
+                
+              case 'max':
+                if( min === undefined && max !== undefined ) range.min = Object.get(self.fields, key)[0];
+                break;
+                
+            }
+            
+          },
+          
+          // Validate multiple selection inputs.
+          multiselect() {
+            
+            const selected = self.filters[key];
+            
+            let index;
+            
+            if( selected.length > 1 && (index = selected.indexOf(undefined)) > -1 ) {
+              
+              selected.splice(index, 1);
+              
+            }
+            
+          }
+          
+        };
+        
+      },
+      
       toggle() { this.open = !this.open; },
       
       clear() { 
@@ -701,7 +791,7 @@ $.when(
       
       subset( array, item ) {
         
-        return array.slice(array.indexOf(item));
+        return array.indexOf(item) > -1 ? array.slice(array.indexOf(item)) : array;
         
       },
       
@@ -722,18 +812,47 @@ $.when(
           
             self.filters[key].splice(index, 1);
 
-          },
-      
-          validate( target ) {
-
-            const {min, max} = target; 
-
-            if( max === undefined || min === undefined || min > max ) target.max = min;
-
           }
           
         };
        
+      },
+      
+      multiselect( key ) {
+        
+        // Capture context.
+        const self = this;
+        
+        return {
+          
+          selected( values ) {
+            
+            // Convert values to an array.
+            values = Array.isArray( values ) ? values : [values];
+            
+            // Look for intersection.
+            const intersection = self.filters[key].intersection(values);
+            
+            // Return result.
+            return intersection.length > 0;
+            
+          },
+               
+          unselected( values ) {
+            
+            // Convert values to an array.
+            values = Array.isArray( values ) ? values : [values];
+            
+            // Look for intersection.
+            const intersection = self.filters[key].intersection(values);
+            
+            // Return result.
+            return intersection.length === 0;
+              
+          }
+          
+        };
+        
       },
       
       filter() {
