@@ -433,6 +433,16 @@ $.when(
       return filters;
       
     }
+    
+    index() {
+      
+      // Save the called method.
+      this.recall.method = 'index';
+      
+      // Execute the request.
+      return this.request('GET', 'index/');
+      
+    }
 
   }
   

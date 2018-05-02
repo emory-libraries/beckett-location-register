@@ -11,6 +11,7 @@ trait GET {
     // Capture meta data.
     $endpoint = $meta['endpoint'];
     $model = $endpoint['model'];
+    $aggregate = isset($endpoint['aggregate']) ? (bool) $endpoint['aggregate'] : false;
     $order = isset($endpoint['order']) ? preg_match('/desc/', $endpoint['order']) ? SORT_DESC : SORT_ASC : SORT_ASC;
     $dynamic = isset($meta['regex']);
     
@@ -120,96 +121,181 @@ trait GET {
     
     // Otherwise, use the data set as is.
     else { $data = $this->csv; }
+
+    // Handle aggregate data requests.
+    if( $aggregate ) {
       
-    // Save data.
-    $this->data = $data;
+      // Flatten all data.
+      $data = array_map( 'array_flatten', $data );
 
-    // Filter based on bindings.
-    if( $dynamic ) {
+      // Loop through the data set.
+      foreach($data as $item) {
 
-      // Set default search modes.
-      $mode = [
-        'strict'      => false,
-        'literal'     => false,
-        'approximate' => false,
-        'insensitive' => true
-      ];
+        // Group all values.
+        foreach($item as $key => $value) {
 
-      // Configure search modes based on endpoint.
-      if( array_key_exists('strict', $endpoint) and isset($endpoint['strict']) ) {
+          // Initialize a result aggregator.
+          if( !array_key_exists($key, $this->data) ) $this->data[$key] = [];
 
-        $mode['strict'] = $endpoint['strict'] === true ? true : $mode['strict'];
+          // Save the value to the aggregator.
+          $this->data[$key][] = $value;
 
-      }
-      if( array_key_exists('insensitive', $endpoint) and isset($endpoint['insensitive']) ) {
-
-        $mode['insensitive'] = $endpoint['insensitive'] === false ? false : $mode['insensitive'];
-
-      }
-      if( array_key_exists('approximate', $endpoint) and isset($endpoint['approximate']) ) {
-
-        $mode['approximate'] = $endpoint['approximate'] === false ? false : $mode['approximate'];
-
-      }
-      if( array_key_exists('literal', $endpoint) and isset($endpoint['literal']) ) {
-
-        $mode['literal'] = $endpoint['literal'] === true ? true : $mode['literal'];
+        }
 
       }
 
-      // Interpret endpoints.
-      $target = explode('/', $endpoint['endpoint']);
-      $given = explode('/', $this->endpoint);
+      // Only keep unique values.
+      $this->data = array_map( 'array_values', array_map( 'array_unique', $this->data ) );
+      
+      // Sort all the aggregate data.
+      array_walk($this->data, function(&$values) use ($order) { 
+        
+        sort($values, $order); 
+      
+      });
+      
+      // Expand and typify the aggregate data.
+      $this->data = $this->__typify( array_expand($this->data) );
+      
+    }
+    
+    // Handle non-aggregate data requests.
+    else {
+      
+      // Save data.
+      $this->data = $data;
+      
+      // Filter based on bindings.
+      if( $dynamic ) {
+        
+        // Set default search modes.
+        $mode = [
+          'strict'      => false,
+          'literal'     => false,
+          'approximate' => false,
+          'insensitive' => true
+        ];
 
-      // Initialize regular expressions.
-      $regex = [
-        'dynamic'       => '/:.+/',
-        'interpolation' => '/\{(.+?)\}/'
-      ];
+        // Configure search modes based on endpoint.
+        if( array_key_exists('strict', $endpoint) and isset($endpoint['strict']) ) {
+          
+          $mode['strict'] = $endpoint['strict'] === true ? true : $mode['strict'];
+          
+        }
+        if( array_key_exists('insensitive', $endpoint) and isset($endpoint['insensitive']) ) {
+          
+          $mode['insensitive'] = $endpoint['insensitive'] === false ? false : $mode['insensitive'];
+          
+        }
+        if( array_key_exists('approximate', $endpoint) and isset($endpoint['approximate']) ) {
+          
+          $mode['approximate'] = $endpoint['approximate'] === false ? false : $mode['approximate'];
+          
+        }
+        if( array_key_exists('literal', $endpoint) and isset($endpoint['literal']) ) {
+          
+          $mode['literal'] = $endpoint['literal'] === true ? true : $mode['literal'];
+          
+        }
 
-      // Compare endpoints.
-      foreach( $target as $index => $pattern ) {
+        // Interpret endpoints.
+        $target = explode('/', $endpoint['endpoint']);
+        $given = explode('/', $this->endpoint);
+        
+        // Initialize regular expressions.
+        $regex = [
+          'dynamic'       => '/:.+/',
+          'interpolation' => '/\{(.+?)\}/'
+        ];
 
-        // Catch dynamic endpoint data.
-        if( preg_match($regex['dynamic'], $pattern) ) {
+        // Compare endpoints.
+        foreach( $target as $index => $pattern ) {
 
-          // Get the match bindings.
-          $match = $endpoint['match'];
+          // Catch dynamic endpoint data.
+          if( preg_match($regex['dynamic'], $pattern) ) {
 
-          // Filter out the appropriate data from the given endpoint.
-          $filter = urldecode( $given[$index] );
+            // Get the match bindings.
+            $match = $endpoint['match'];
+            
+            // Filter out the appropriate data from the given endpoint.
+            $filter = urldecode( $given[$index] );
 
-          // Filter the result set.
-          $this->data = array_values(array_filter($this->data, function($item) use ($match, $pattern, $filter, $regex, $mode) { 
+            // Filter the result set.
+            $this->data = array_values(array_filter($this->data, function($item) use ($match, $pattern, $filter, $regex, $mode) { 
+              
+              // Initialize a result.
+              $result = false;
 
-            // Initialize a result.
-            $result = false;
+              // Flatten the item for easier comparison.
+              $flattened = array_flatten( $item );
 
-            // Flatten the item for easier comparison.
-            $flattened = array_flatten( $item );
+              // Get the field on which data should be matched.
+              $field = $match[$pattern];
+    
+              // Initialize the set of fields that should be compared.
+              $comps = [];
 
-            // Get the field on which data should be matched.
-            $field = $match[$pattern];
+              // Handle matches allowed on any field.
+              if( $field == 'any' ) {
+                
+                // Capture the data for comparison.
+                $comps = array_merge($comps, array_values($flattened));
 
-            // Initialize the set of fields that should be compared.
-            $comps = [];
+              }
+              
+              // Otherwise, handle matches allowed on multiple fields.
+              else if( is_array($field) ) {
+                
+                // Loop through the permitted fields.
+                foreach( $field as &$key ) {
+                  
+                  // Handle any data interpolations.
+                  if( preg_match_all($regex['interpolation'], $key, $bindings) ) {
 
-            // Handle matches allowed on any field.
-            if( $field == 'any' ) {
+                    // Extract the raw data.
+                    array_shift($bindings);
 
-              // Capture the data for comparison.
-              $comps = array_merge($comps, array_values($flattened));
+                    // Interpolate each binding.
+                    foreach( $bindings[0] as $binding ) {
 
-            }
+                      // Bind the data.
+                      if( array_key_exists($binding, $flattened) ) { $key = str_replace("{{$binding}}", $flattened[$binding], $key); }
+                      
+                      // Otherwise, remove invalid bindings.
+                      else { $key = str_replace("{{$binding}}", '', $key); }
 
-            // Otherwise, handle matches allowed on multiple fields.
-            else if( is_array($field) ) {
+                    }
 
-              // Loop through the permitted fields.
-              foreach( $field as &$key ) {
+                  }
+                  
+                  // Handle simple data comparisons.
+                  else {
+                    
+                    // Verify that the key exists.
+                    if( array_key_exists($key, $flattened) ) {
+                      
+                      // Replace the key with the data.
+                      $key = $flattened[$key];
+                      
+                    }
+                    
+                    // Otherwise, ignore invalid keys.
+                    else { unset($field[$key]); }
+                    
+                  }
+                  
+                }
+                  
+                // Capture the data for comparison.
+                $comps = array_merge($comps, array_values($field));
+                
+              }
 
+              // Otherwise, handle field-based matches.
+              else { 
+                
                 // Handle any data interpolations.
-                if( preg_match_all($regex['interpolation'], $key, $bindings) ) {
+                if( preg_match_all($regex['interpolation'], $field, $bindings) ) {
 
                   // Extract the raw data.
                   array_shift($bindings);
@@ -218,128 +304,85 @@ trait GET {
                   foreach( $bindings[0] as $binding ) {
 
                     // Bind the data.
-                    if( array_key_exists($binding, $flattened) ) { $key = str_replace("{{$binding}}", $flattened[$binding], $key); }
+                    if( array_key_exists($binding, $flattened) ) { $field = str_replace("{{$binding}}", $flattened[$binding], $field); }
 
                     // Otherwise, remove invalid bindings.
-                    else { $key = str_replace("{{$binding}}", '', $key); }
+                    else { $field = str_replace("{{$binding}}", '', $field); }
 
                   }
 
                 }
-
-                // Handle simple data comparisons.
-                else {
-
-                  // Verify that the key exists.
-                  if( array_key_exists($key, $flattened) ) {
-
-                    // Replace the key with the data.
-                    $key = $flattened[$key];
-
-                  }
-
-                  // Otherwise, ignore invalid keys.
-                  else { unset($field[$key]); }
-
-                }
-
+                
+                // Otherwise, handle simple data.
+                else { $field = $flattened[$field]; }
+                
+                // Capture the data for comparison.
+                $comps[] = $field;
+              
               }
+          
+              // Load the search utility.
+              $search = new Search( $comps );
+              
+              // Set search modes.
+              $search->insensitive = $mode['insensitive'];
+              $search->literal = $mode['literal'];
+              $search->strict = $mode['strict'];
+              $search->approximate = $mode['approximate'];
+              
+              // Compare all of the data.
+              $result = $search->search( $filter );
+              
+              // Return the result.
+              return $result;
 
-              // Capture the data for comparison.
-              $comps = array_merge($comps, array_values($field));
+            }));
 
-            }
-
-            // Otherwise, handle field-based matches.
-            else { 
-
-              // Handle any data interpolations.
-              if( preg_match_all($regex['interpolation'], $field, $bindings) ) {
-
-                // Extract the raw data.
-                array_shift($bindings);
-
-                // Interpolate each binding.
-                foreach( $bindings[0] as $binding ) {
-
-                  // Bind the data.
-                  if( array_key_exists($binding, $flattened) ) { $field = str_replace("{{$binding}}", $flattened[$binding], $field); }
-
-                  // Otherwise, remove invalid bindings.
-                  else { $field = str_replace("{{$binding}}", '', $field); }
-
-                }
-
-              }
-
-              // Otherwise, handle simple data.
-              else { $field = $flattened[$field]; }
-
-              // Capture the data for comparison.
-              $comps[] = $field;
-
-            }
-
-            // Load the search utility.
-            $search = new Search( $comps );
-
-            // Set search modes.
-            $search->insensitive = $mode['insensitive'];
-            $search->literal = $mode['literal'];
-            $search->strict = $mode['strict'];
-            $search->approximate = $mode['approximate'];
-
-            // Compare all of the data.
-            $result = $search->search( $filter );
-
-            // Return the result.
-            return $result;
-
-          }));
+          }
 
         }
 
       }
+      
+      // Convert data types for all data.
+      $this->data = $this->__typify( $this->data );
 
-    }
+      // Enable features.
+      if( !empty($this->query) ) { 
+      
+        // Initialize an ordered set of parameters.
+        $params = [];
 
-    // Convert data types for all data.
-    $this->data = $this->__typify( $this->data );
+        // Sort the query parameters by order of precedence.
+        foreach( $this->precedence as $key ) {
 
-    // Enable features.
-    if( !empty($this->query) ) { 
+          if( array_key_exists($key, $this->query) ) {
 
-      // Initialize an ordered set of parameters.
-      $params = [];
+            $params[$key] = $this->query[$key];
 
-      // Sort the query parameters by order of precedence.
-      foreach( $this->precedence as $key ) {
+            unset( $this->query[$key] );
 
-        if( array_key_exists($key, $this->query) ) {
-
-          $params[$key] = $this->query[$key];
-
-          unset( $this->query[$key] );
+          }
 
         }
 
-      }
+        // Merge remaining parameters without any specific order.
+        $this->query = $params = array_merge($params, $this->query); 
+        
+        // Convert all query data to an array.
+        $params = array_map(function($query) { 
+          
+          return (is_array($query) ? $query : [$query]);
+          
+        }, $params);
 
-      // Merge remaining parameters without any specific order.
-      $this->query = $params = array_merge($params, $this->query); 
+        // Loop through features.
+        foreach( $params as $feature => $settings ) { 
 
-      // Convert all query data to an array.
-      $params = array_map(function($query) { 
+          // Apply each feature one by one.
+          if( method_exists($this, "__$feature") ) { $this->{"__$feature"}( $settings ); }
 
-        return (is_array($query) ? $query : [$query]);
-
-      }, $params);
-
-      // Loop through features.
-      foreach( $params as $feature => $settings ) { 
-
-        // Apply each feature one by one.
-        if( method_exists($this, "__$feature") ) { $this->{"__$feature"}( $settings ); }
+        }
 
       }
       
