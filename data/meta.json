@@ -96,6 +96,71 @@
         "aggregate": true
       },
       {
+        "endpoint": "index",
+        "model": {
+          "date": {
+            "day": "Day",
+            "month": "Month",
+            "year": "Year"
+          },
+          "location": {
+            "origin": {
+              "address": "Reg. Place written",
+              "city": "Reg. Place written city",
+              "country": "Reg. Place written country"
+            },
+            "destination": {
+              "address": "Reg place sent",
+              "city": "Reg. PlaceSent City",
+              "country": "Reg. PlaceSent Country"
+            }
+          },
+          "recipient": "Reg. recipient",
+          "repository": "Repository",
+          "language": "PrimaryLang"
+        },
+        "aggregate": true
+      },
+      {
+        "endpoint": "index/location",
+        "model": {
+          "location": {
+            "origin": {
+              "address": "Reg. Place written",
+              "city": "Reg. Place written city",
+              "country": "Reg. Place written country"
+            },
+            "destination": {
+              "address": "Reg place sent",
+              "city": "Reg. PlaceSent City",
+              "country": "Reg. PlaceSent Country"
+            }
+          }
+        },
+        "aggregate": true
+      },
+      {
+        "endpoint": "index/recipient",
+        "model": {
+          "recipient": "Reg. recipient"
+        },
+        "aggregate": true
+      },
+      {
+        "endpoint": "index/repository",
+        "model": {
+          "recipient": "Repository"
+        },
+        "aggregate": true
+      },
+      {
+        "endpoint": "index/language",
+        "model": {
+          "language": "PrimaryLang"
+        },
+        "aggregate": true
+      },
+      {
         "endpoint": "browse",
         "model": "summary"
       },

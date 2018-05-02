@@ -434,13 +434,14 @@ $.when(
       
     }
     
-    index() {
+    index( field = '' ) {
       
       // Save the called method.
       this.recall.method = 'index';
+      this.recall.arguments.push( field );
       
       // Execute the request.
-      return this.request('GET', 'index/');
+      return this.request('GET', `index/${field}`);
       
     }
 
