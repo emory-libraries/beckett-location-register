@@ -35,7 +35,6 @@
         "from": "Addressed from (Actual)"
       },
       "language": "PrimaryLang",
-      "public": "Public? | public",
       "autographed": "Autograph or Typed",
       "description": "PhysDes",
       "signed": "initialed or signed | S",

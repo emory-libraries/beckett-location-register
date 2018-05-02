@@ -1,0 +1,20 @@
+// Helpers for building Vue.js transitions.
+@mixin transition( $name ) { .#{$name} { @content; } }
+@mixin transition-on-enter { &-enter-active { @content; } }
+@mixin transition-on-leave { &-leave-active { @content; } }
+@mixin transition-on-enter-leave { 
+  @include transition-on-enter { @content; } 
+  @include transition-on-leave { @content; }
+}
+@mixin transition-enter-from { &-enter { @content; } }
+@mixin transition-enter-to { &-enter-to { @content; } }
+@mixin transition-leave-from { &-leave { @content; } }
+@mixin transition-leave-to { &-leave-to { @content; } }
+@mixin transition-in {
+  @include transition-enter-to { @content; }
+  @include transition-leave-from { @content; }
+}
+@mixin transition-out {
+  @include transition-enter-from { @content; }
+  @include transition-leave-to { @content; }
+}

@@ -1,0 +1,13 @@
+kbd {
+  background-color: color('grey');
+  display: inline-block;
+  margin: 0 .1em;
+  padding: .1em .6em;
+  line-height: 1.4;
+  text-shadow: 0 1px 0 color('white');
+  border: 1px solid color('grey', 'medium');
+  border-radius: 3px;
+  box-shadow: 0 1px 0 rgba(color('black', 'off'), .2), 
+              0 0 0 2px color('white') inset;
+  white-space: nowrap;
+}

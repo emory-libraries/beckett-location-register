@@ -33,9 +33,16 @@
         </tr>
         
          <tr>
-          <th scope="row">Addressed</th>
+          <th scope="row">Addressed To</th>
           <td>
-            {{letter.addressed}}
+            {{letter.addressed.to}}
+          </td>
+        </tr>
+        
+        <tr>
+          <th scope="row">Addressed From</th>
+          <td>
+            {{letter.addressed.from}}
           </td>
         </tr>
         
@@ -64,13 +71,6 @@
           <th scope="row">Collection</th>
           <td>
             {{letter.collection}}
-          </td>
-        </tr>
-        
-        <tr>
-          <th scope="row">Public</th>
-          <td>
-            {{letter.public ? 'Yes' : 'No'}}
           </td>
         </tr>
         

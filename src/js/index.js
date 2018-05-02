@@ -1401,7 +1401,13 @@ $.when(
     data() {
       return {
         ready: false,
-        query: null,
+        query: {
+          input: null,
+          data: [],
+          type: null,
+          suggestions: [],
+          tooltip: false
+        },
         field: null
       };
     },
@@ -1410,6 +1416,13 @@ $.when(
       
       search() {
         
+        // Build the query.
+        const query = this.query.data.map((data) => {
+          
+          return data.value;
+          
+        }).join(' ');
+     console.log(query);
         // Load the API.
         const api = new API();
         
@@ -1420,7 +1433,7 @@ $.when(
         const field = isset(this.field) ? this.field.replace('.', '/') : null;
         
         // Execute a request on the API.
-        api.search( this.query, field ).always((response) => {
+        api.search( query, field ).always((response) => {
           
           // Trigger an event with the results.
           event.trigger('search', {response: response, api: api});
@@ -1429,10 +1442,115 @@ $.when(
         
       },
       
+      autofill() {
+        
+      },
+      
+      tooltip() {
+        
+        this.query.tooltip = isset(this.query.input);
+        
+      },
+      
+      save() {
+        
+        // Initialize a helper function to quote strings.
+        const quote = function( string ) {
+          
+          const has_spaces = string.indexOf(' ') > -1,
+                has_single = string.indexOf("'") > -1,
+                has_double = string.indexOf('"') > -1;
+    
+          if( has_spaces ) {
+            
+            if( has_single && !has_double ) string = `"${string}"`;
+            if( !has_single && has_double ) string = `'${string}'`;
+            if( has_single && has_double ) string = `"${string.replace(/"/g, '\"')}"`;
+            if( !has_single && !has_double ) string = `"${string}"`;
+            
+          }
+          
+          return string;
+          
+        };
+        
+        // Ignore empty inputs.
+        if( !isset(this.query.input) ) return;
+        
+        // Handle query types.
+        switch( this.query.type ) {
+            
+          case 'AND':
+            
+            // Save the input.
+            this.query.data.push({
+              display: this.query.input,
+              type: this.query.type,
+              value: '+' + quote(this.query.input) 
+            });
+            
+            break;
+            
+          case 'NOT':
+            
+            // Save the input.
+            this.query.data.push({
+              display: this.query.input,
+              type: this.query.type,
+              value: '-' + quote(this.query.input) 
+            });
+            
+            break;
+            
+          case 'OR':
+            
+            // Save the input.
+            this.query.data.push({
+              display: this.query.input, 
+              type: this.query.type,
+              value: '~' + quote(this.query.input) 
+            });
+            
+            break;
+            
+          default:
+            
+            // Save the data.
+            this.query.data.unshift({
+              display: this.query.input,
+              type: false,
+              value: this.query.input
+            });
+            
+            // Set the type.
+            this.query.type = 'OR';
+            
+        }
+        
+        // Prepare for another entry.
+        this.query.input = null;
+        this.query.suggestions = [];
+        
+      },
+      
+      remove( index ) {
+        
+        // Remove the given index from the query data.
+        this.query.data.splice(index, 1);
+        
+        // Handle initial search fields.
+        if( index === 0 ) this.query.type = null;
+        
+      },
+      
       clear() {
         
         // Clear the search form.
-        this.query = null;
+        this.query.input = null;
+        this.query.data = [];
+        this.query.type = null;
+        this.query.suggestions = [];
+        this.query.tooltip = false;
         this.field = null;
         
       },

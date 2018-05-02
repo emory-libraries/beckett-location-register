@@ -1,0 +1,7 @@
+@include transition( 'fade' ) {
+  
+  @include transition-on-enter-leave { transition: opacity .5s $transition-timing; };
+  @include transition-in { opacity: 1; };
+  @include transition-out { opacity: 0; };
+  
+};
