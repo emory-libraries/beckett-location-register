@@ -35,12 +35,15 @@ class Search {
     $this->__prepare( $query );
 
     // Extract ANDs, NOTs, and ORs from query string.
-    preg_match('/\+[\"\'].+?[\"|\']|\+.+?(?= |\+|\-|\~|$)/', $query, $ands);
-    preg_match('/\-[\"\'].+?[\"|\']|\-.+?(?= |\+|\-|\~|$)/', $query, $nots);
-    preg_match('/\~[\"\'].+?[\"|\']|\~.+?(?= |\+|\-|\~|$)/', $query, $ors);
+    preg_match_all('/\+[\"\'].+?[\"|\']|\+.+?(?= |\+|\-|\~|$)/', $query, $ands);
+    preg_match_all('/\-[\"\'].+?[\"|\']|\-.+?(?= |\+|\-|\~|$)/', $query, $nots);
+    preg_match_all('/\~[\"\'].+?[\"|\']|\~.+?(?= |\+|\-|\~|$)/', $query, $ors);
 
     // Clean up the ANDs, NOTs, and ORs arrays.
     if( isset($ands) ) {
+      
+      // Extract matches.
+      $ands = $ands[0];
 
       // Remove the values from the original query string.
       $query = trim( str_replace($ands, '', $query) );
@@ -55,6 +58,9 @@ class Search {
     }
     if( isset($nots) ) {
 
+      // Extract matches.
+      $nots = $nots[0];
+      
       // Remove the values from the original query string.
       $query = trim( str_replace($nots, '', $query) );
 
@@ -67,6 +73,9 @@ class Search {
 
     }
     if( isset($ors) ) {
+      
+      // Extract matches.
+      $ors = $ors[0];
 
       // Remove the values from the original query string.
       $query = trim( str_replace($ors, '', $query) );
@@ -172,7 +181,6 @@ class Search {
   }
   
   // Apply NOT (`-`) comparisons
-  // TODO: Figure out why all NOTs are not getting applied.
   private function __not( array $nots, $b ) { 
     
     if( empty($nots) ) return true;
