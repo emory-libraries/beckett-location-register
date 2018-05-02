@@ -174,6 +174,7 @@ $.when(
       this.paging = {};
       this.filter = {};
       this.sort = {};
+      this.index = true;
       
     }
     
@@ -196,9 +197,26 @@ $.when(
         let query = '';
     
         // Build the query string.
-        if( !Object.isEmpty(self.paging) ) query += (query === '' ? '?' : '&') + self.query('paging');
-        if( !Object.isEmpty(self.filter) ) query += (query === '' ? '?' : '&') + self.query('filter');
-        if( !Object.isEmpty(self.sort) ) query += (query === '' ? '?' : '&') + self.query('sort'); 
+        if( !Object.isEmpty(self.paging) ) {
+          
+          query += (query === '' ? '?' : '&') + self.query('paging');
+          
+        }
+        if( !Object.isEmpty(self.filter) ) {
+          
+          query += (query === '' ? '?' : '&') + self.query('filter');
+          
+        }
+        if( !Object.isEmpty(self.sort) ) {
+          
+          query += (query === '' ? '?' : '&') + self.query('sort'); 
+          
+        }
+        if( !Object.isEmpty(self.index) ) {
+          
+          query += (query === '' ? '?' : '&') + self.query('index'); 
+          
+        }
 
         // Send the request.
         return $.ajax({
@@ -239,21 +257,27 @@ $.when(
       let query = '';
       
       // Loop through each parameter.
-      for( let key in self[feature] ) {
+      if( self[feature] instanceof Object && self[feature] !== null ) {
         
-        // Capture the value.
-        let value = self[feature][key];
-        
-        // Convert array values into comma-delimited lists.
-        if( Array.isArray(value) ) value = value.join(',');
-        
-        // Save the query parameter.
-        query += `${feature}[${key}]=${value}&`;
+        for( let key in self[feature] ) {
+
+          // Capture the value.
+          let value = self[feature][key];
+
+          // Convert array values into comma-delimited lists.
+          if( Array.isArray(value) ) value = value.join(',');
+
+          // Save the query parameter.
+          query += `${feature}[${key}]=${value}&`;
+
+        }
+
+        // Output the query string.
+        return query.slice(0, -1);
         
       }
-
-      // Output the query string.
-      return query.slice(0, -1);
+      
+      return `${feature}=${self[feature]}`;
       
     }
     
@@ -297,16 +321,6 @@ $.when(
       
       // Execute the request.
       return this.request('GET', 'browse/');
-      
-    }
-      
-    index() {
-      
-      // Save the called method.
-      this.recall.method = 'index';
-      
-      // Execute the request.
-      return this.request('GET', 'index/');
       
     }
       
@@ -840,12 +854,6 @@ $.when(
     
     created() {
       
-      // Initialize an API instance.
-      const api = new API();
-      
-      // Index all field data.
-      api.index().then((response) => { self.fields = response.data; });
-      
       // Capture context.
       const self = this;
       
@@ -860,6 +868,9 @@ $.when(
         
         // Reload the API.
         self.api = data.api; 
+        
+        // Capture any indexing data.
+        self.fields = data.response.index.data;
         
         // Filtering was applied.
         if( data.response.filter ) {
@@ -1422,7 +1433,7 @@ $.when(
           return data.value;
           
         }).join(' ');
-     console.log(query);
+
         // Load the API.
         const api = new API();
         
