@@ -36,13 +36,14 @@
           </datalist>
 
         </li>
+        <transition name="fade">
+          <li v-if="query.tooltip">
+            <div class="tooltip">
+              Hit <kbd>ENTER</kbd> when done.
+            </div>
+          </li>
+        </transition>
       </ul>
-      
-      <transition name="fade">
-        <div class="tooltip" v-if="query.tooltip">
-          Hit <kbd>ENTER</kbd> when done.
-        </div>
-      </transition>
       
     </div>
     

@@ -110,14 +110,11 @@
     }
     
     .tooltip {
-      @include position(auto 0 100% 0, absolute);
-      background-color: color('grey', 'light');
+      opacity: .6;
       font-size: .8em;
-      height: 40px;
+      height: $height - ($padding * 2); ;
       padding: 10px;
       align-items: center;
-      overflow: auto;
-      z-index: 2;
     }
     
   }

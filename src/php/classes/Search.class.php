@@ -172,6 +172,7 @@ class Search {
   }
   
   // Apply NOT (`-`) comparisons
+  // TODO: Figure out why all NOTs are not getting applied.
   private function __not( array $nots, $b ) { 
     
     if( empty($nots) ) return true;
