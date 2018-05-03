@@ -18,26 +18,26 @@
 
       <button @click="page(paging.pages.first.offset)" 
               :disabled="paging.previous === false" 
-              class="btn-last fa-angle-double-left"
+              class="btn-arrow btn-last fa-angle-double-left"
               title="First"></button>
       <button @click="page(paging.previous)" 
               :disabled="paging.previous === false" 
-              class="btn-previous fa-angle-left"
+              class="btn-arrow btn-previous fa-angle-left"
               title="Previous"></button>
 
       <ul v-if="paging.pages && paging.pages.index">
         <li :class="{active: index.active}" v-for="index in paging.pages.index">
-          <a @click="page(index.offset)">{{index.number}}</a>
+          <button class="btn-page" @click="page(index.offset)">{{index.number}}</button>
         </li>
       </ul>
 
       <button @click="page(paging.next)" 
               :disabled="paging.next === false" 
-              class="btn-next fa-angle-right"
+              class="btn-arrow btn-next fa-angle-right"
               title="Next"></button>
       <button @click="page(paging.pages.last.offset)" 
               :disabled="paging.next === false" 
-              class="btn-last fa-angle-double-right"
+              class="btn-arrow btn-last fa-angle-double-right"
               title="Last"></button>
       
     </div>

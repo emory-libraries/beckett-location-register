@@ -5,3 +5,11 @@
   @include transition-out { opacity: 0; };
   
 };
+
+@include transition( 'drawer' ) {
+  
+  @include transition-on-enter-leave { transition: right .5s $transition-timing; }
+  @include transition-in { right: 0 !important; }
+  @include transition-out { right: -$drawer-width !important; }
+  
+};

@@ -27,6 +27,8 @@
     
     tbody{ max-height: 500px; }
     
+    tr { @include on-hover-focus(z-index, auto, 1); }
+    
     --date: 100%;
     --recipient: 100%;
     --origin: 100%;

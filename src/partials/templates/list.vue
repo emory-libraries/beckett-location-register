@@ -66,18 +66,11 @@
       </thead>
       
       <tbody>
-        <tr v-for="letter in data" @click="read(letter)">
+        <tr v-for="letter in data" @click="read(letter)" @keypress.enter="read(letter)" tabindex="0">
           <td class="date">{{letter.date.month}}-{{letter.date.day}}-{{letter.date.year}}</td>
           <td class="recipient">{{letter.recipient}}</td>
           <td class="origin">{{letter.location.origin.city}}</td>
           <td class="destination">{{letter.location.destination.city}}</td>
-          <!-- PLACEHOLDER FOR REAL DATA 
-          <td class="date">{{item.date}}</td>
-          <td class="recipient">{{item.recipient}}</td>
-          <td class="repository">{{item.repository}}</td>
-          <td class="origin">{{item.origin}}</div>
-          <td class="destination">{{item.destination}}</td>
-          -->
         </tr>
       </tbody>
       

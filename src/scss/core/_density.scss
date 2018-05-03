@@ -63,6 +63,8 @@
     }
 
     @include last-child { border-right: $border; }
+    
+    @include on-focus(z-index, auto, 1);
 
   }
 

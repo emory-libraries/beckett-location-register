@@ -711,6 +711,7 @@ $.when(
       return {
         api: null,
         limit: paging.limit,
+        duration: 500,
         open: false,
         filterable: false,
         fields: {},
@@ -785,7 +786,7 @@ $.when(
         
       },
       
-      toggle() { this.open = !this.open; },
+      toggle( state ) { this.open = isset( state ) ? state : !this.open; },
       
       clear() { 
         
@@ -1035,7 +1036,7 @@ $.when(
         }
         
         // Hide the filter form.
-        self.open = false;
+        self.toggle( false );
       
       });
       event.on('limit', (limit) => { self.limit = limit; });

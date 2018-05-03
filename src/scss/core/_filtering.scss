@@ -1,19 +1,17 @@
 .filtering {
   margin-left: 10px;
   
-  .modal {
-    $width: 300px;
-    width: $width;
-    @include position($header-height 0 0, fixed);
+  .drawer {
+    width: $drawer-width;
+    @include position(0 0 0, fixed);
+    position: fixed;
+    top: $header-height;
+    bottom: 0;
     background-color: color('blue', 'powder');
-    transition: all .5s $transition-timing;
     border-left: 1px solid color('grey');
     z-index: 7;
     padding: 10px 25px;
     overflow: auto;
-    
-    &.open { right: 0; }
-    &.closed { right: -$width; }
     
     .btn-close {
       appearance: none;

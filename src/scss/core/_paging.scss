@@ -74,7 +74,10 @@
 
       }
 
-      a { 
+      .btn-page { 
+        background: transparent;
+        border: none;
+        color: inherit;
         @include size( 100% );
         @include absolute-center-contents;
       }
@@ -83,7 +86,7 @@
 
     }
 
-    #{$all-buttons} { 
+    .btn-arrow { 
       $normal: color('grey', 'light');
       $hover: color('grey');
       padding: 0;
@@ -95,13 +98,19 @@
       border: 0;
       @include on-hover-focus(background-color, $normal, $hover);
       @include on-hover-focus(color, color-contrast($normal), color-contrast($hover));
+      &[disabled] { 
+        @include on-hover-focus(background-color, rgba($normal, .25), rgba($hover, .25));
+        @include on-hover-focus(color, rgba(color-contrast($normal), .25), rgba(color-contrast($hover), .25));
+      }
     }
     
-    li, #{$all-buttons} {
+    li, .btn-arrow {
       @include border-y( $border );
       border-left: $border;
       transition: $transition-all;
     }
+    
+    #{$all-buttons} { @include on-focus(z-index, auto, 1); }
     
     > :first-child { @include border-left-radius( 3px ); }
     > :last-child { @include border-right-radius( 3px ); border-right: $border; }
