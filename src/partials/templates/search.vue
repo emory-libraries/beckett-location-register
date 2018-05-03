@@ -25,7 +25,7 @@
                  placeholder="Search" 
                  v-model="query.input"
                  @keypress.enter="save()" 
-                 @keyup="tooltip(); autofill()"
+                 @keyup="tooltip(); autofill().fill()"
                  list="autofill"/>
           
           <datalist id="autofill">
@@ -48,7 +48,7 @@
     </div>
     
     <div class="select field">
-      <select v-model="field">
+      <select v-model="field" @change="autofill().reset()">
         <option :value="null">Any</option>
         <option :value="'recipient'">Recipient</option>
         <option :value="'repository'">Repository</option>

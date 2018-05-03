@@ -57,6 +57,35 @@ $.when(
     return result;
     
   };
+  Array.prototype.flatten = function( depth = 0, level = 1 ) {
+    
+    const array = this;
+    
+    let result = [];
+    
+    for(let i = 0; i < array.length; i++ ) {
+      
+      let value = array[i];
+      
+      if( Array.isArray(value) ) {
+        
+        value = value.map((item) => {
+
+          if( Array.isArray(item) && (depth === 0 || level <= depth) ) return item.flatten(depth, level + 1);
+
+          return item;
+
+        });
+        
+      }
+      
+      result = result.concat(value);
+      
+    }
+    
+    return result;
+    
+  };
   Array.isEmpty = function( array ) { return Array.isArray( array ) && array.length === 0; };
   Array.isMultiple = function( array ) { return Array.isArray( array ) && array.length > 1; };
   Array.isEqual = function( array1, array2 ) {
@@ -179,6 +208,15 @@ $.when(
     
     // Return undefined by default.
     return undefined;
+    
+  };
+  Object.condense = function( object ) {
+    
+    return Object.values(object).map((value) => {
+      
+      return value instanceof Object && value !== null ? Object.condense(value) : value;
+      
+    }).flatten();
     
   };
 
@@ -1608,73 +1646,102 @@ $.when(
         // Capture context.
         const self = this;
         
-        // Disable autofill when the field is set to `Any`.
-        if( !isset(self.field) ) return;
-        
-        // Disable autofill if no input is given.
-        if( !isset(self.query.input) ) return;
-        
-        // Capture everytime an autofill event is fired.
-        self.query.autofills.push( true );
-        
-        // Initialize a suggestion method.
-        const suggest = function() { 
+        return {
           
-          // Ignore repeat suggests.
-          if( self.query.suggesting ) return;
+          fill() {
+        
+            // Disable autofill when the field is set to `Any`.
+            if( !isset(self.field) ) return;
+
+            // Disable autofill if no input is given.
+            if( !isset(self.query.input) ) return;
+
+            // Capture everytime an autofill event is fired.
+            self.query.autofills.push( true );
+
+            // Initialize a suggestion method.
+            const suggest = function() { 
+
+              // Get the field to search on.
+              const field = self.field.substring(0, self.field.indexOf('.'));
+
+              // Ignore repeat suggests.
+              if( self.query.suggesting ) return;
+
+              // Set suggesting flag.
+              self.query.suggesting = true;
+
+              // Initialize the API.
+              const api = new API();
+
+              // Load some suggestions.
+              api.aggregate( field ).then((response) => {
+
+                // Desensitize the input.
+                const input = self.query.input.toLowerCase();
+
+                // Build a regex for word breaks.
+                const words = /[-_ ]/g;
+
+                // Extract the relevant response data.
+                let data = Object.get(response.data, self.field);
+
+                // Condense nested data into a single array.
+                if( data instanceof Object && data !== null ) data = Object.condense(data);
+
+                // Save the list of suggestions.
+                self.query.suggestions = data.filter((comp) => {
+
+                  // Desensitize the data.
+                  comp = comp.toLowerCase();
+
+                  return comp.indexOf(input) > -1 || comp.split(words).intersection(input.split(words)).length > 0;
+
+                });
+
+              }).catch(() => {
+
+                // Clear the list of suggestions.
+                self.query.suggestions = [];
+
+              }).always(() => {
+
+                // Reset the suggesting flag.
+                self.query.suggesting = false;
+
+              });
+
+            };
+
+            // Wait until the user pauses.
+            setTimeout(() => {
+
+              self.query.autofills.pop(); 
+
+              setTimeout(() => { 
+
+                if( self.query.autofills.length === 0 ) suggest();
+
+              }, 250);
+
+            }, 250);
+            
+          },
           
-          // Set suggesting flag.
-          self.query.suggesting = true;
-          
-          // Initialize the API.
-          const api = new API();
-
-          // Load some suggestions.
-          api.aggregate( self.field ).then((response) => {
-
-            // Desensitize the input.
-            const input = self.query.input.toLowerCase();
-
-            // Build a regex for word breaks.
-            const words = /[-_ ]/g;
-
-            // Save the list of suggestions.
-            self.query.suggestions = Object.get(response.data, self.field).filter((data) => {
-
-              // Desensitize the data.
-              const comp = data.toLowerCase();
-
-              return comp.indexOf(input) > -1 || 
-                     comp.split(words).intersection(input.split(words)).length > 0;
-
-            });
-
-          }).catch(() => {
-
-            // Clear the list of suggestions.
-            self.query.suggestions = [];
-
-          }).always(() => {
+          reset() {
             
             // Reset the suggesting flag.
             self.query.suggesting = false;
             
-          });
-          
+            // Clear suggestions.
+            self.query.suggestions = [];
+            
+            // Clear autofills.
+            self.query.autofills = [];
+            
+          }
+  
         };
-        
-        // Wait until the user pauses.
-        setTimeout(() => {
-          
-          self.query.autofills.pop(); 
-          
-          setTimeout(() => { 
-            
-            if( self.query.autofills.length === 0 ) suggest();
-            
-          }, 250);
-          
-        }, 250);
         
       },
       
@@ -1849,6 +1916,9 @@ $.when(
 
         // Jump to list.
         self.$router.push({name: 'List'});
+        
+        // Clear the search field.
+        self.clear();
         
       });
       event.on('search back', () => {
