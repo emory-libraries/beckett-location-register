@@ -11,11 +11,12 @@
   margin-bottom: 25px;
   
   @include breakpoint( screen('large') ) {
-    height: $height;
+    min-height: $height;
     flex-wrap: nowrap;
   };
   
   #{$all-verbage-inputs}, 
+  .field,
   .buttons,
   #{$all-buttons} { 
     height: $height - ($padding * 2); 
@@ -117,15 +118,28 @@
       align-items: center;
     }
     
+    @include breakpoint( screen('large') ) {
+      width: auto;
+      flex-grow: 1;
+    };
+    
   }
   
   .field {
     width: 100%;
     margin-top: $padding;
+    align-self: auto;
 
     @include breakpoint( $breakpoint ) {
       width: auto;
       flex-grow: 5; 
+    };
+    
+    @include breakpoint( screen('large') ) { 
+      margin-left: $padding;
+      margin-top: 0;
+      min-width: 150px;
+      flex-grow: unset;
     };
 
   }
@@ -133,30 +147,39 @@
   .buttons {
     $spacing: 10px;
     $count: 3;
+    $width: 110px;
 
     width: 100%;
     margin-top: $padding;
-
-    @include breakpoint( $breakpoint ) { 
-      margin-left: $padding;
-      width: auto;
-      flex-grow: 2; 
-    };
-
+    
     #{$all-buttons} { 
       width: calc((100% / #{$count}) - ((#{$padding} * (#{$count} - 1)) / #{$count}));
       @include absolute-center-contents;
       float: left;
 
       .icon { font-size: 1rem; }
+    
+      + #{$all-buttons} { margin-left: $spacing; }
 
       @include breakpoint( $breakpoint ) { align-self: stretch; };
 
-      + #{$all-buttons} { margin-left: $spacing; }
+      @include breakpoint( screen('large') ) { min-width: $width; }
 
     }
 
     @include clearfix;
+
+    @include breakpoint( $breakpoint ) { 
+      margin-left: $padding;
+      width: auto;
+      flex-grow: 2; 
+    };
+  
+    @include breakpoint( screen('large') ) {
+      margin-top: 0;
+      flex-grow: unset;
+      min-width: ($width * $count) + ($spacing * ($count - 1));
+    };
 
   }
   
