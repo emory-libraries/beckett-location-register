@@ -57,6 +57,7 @@
       "<%= pkg.dependencies %>"
     ],
     "php": [
+      "<%= composer.require %>"
     ]
   }
 }
