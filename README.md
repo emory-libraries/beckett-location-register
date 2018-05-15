@@ -1,3 +1,3 @@
 # Beckett Location Register
 
-This Beckett Location Register is for the Emory University Center for Digital Scholarship (ECDS) as an extension of their Beckett Letters project. The purpose of this register is to help users locate and otherwise lookup any relevant information about the letters written by Samuel Beckett through a searchable, filterable, and/or browseable user interface, which retrieves data from a `.csv` or similar file via a REST API.
+This Beckett Location Register is for the Emory University Center for Digital Scholarship (ECDS) as an extension of their Beckett Letters project. The purpose of this register is to help users locate and otherwise lookup any relevant information about the letters written by Samuel Beckett through a searchable, filterable, and/or browseable user interface, which retrieves data from a `.csv` or `.xlsx` or from Google Sheets  via a REST API.
