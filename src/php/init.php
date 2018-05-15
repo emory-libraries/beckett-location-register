@@ -9,8 +9,10 @@ set_time_limit( 50 );
 // Set the default timezone.
 date_default_timezone_set('America/New_York');
 
-// Autoload dependencies.
+// Autoload classes.
 include 'autoload.php';
+
+// Autoload dependencies.
 if( file_exists($dependencies = 'dependencies/autoload.php') ) include $dependencies;
 
 // Load configurations.

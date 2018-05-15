@@ -29,7 +29,7 @@ function csv_to_array( $path, $has_headers = true ) {
       }, array_shift($csv)); 
 
       // Map headers to the array data.
-      $csv = array_map(function($row) use($headers) {
+      $csv = array_map(function($row) use ($headers) {
 
         return array_combine($headers, $row);
         

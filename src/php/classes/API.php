@@ -750,7 +750,7 @@ class API {
     'Access-Control-Allow-Methods' => '*',
     'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
     'Pragma' => 'no-cache',
-    //'Content-Type' => 'application/json; charset=utf-8'
+    'Content-Type' => 'application/json; charset=utf-8'
   ];
   
   private $codes = [
@@ -777,6 +777,7 @@ class API {
   protected $path = '';
   protected $csv = [];
   protected $error = false;
+  protected $local = false;
   
   public $method = 'GET';
   public $uri = '';
@@ -813,18 +814,18 @@ class API {
     // Initialize the cache.
     if( $this->caching ) $this->cache = new Cache();
 
-    // Load data from file.
-    $this->csv = $this->__load();
+    // Load data from source.
+    $this->csv = $this->local ? $this->__spreadsheet() : $this->__googlesheet();
     
     // Handle the request.
     $this->__request();
     
   }
   
-  // Load the CSV/XLSX data from file.
-  private function __load( $has_headers = true ) {
+  // Load the data from CSV or XLSX spreadsheet.
+  private function __spreadsheet( $has_headers = true ) {
     
-    // Ignore cached data.
+    // Ignore for cached data.
     if( $this->caching and $this->cache->def('__DATABASE__') !== null ) {
       
       return $this->cache->def('__DATABASE__');
@@ -892,6 +893,57 @@ class API {
     // Cache the data.
     if( $this->caching ) $this->cache->def('__DATABASE__', $data);
 
+    // Return the data.
+    return $data;
+    
+  }
+  
+  // Load data from Google Sheet.
+  private function __googlesheet( $has_headers = true ) {
+    
+    // Ignore for cached data.
+    if( $this->caching and $this->cache->def('__DATABASE__') !== null ) {
+      
+      return $this->cache->def('__DATABASE__');
+      
+    }
+    
+    // Get the Google Sheet.
+    $sheet = new Sheet( $_ENV['SHEET_ID'] );
+    
+    // Read all data from the Google Sheet.
+    $data = $sheet->read( $_ENV['SHEET_NAME'] );
+    
+    // Map headers.
+    if( $has_headers ) {
+      
+      // Extract headers.
+      $headers = array_map(function($header) {
+        
+        return trim(iconv('UTF-8', 'ASCII//IGNORE', $header));
+        
+      }, array_shift($data));
+      
+      // Merge headers and values.
+      $data = array_map(function($item) use ($headers) {
+        
+        return array_combine($headers, $item);
+        
+      }, $data);
+      
+    }
+    
+    // Remove private data.
+    $data = array_filter($data, function($item) {
+      
+      // Only keep public data.
+      return $item['Public?'] == 'public';
+      
+    });
+    
+    // Cache the data.
+    if( $this->caching ) $this->cache->def('__DATABASE__', $data);
+    
     // Return the data.
     return $data;
     
