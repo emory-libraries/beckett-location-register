@@ -6,3 +6,4 @@ secret.json
 dev/
 dist/
 ~$*.*
+vendor/
