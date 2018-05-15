@@ -750,7 +750,7 @@ class API {
     'Access-Control-Allow-Methods' => '*',
     'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
     'Pragma' => 'no-cache',
-    'Content-Type' => 'application/json; charset=utf-8'
+    //'Content-Type' => 'application/json; charset=utf-8'
   ];
   
   private $codes = [
@@ -912,7 +912,7 @@ class API {
     $sheet = new Sheet( $_ENV['SHEET_ID'] );
     
     // Read all data from the Google Sheet.
-    $data = $sheet->read( $_ENV['SHEET_NAME'] );
+    $data = $sheet->read( $_ENV['SHEET_NAME'] ); 
     
     // Map headers.
     if( $has_headers ) {
@@ -927,6 +927,13 @@ class API {
       // Merge headers and values.
       $data = array_map(function($item) use ($headers) {
         
+        // Get the length difference between the item and headers.
+        $difference = count($headers) - count($item);
+        
+        // Make sure item is the same length as headers.
+        if( $difference > 0 ) $item = array_merge($item, array_fill(0, $difference, null));
+        
+        // Merge headers.
         return array_combine($headers, $item);
         
       }, $data);

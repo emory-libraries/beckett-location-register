@@ -16,7 +16,7 @@ class Sheet {
     
   }
   
-  function read( $range = null ) { var_dump($range);
+  function read( $range = null ) {
     
     // Query the sheet.
     $response = $this->service->spreadsheets_values->get($this->id, $range);
