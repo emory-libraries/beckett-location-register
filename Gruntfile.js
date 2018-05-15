@@ -3,11 +3,13 @@ module.exports = function( grunt ) {
   let path = require('path'),
       extend = require('extend'),
       pkg = require('./package.json'),
+      composer = require('./composer.json'),
       config = require('./package-config.json');
   
   const PATHS = config.paths;
   
   grunt.config.set('pkg', pkg);
+  grunt.config.set('composer', composer);
   grunt.config.set('config', (config = grunt.config.process(config)));
   
   let type = function( thing ) {
