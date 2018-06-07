@@ -923,7 +923,7 @@ class API {
       // Extract headers.
       $headers = array_map(function($header) {
         
-        return trim(Encoding::toUTF8($header));
+        return trim(iconv('UTF-8', 'ASCII//IGNORE', str_sanitize($header)));
         
       }, array_shift($data));
       
