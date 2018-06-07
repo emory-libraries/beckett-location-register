@@ -63,7 +63,7 @@ module.exports = function( grunt ) {
       },
       js: {
         files: [path.resolve(PATHS.src.js, '**/*.js')],
-        tasks: ['jshint:dev', 'babel:dev']
+        tasks: ['jshint:dev', 'babel:dev', 'replace:dev']
       },
       scss: {
         files: [path.resolve(PATHS.src.scss, '**/*.scss')],
@@ -189,6 +189,10 @@ module.exports = function( grunt ) {
             {
               match: 'base',
               replacement: '<base href="//localhost/beckett-location-register/dev/">'
+            }, 
+            {
+              match: 'path',
+              replacement: '/beckett-location-register/dev'
             }
           ]
         },
@@ -198,6 +202,12 @@ module.exports = function( grunt ) {
             flatten: true,
             src: [path.resolve(PATHS.dev.root, '*.html')],
             dest: path.resolve(PATHS.dev.root)
+          },
+          {
+            expand: true,
+            flatten: true,
+            src: [path.resolve(PATHS.dev.js, '*.js')],
+            dest: path.resolve(PATHS.dev.js)
           }
         ]
       },
@@ -247,6 +257,10 @@ module.exports = function( grunt ) {
             {
               match: 'base',
               replacement: ''
+            },
+            {
+              match: 'path',
+              replacement: ''
             }
           ]
         },
@@ -256,6 +270,12 @@ module.exports = function( grunt ) {
             flatten: true,
             src: [path.resolve(PATHS.dist.root, '*.html')],
             dest: path.resolve(PATHS.dist.root)
+          },
+          {
+            expand: true,
+            flatten: true,
+            src: [path.resolve(PATHS.dist.js, '*.js')],
+            dest: path.resolve(PATHS.dist.js)
           }
         ]
       },
@@ -414,8 +434,8 @@ module.exports = function( grunt ) {
             src: [
               '**/*.js', 
               '!**/*.min.js',
-              '!' + path.join(PATHS.dist.dependencies.js, '**/vue.js'),
-              '!' + path.join(PATHS.dist.dependencies.js, '/codemirror/*.js')
+              '!dependencies/vue.js',
+              '!dependencies/codemirror/*.js'
             ],
             dest: PATHS.dist.js,
             ext: '.min.js'

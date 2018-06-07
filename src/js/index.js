@@ -1,5 +1,5 @@
 // Define root.
-const PATH = ''; /* FOR DEVELOPMENT USE ONLY, use '/beckett-location-register/dev' */ 
+const PATH = '@@path'; // FOR DEVELOPMENT USE
 const ROOT = location.protocol + '//' + location.host + PATH;
 
 // Load meta data.
