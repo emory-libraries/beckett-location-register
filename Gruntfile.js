@@ -185,6 +185,10 @@ module.exports = function( grunt ) {
             {
               match: 'livereload',
               replacement: '<script src="//localhost:35729/livereload.js"></script>'
+            },
+            {
+              match: 'base',
+              replacement: '<base href="//localhost/beckett-location-register/dev/">'
             }
           ]
         },
@@ -238,6 +242,10 @@ module.exports = function( grunt ) {
             },
             {
               match: 'livereload',
+              replacement: ''
+            },
+            {
+              match: 'base',
               replacement: ''
             }
           ]
