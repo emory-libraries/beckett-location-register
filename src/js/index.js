@@ -308,9 +308,7 @@ $.when(
           url: `${self.src}${endpoint}${query}`,
           method: method,
           data: data
-        }).always((response) => {
-          
-          
+        }).always((response) => { 
           
           // Capture any feature feedback.
           if( response.data ) {
@@ -1351,7 +1349,7 @@ $.when(
         event.trigger('loading', false);
         
       });
-      event.on('list paging filtering sort', (data) => {
+      event.on('list paging filtering sort', (data) => { 
 
         // Reset any errors.
         self.reset();

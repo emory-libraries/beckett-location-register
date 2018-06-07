@@ -304,9 +304,17 @@ module.exports = function( grunt ) {
           {
             expand: true,
             cwd: PATHS.data.root,
-            src: ['**/*'],
+            src: ['**/*', '!.env', '!.env.dev', '!.env.prod'],
             dest: PATHS.dev.root,
             dot: true
+          }, 
+          {
+            expand: true,
+            cwd: PATHS.data.root,
+            src: ['.env.dev'],
+            dest: PATHS.dev.root,
+            dot: true,
+            rename: (dest, src) => dest + src.replace('.dev', '')
           }, 
           {
             expand: true,
@@ -339,10 +347,18 @@ module.exports = function( grunt ) {
           {
             expand: true,
             cwd: PATHS.data.root,
-            src: ['**/*'],
+            src: ['**/*', '!.env', '!.env.dev', '!.env.prod'],
             dest: PATHS.dist.root,
             dot: true
-          },
+          }, 
+          {
+            expand: true,
+            cwd: PATHS.data.root,
+            src: ['.env.prod'],
+            dest: PATHS.dist.root,
+            dot: true,
+            rename: (dest, src) => dest + src.replace('.prod', '')
+          }, 
           {
             expand: true,
             cwd: PATHS.composer.root,

@@ -2,6 +2,8 @@ node_modules/
 vendor/
 secret.json
 .env
+.env.dev
+.env.prod
 .sass-cache/
 .DS_Store
 dev/
