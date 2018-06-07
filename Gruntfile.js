@@ -67,7 +67,7 @@ module.exports = function( grunt ) {
       },
       scss: {
         files: [path.resolve(PATHS.src.scss, '**/*.scss')],
-        tasks: ['sass:dev', 'postcss:dev']
+        tasks: ['dart-sass:dev', 'postcss:dev']
       },
       php: {
         files: [path.resolve(PATHS.src.php, '**/*.php')],
@@ -338,11 +338,10 @@ module.exports = function( grunt ) {
         src: [path.resolve(PATHS.src.js, '*.js')]
       }
     },
-    sass: {
+    'dart-sass': {
       dev: {
         options: {
-          sourcemap: 'none',
-          noCache: true,
+          sourceMap: false,
           style: 'expanded',
           update: true
         },
@@ -358,8 +357,7 @@ module.exports = function( grunt ) {
       },
       dist: {
         options: {
-          sourcemap: 'none',
-          noCache: true,
+          sourceMap: false,
           style: 'compressed'
         },
         files: [
@@ -469,11 +467,11 @@ module.exports = function( grunt ) {
 
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-sass');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
+  grunt.loadNpmTasks('grunt-dart-sass');
   grunt.loadNpmTasks('grunt-babel');
   grunt.loadNpmTasks('grunt-replace');
   grunt.loadNpmTasks('grunt-copy-deps');
@@ -485,7 +483,7 @@ module.exports = function( grunt ) {
     'clean:dev',
     'copydeps:dev',
     'copy:dev',
-    'sass:dev',
+    'dart-sass:dev',
     'postcss:dev',
     'jshint:dev',
     'babel:dev',
@@ -500,7 +498,7 @@ module.exports = function( grunt ) {
     'clean:dist',
     'copydeps:dist',
     'copy:dist',
-    'sass:dist',
+    'dart-sass:dist',
     'postcss:dist',
     'cssmin:dist',
     'clean:unmincss',
