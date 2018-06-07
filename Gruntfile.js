@@ -414,8 +414,8 @@ module.exports = function( grunt ) {
             src: [
               '**/*.js', 
               '!**/*.min.js',
-              '!' + path.resolve(PATHS.dist.dependencies.js, '**/vue.js'),
-              '!' + path.resolve(PATHS.dist.dependencies.js, '/codemirror/*.js')
+              '!' + path.join(PATHS.dist.dependencies.js, '**/vue.js'),
+              '!' + path.join(PATHS.dist.dependencies.js, '/codemirror/*.js')
             ],
             dest: PATHS.dist.js,
             ext: '.min.js'

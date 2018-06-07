@@ -1,6 +1,6 @@
 // Define root.
-const PATH = '/beckett-location-register/dev', // FOR DEVELOPMENT
-      ROOT = location.protocol + '//' + location.host + PATH;
+const PATH = ''; /* FOR DEVELOPMENT USE ONLY, use '/beckett-location-register/dev' */ 
+const ROOT = location.protocol + '//' + location.host + PATH;
 
 // Load meta data.
 $.when(
