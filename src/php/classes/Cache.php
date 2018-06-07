@@ -6,7 +6,7 @@ class Cache {
   protected $cache;
   
   // FOR DEVELOPMENT USE ONLY.
-  private $development = true;
+  private $development = false;
   
   // Constructor
   function __construct( $id = 'cache' ) {
