@@ -1,5 +1,8 @@
 <?php
 
+// Use dependencies.
+use \ForceUTF8\Encoding;
+
 // Parses a CSV file into an associative PHP array.
 function csv_to_array( $path, $has_headers = true ) { 
   
@@ -24,7 +27,7 @@ function csv_to_array( $path, $has_headers = true ) {
       // Extract headers.
       $headers = array_map(function($header) {
         
-        return trim(iconv('UTF-8', 'ASCII//IGNORE', $header));
+        return trim(Encoding::toUTF8($header));
         
       }, array_shift($csv)); 
 

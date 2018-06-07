@@ -1,5 +1,8 @@
 <?php
 
+// Use dependencies.
+use \ForceUTF8\Encoding;
+
 // `GET` Methods
 trait GET {
   
@@ -777,7 +780,7 @@ class API {
   protected $path = '';
   protected $csv = [];
   protected $error = false;
-  protected $local = false;
+  protected $local = true;
   
   public $method = 'GET';
   public $uri = '';
@@ -920,7 +923,7 @@ class API {
       // Extract headers.
       $headers = array_map(function($header) {
         
-        return trim(iconv('UTF-8', 'ASCII//IGNORE', $header));
+        return trim(Encoding::toUTF8($header));
         
       }, array_shift($data));
       
