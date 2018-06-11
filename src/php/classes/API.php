@@ -753,7 +753,7 @@ class API {
     'Access-Control-Allow-Methods' => '*',
     'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
     'Pragma' => 'no-cache',
-    //'Content-Type' => 'application/json; charset=utf-8'
+    'Content-Type' => 'application/json; charset=utf-8'
   ];
   
   private $codes = [
@@ -780,7 +780,7 @@ class API {
   protected $path = '';
   protected $csv = [];
   protected $error = false;
-  protected $local = true;
+  protected $local = true; // Set the default value, but inherit from the Config class.
   
   public $method = 'GET';
   public $uri = '';
@@ -796,6 +796,9 @@ class API {
   
   // Constructor
   function __construct( Config $config ) {
+   
+    // Configure the API.
+    if( in_array($config->LOCAL_DATABASE, [true, false]) ) $this->local = $config->LOCAL_DATABASE;
     
     // Determine API path.
     $this->path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $config->ROOT) . '/' . $config->ROUTER['api'];

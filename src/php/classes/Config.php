@@ -2,7 +2,9 @@
 
 class Config {
   
-  private $config = [];
+  private $config = [
+    'LOCAL_DATABASE' => false
+  ];
   
   // Constructor
   function __construct() {

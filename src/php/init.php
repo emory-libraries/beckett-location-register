@@ -4,7 +4,7 @@
 ini_set('memory_limit', '1000M');
 
 // Increase time limit to handle large requests.
-set_time_limit( 50 );
+set_time_limit( 120 );
 
 // Set session path.
 session_save_path('/tmp');
