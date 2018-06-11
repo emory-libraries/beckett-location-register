@@ -155,4 +155,45 @@ function array_colsort( array $array, array $cols = [] ) {
   
 }
 
+function array_equiv( array $array, array $comp ) {
+  
+  // First, check length.
+  if( count($array) !== count($comp) ) return false;
+  
+  // Next, check keys and values.
+  foreach( $array as $key => $value ) {
+    
+    // Check if the key exists.
+    if( array_key_exists($key, $comp) ) return false;
+    
+    // Get the value.
+    $comp_value = $comp[$key];
+    
+    // Check for array values.
+    if( is_array($value) or is_array($comp_value) ) {
+      
+      // Check for type equivalence.
+      if( is_array($value) and !is_array($comp_value) ) return false;
+      if( is_array($comp_value) and !is_array($value) ) return false;
+      
+      // Check for array equivalence.
+      if( !array_equiv($value, $comp_value) ) return false;
+      
+    }
+    
+    // Check for scalar values.
+    else {
+      
+      // Check for value equivalence.
+      if( $value !== $comp_value ) return false;
+      
+    }
+    
+  }
+     
+  // Otherwise, equivalent.
+  return true;
+  
+}
+
 ?>

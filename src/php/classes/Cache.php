@@ -67,11 +67,11 @@ class Cache {
     foreach( $this->cache as $index => &$data ) { 
       
       if( isset($data['method']) and isset($data['endpoint']) and isset($data['query']) ) {
-        
+
         // Compare data.
         $same_method = $data['method'] == $method;
-        $same_endpoint = $data['endpoint'] == $endpoint;
-        $same_query = count(array_diff_assoc($data['query'], $query)) > 0;
+        $same_endpoint = $data['endpoint'] == $endpoint; 
+        $same_query = array_equiv($data['query'], $query);
 
         if( $same_method and $same_endpoint and $same_query ) {
 
@@ -108,13 +108,13 @@ class Cache {
   // Get some cache data.
   function get( $method, $endpoint, $query ) {
     
-    $match = array_filter($this->cache, function($data) use($method, $endpoint, $query) {
+    $match = array_values(array_filter($this->cache, function($data) use($method, $endpoint, $query) {
       
       return isset($data['method']) and $data['method'] == $method and
              isset($data['endpoint']) and $data['endpoint'] == $endpoint and
              isset($data['query']) and $data['query'] == $query;
       
-    });
+    }));
 
     if( isset($match) and !empty($match) ) return $match[0];
     
