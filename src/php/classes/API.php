@@ -716,22 +716,25 @@ trait FEATURES {
     // Index each field for each record.
     foreach( $flattened as $record ) {
       
-      $indexed = array_merge_recursive($indexed, $record);
+      foreach( $record as $key => $value ) {
+        
+        if( !array_key_exists($key, $indexed) ) $indexed[$key] = [];
+        
+        $indexed[$key][] = $value;
+        
+      }
 
     }
     
-    // Only keep unique values.
-    $indexed = array_map( 'array_values', array_map( 'array_unique', $indexed ) );
+    // Only keep unique values, then sort and typify the data.
+    foreach( $indexed as $key => $record ) {
+      
+      $indexed[$key] = $this->__typify(sort(array_values(array_unique($record))));
+      
+    }
 
-    // Sort all the aggregate data.
-    array_walk($indexed, function(&$values) use ($order) { 
-
-      sort($values, $order); 
-
-    });
-
-    // Expand and typify the aggregate data.
-    $indexed = $this->__typify( array_expand($indexed) );
+    // Expand the aggregate data.
+    $indexed = array_expand($indexed);
     
     // Save index data.
     $this->features['index'] = [
