@@ -691,7 +691,7 @@ $.when(
         self.api.sort = self.sort; 
 
         // Reinvoke the last call to the API.
-        self.api.last().then((response) => { 
+        self.api.last().then((response) => {
           
           // Trigger a paging event.
           event.trigger('paging', {response: response, api: self.api});

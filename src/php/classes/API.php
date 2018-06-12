@@ -726,15 +726,15 @@ trait FEATURES {
 
     }
     
-    // Only keep unique values, then sort and typify the data.
+    // Only keep unique values, then sort the data.
     foreach( $indexed as $key => $record ) {
       
-      $indexed[$key] = $this->__typify(sort(array_values(array_unique($record))));
+      $indexed[$key] = array_values(sort(array_unique($record)));
       
     }
 
-    // Expand the aggregate data.
-    $indexed = array_expand($indexed);
+    // Expand and typify the aggregate data.
+    $indexed = array_expand($this->__typify($indexed));
     
     // Save index data.
     $this->features['index'] = [

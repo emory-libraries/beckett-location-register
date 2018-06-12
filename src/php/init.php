@@ -1,5 +1,8 @@
 <?php
 
+// Set error levels.
+error_reporting(0);
+
 // Increase memory limit to handle large files.
 ini_set('memory_limit', '1000M');
 
