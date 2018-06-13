@@ -1,6 +1,6 @@
 <?php
 
-// Set error levels.
+// Silence errors for production.
 error_reporting(0);
 
 // Increase memory limit to handle large files.

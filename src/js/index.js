@@ -959,7 +959,7 @@ $.when(
         const fields = this.fields;
         
         // Initialize a method for validating filters fields.
-        const validate = function(field) {
+        const validate = function(field) { 
           
           // Break out the fields.
           field = field.split('.');
@@ -969,7 +969,7 @@ $.when(
           
           // Narrow down the pointer.
           for( let i = 0; i < field.length; i++ ) {
-            
+    
             // Validate the pointer.
             if( !pointer.hasOwnProperty(field[i]) ) return false;
             
@@ -977,7 +977,7 @@ $.when(
             pointer = pointer[field[i]];
             
           }
-          
+    
           // Check the pointer for multiplicity.
           if( !Array.isMultiple(pointer) ) return false;
           
@@ -1014,12 +1014,12 @@ $.when(
           },
           'location'() {
             return this['location.origin']() ||
-                   this['location.destination()'];
+                   this['location.destination']();
           },
           'recipient': validate('recipient'),
           'repository': validate('repository'),
           'language': validate('language'),
-          'any'() { 
+          'any'() {
             return this.date() ||
                    this.location() ||
                    this.recipient ||
@@ -1039,7 +1039,7 @@ $.when(
     created() {
       
       // Capture context.
-      const self = this;
+      const self = this; 
       
       // Handle events.
       event.on('filtering', () => {
@@ -1049,12 +1049,12 @@ $.when(
         
       });
       event.on('list filtering paging sort', (data) => {
-        
+  
         // Reload the API.
         self.api = data.api; 
         
         // Capture any indexing data.
-        self.fields = data.response.index.data;
+        self.fields = data.response.index ? data.response.index.data : {};
         
         // Filtering was applied.
         if( data.response.filter ) {
@@ -1356,9 +1356,9 @@ $.when(
 
         // Save response data.
         self.response = data.response;
-        self.data = data.response.data || [];
+        self.data = data.response.data || []; 
         self.api = data.api;
-        
+ 
         // Capture density if given.
         if( data.density ) self.density = data.density;
 

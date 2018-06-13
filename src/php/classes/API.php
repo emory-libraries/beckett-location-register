@@ -689,7 +689,7 @@ trait FEATURES {
   }
   
   // Enables all data fields to be indexed.
-  private function __index( array $settings ) {
+  private function __index( array $settings ) { 
     
     // Continue if no errors previously occurred.
     if( $this->error ) return;
@@ -726,15 +726,23 @@ trait FEATURES {
 
     }
     
-    // Only keep unique values, then sort the data.
+    // Clean up the indexed data.
     foreach( $indexed as $key => $record ) {
       
-      $indexed[$key] = array_values(sort(array_unique($record)));
+      // Only keep unique values.
+      $unique = array_unique($record);
+      
+      // Sort the values.
+      if( $order === SORT_DESC ) rsort($unique);
+      else sort($unique);
+      
+      // Typify and save the updated values.
+      $indexed[$key] = $this->__typify($unique);
       
     }
 
-    // Expand and typify the aggregate data.
-    $indexed = array_expand($this->__typify($indexed));
+    // Expand the aggregate data.
+    $indexed = array_expand($indexed);
     
     // Save index data.
     $this->features['index'] = [
