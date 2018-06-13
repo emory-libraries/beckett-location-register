@@ -440,21 +440,25 @@ trait FEATURES {
       $ordered = [];
 
       // Rearrange the order of any date fields: year -> month -> day.
-      $years = array_filter($settings, function($value, $field) {
-
-        return strpos($field, 'year') !== false;
-
-      }, ARRAY_FILTER_USE_BOTH);
-      $months = array_filter($settings, function($value, $field) {
-
-        return strpos($field, 'month') !== false;
-
-      }, ARRAY_FILTER_USE_BOTH);
-      $days = array_filter($settings, function($value, $field) {
-          
-        return strpos($field, 'day') !== false;
-
-      }, ARRAY_FILTER_USE_BOTH);
+      $years = [];
+      $months = [];
+      $days = [];
+      
+      foreach( $settings as $field => $value ) {
+        
+        if( strpos($field, 'year') !== false ) $years[$field] = $value;
+        
+      }
+      foreach( $settings as $field => $value ) {
+        
+        if( strpos($field, 'month') !== false ) $months[$field] = $value;
+        
+      }
+      foreach( $settings as $field => $value ) {
+        
+        if( strpos($field, 'day') !== false ) $days[$field] = $value;
+        
+      }
       
       // Apply the new order.
       $ordered = array_merge($ordered, $years);
