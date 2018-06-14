@@ -1771,62 +1771,75 @@ $.when(
           
         };
         
-        // Ignore empty inputs.
-        if( !isset(this.query.input) ) return;
-        
-        // Handle query types.
-        switch( this.query.type ) {
-            
-          case 'AND':
-            
-            // Save the input.
-            this.query.data.push({
-              display: this.query.input,
-              type: this.query.type,
-              value: '+' + quote(this.query.input) 
-            });
-            
-            break;
-            
-          case 'NOT':
-            
-            // Save the input.
-            this.query.data.push({
-              display: this.query.input,
-              type: this.query.type,
-              value: '-' + quote(this.query.input) 
-            });
-            
-            break;
-            
-          case 'OR':
-            
-            // Save the input.
-            this.query.data.push({
-              display: this.query.input, 
-              type: this.query.type,
-              value: '~' + quote(this.query.input) 
-            });
-            
-            break;
-            
-          default:
-            
-            // Save the data.
-            this.query.data.unshift({
-              display: this.query.input,
-              type: false,
-              value: this.query.input
-            });
-            
-            // Set the type.
-            this.query.type = 'OR';
-            
+        // Attempt to search when given empty inputs.
+        if( !isset(this.query.input) ) {
+          
+          // Check for previously entered search queries.
+          if( this.query.data.length > 0 ) this.search();
+          
+          // Otherwise, ignore empty fields.
+          return;
+          
         }
         
-        // Prepare for another entry.
-        this.query.input = null;
-        this.query.suggestions = [];
+        // Otherwise, save the input.
+        else {
+        
+          // Handle query types.
+          switch( this.query.type ) {
+
+            case 'AND':
+
+              // Save the input.
+              this.query.data.push({
+                display: this.query.input,
+                type: this.query.type,
+                value: '+' + quote(this.query.input) 
+              });
+
+              break;
+
+            case 'NOT':
+
+              // Save the input.
+              this.query.data.push({
+                display: this.query.input,
+                type: this.query.type,
+                value: '-' + quote(this.query.input) 
+              });
+
+              break;
+
+            case 'OR':
+
+              // Save the input.
+              this.query.data.push({
+                display: this.query.input, 
+                type: this.query.type,
+                value: '~' + quote(this.query.input) 
+              });
+
+              break;
+
+            default:
+
+              // Save the data.
+              this.query.data.unshift({
+                display: this.query.input,
+                type: false,
+                value: this.query.input
+              });
+
+              // Set the type.
+              this.query.type = 'OR';
+
+          }
+
+          // Prepare for another entry.
+          this.query.input = null;
+          this.query.suggestions = [];
+          
+        }
         
       },
       
