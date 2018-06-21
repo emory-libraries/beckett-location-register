@@ -1531,6 +1531,7 @@ $.when(
 
     data() {
       return {
+        boolean: false,
         ready: false,
         query: {
           input: null,
@@ -1550,12 +1551,18 @@ $.when(
       search() {
         
         // Build the query.
-        const query = this.query.data.map((data) => {
+        let query = this.query.data.map((data) => {
           
           return data.value;
           
         }).join(' ');
         
+        // Capture any remaining input.
+        if( this.query.input ) query += ` ${this.query.input}`;
+        
+        // Clean up the query.
+        query = query.trim();
+    
         // Reset paging.
         this.$api.paging.offset = 0;
         
