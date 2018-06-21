@@ -1,25 +1,6 @@
 .list {
 
-  .controls {
-    margin-top: 10px;
-    margin-bottom: 25px;
-    display: flex;
-    flex-wrap: wrap;
-    
-    @include breakpoint( $controls-breakpoint ) { 
-      height: $controls-height; 
-      flex-wrap: nowrap;
-    };
-    
-    > * { align-self: stretch; }
-    
-    #{$all-buttons} { height: $controls-height; }
-    
-    @import 'density';
-    @import 'paging';
-    @import 'filtering';
-    
-  }
+  @import 'controls';
   
   > table {
     

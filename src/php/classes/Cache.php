@@ -2,14 +2,15 @@
 
 class Cache {
   
+  protected $config;
   protected $id;
   protected $cache;
   
-  // FOR DEVELOPMENT USE ONLY.
-  private $development = false;
-  
   // Constructor
-  function __construct( $id = 'cache' ) {
+  function __construct( Config $config, $id = 'cache' ) {
+    
+    // Save configurations.
+    $this->config = $config;
     
     // Save the ID.
     $this->id = $id;
@@ -18,7 +19,7 @@ class Cache {
     session_start();
     
     // FOR DEVELOPMENT USE ONLY.
-    if( $this->development ) unset($_SESSION);
+    if( $config->DEVELOPMENT ) unset($_SESSION);
 
     // Reload the cache if it already exists.
     if( isset($_SESSION[$this->id]) ) $this->cache = &$_SESSION[$this->id];

@@ -60,15 +60,20 @@
     
     <div class="buttons">
     
-      <button class="button icon icon-block-left btn-search primary" @click="search" :disabled="query.data.length === 0">
+      <button class="button icon icon-block-left btn-search primary" 
+              @click="search" 
+              :disabled="query.data.length === 0 && !query.input">
         <span class="icon fa-search"></span>
         Search
       </button>
-      <button class="button icon icon-block-left btn-clear" @click="clear" :disabled="query.data.legnth === 0 && !field">
+      <button class="button icon icon-block-left btn-clear" 
+              @click="clear" 
+              :disabled="!field && (query.data.legnth === 0 || !query.input)">
         <span class="icon fa-repeat"></span>
         Clear
       </button>
-      <button class="button icon icon-block-left btn-browse info" @click="browse">
+      <button class="button icon icon-block-left btn-browse info" 
+              @click="browse">
         <span class="icon fa-binoculars"></span>
         Browse
       </button>

@@ -4,18 +4,18 @@
     
     <div class="controls">
       
-      <div class="density">
+      <div class="density"> 
         
         <button class="btn-density light"
-                :class="{active: density == 'light'}"
-                @click="density = 'light'">
+                :class="{active: $api.density == 'light'}"
+                @click="$api.density = 'light'">
           <span class="bar"></span>
           <span class="bar"></span>
           <span class="bar"></span>
         </button>
         <button class="btn-density medium"
-                :class="{active: density == 'medium'}"
-                @click="density = 'medium'">
+                :class="{active: $api.density == 'medium'}"
+                @click="$api.density = 'medium'">
           <span class="bar"></span>
           <span class="bar"></span>
           <span class="bar"></span>
@@ -23,8 +23,8 @@
         </button>
         
         <button class="btn-density heavy"
-                :class="{active: density == 'heavy'}"
-                @click="density = 'heavy'">
+                :class="{active: $api.density == 'heavy'}"
+                @click="$api.density = 'heavy'">
           <span class="bar"></span>
           <span class="bar"></span>
           <span class="bar"></span>
@@ -42,7 +42,7 @@
     
     <div class="alert" :class="error.state" v-if="error.message">{{error.message}}</div>
     
-    <table :density="density" 
+    <table :density="$api.density" 
            v-if="data.length > 0"
            class="striped highlight">
       

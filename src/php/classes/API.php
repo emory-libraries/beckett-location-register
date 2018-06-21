@@ -17,7 +17,7 @@ trait GET {
     $aggregate = isset($endpoint['aggregate']) ? (bool) $endpoint['aggregate'] : false;
     $order = isset($endpoint['order']) ? preg_match('/desc/', $endpoint['order']) ? SORT_DESC : SORT_ASC : SORT_ASC;
     $dynamic = isset($meta['regex']);
-    
+
     // Look for a set of named data models.
     $models = $this->config->META['models'];
     
@@ -406,7 +406,7 @@ trait FEATURES {
     'paging'  => [
       'limit'   => 10,
       'offset'  => 0,
-      'pages'   => 5
+      'count'   => 5
     ],
     'sort'    => [
       'order'   => SORT_ASC,
@@ -573,10 +573,10 @@ trait FEATURES {
     // Determine settings.
     $limit = isset($settings['limit']) ? $settings['limit'] : $this->defaults['paging']['limit'];
     $offset = isset($settings['offset']) ? $settings['offset'] : $this->defaults['paging']['offset'];
-    $pages = isset($settings['pages']) ? $settings['pages'] : $this->defaults['paging']['pages'];
+    $count = isset($settings['count']) ? $settings['count'] : $this->defaults['paging']['count'];
     
     // Always use an odd number for pages.
-    if( $pages % 2 == 0 ) $pages++;
+    if( $count % 2 == 0 ) $count++;
 
     // Catch errors.
     if( is_bool($limit) or !is_numeric($limit) or is_bool($offset) or !is_numeric($offset) ) {
@@ -598,7 +598,7 @@ trait FEATURES {
       'next' => $limit + $offset < $length ? $limit + $offset : false,
       'previous' => $offset - $limit >= 0 ? $offset - $limit : false, 
       'pages' => [
-        'count' => $pages,
+        'count' => $count,
         'total' => ($total = ceil($length / $limit)),
         'active' => ($active = $total - ceil(($length - $offset - $limit) / $limit)),
         'next' => [
@@ -618,11 +618,16 @@ trait FEATURES {
           'number' => $total - 1
         ],
         'index' => []
+      ],
+      "results" => [
+        "total" => $length,
+        "start" => $offset + 1,
+        "stop" => ($stop = ($total * ($active / $total)) * $limit) > $length ? $length : $stop
       ]
     ];
     
     // Determine the page split.
-    $split = ($pages - 1) / 2;
+    $split = ($count - 1) / 2;
     
     // Initialize a counter for previous pages and next pages.
     $p = 0;
@@ -632,7 +637,7 @@ trait FEATURES {
     $pointer = &$this->features['paging']['pages']['index'];
     
     // Build page numbers.
-    for( $i = 0; $i < $pages; $i++ ) {
+    for( $i = 0; $i < $count; $i++ ) {
       
       $addActive = function() use (&$pointer, $active, $offset) {
         
@@ -764,11 +769,15 @@ class API {
   use GET, FEATURES;
   
   private $headers = [
-    'Access-Control-Allow-Origin' => '*',
-    'Access-Control-Allow-Methods' => '*',
-    'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-    'Pragma' => 'no-cache',
-    'Content-Type' => 'application/json; charset=utf-8'
+    'always' => [
+      'Access-Control-Allow-Origin' => '*',
+      'Access-Control-Allow-Methods' => '*',
+      'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+      'Pragma' => 'no-cache'
+    ],
+    'production' => [
+      'Content-Type' => 'application/json; charset=utf-8'
+    ]
   ];
   
   private $codes = [
@@ -830,16 +839,30 @@ class API {
     $this->status = ['code' => 400, 'message' => $this->codes[400]];
     
     // Send initial headers.
-    foreach( $this->headers as $key => $value ) { header("$key: $value"); }
+    $this->__headers();
     
     // Initialize the cache.
-    if( $this->caching ) $this->cache = new Cache();
+    if( $this->caching ) $this->cache = new Cache($config);
 
     // Load data from source.
     $this->csv = $this->local ? $this->__spreadsheet() : $this->__googlesheet();
     
     // Handle the request.
     $this->__request();
+    
+  }
+  
+  // Build and send initial headers.
+  private function __headers() {
+    
+    // Always send main headers.
+    foreach( $this->headers['always'] as $key => $value ) { header("$key: $value"); }
+    
+    // Only send development headers when in development mode.
+    if( $this->config->DEVELOPMENT ) foreach( $this->headers['development'] as $key => $value ) { header("$key: $value"); }
+    
+    // Only send production headers when in production mode.
+    if( !$this->config->DEVELOPMENT ) foreach( $this->headers['production'] as $key => $value ) { header("$key: $value"); }
     
   }
   

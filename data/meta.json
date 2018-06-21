@@ -224,7 +224,8 @@
         "model": "default",
         "match": {
           ":id": "id"
-        }
+        },
+        "strict": true
       }
     ]
   }

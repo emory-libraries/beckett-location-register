@@ -145,6 +145,13 @@ $.when(
     return result;
     
   };
+  Object.isObject = function( object, permitNull = false ) { 
+  
+    if( Array.isArray(object) ) return false;
+    
+    return permitNull ? object instanceof Object : object instanceof Object && object !== null;
+  
+  };
   Object.isEmpty = function( object ) { return object.constructor === Object && Object.keys(object).length === 0; };
   Object.isEqual = function( object1, object2 ) {
     
@@ -234,274 +241,353 @@ $.when(
             
             return isset(value);
             
+          },
+          
+          when( condition, callback, delay = 100 ) {
+            
+            // Check if the condition was met, then fire the callback.
+            if( condition() ) callback();
+          
+            // Otherwise, wait until the condition is met.
+            else setTimeout(() => this.when(condition, callback, delay), delay);
+            
           }
           
         };
-  
-  // Configure default paging settings.
-  const paging = {
-    limit: 20,
-    count: 5,
-    offset: 0
-  };
 
-  // Classes
-  class API {
+  // Build the API.
+  const API = new Vue({
 
-    constructor() {
-      
-      this.src = `${ROOT}/${ROUTER.api}`;
-      this.recall = {method: null, arguments: []};
-      this.method = null;
-      this.endpoint = null;
-      this.paging = {};
-      this.filter = {};
-      this.sort = {};
-      this.index = true;
-      this.loading = true;
-      
-    }
+    data: {
+      src: `${ROOT}/${ROUTER.api}`,
+      history: [],
+      method: null,
+      endpoint: null,
+      paging: {
+        limit: 20,
+        count: 5,
+        offset: 0,
+        increments: [10, 20, 50, 100]
+      },
+      filter: {},
+      sort: {
+        'date.day': 'ASC',
+        'date.month': 'ASC',
+        'date.year': 'ASC'
+      },
+      indexing: {},
+      loading: true,
+      density: 'medium'
+    },
     
-    request( method, endpoint, data = {} ) {
+    methods: {
       
-      // Capture context.
-      const self = this;
-      
-      // Validate the endpoint.
-      if( self.valid(method, endpoint) ) {
+      // Implement utility methods.
+      utils() {
         
-        // Save the endpoint and method.
-        self.method = method;
-        self.endpoint = endpoint;
-      
-        // Start loading.
-        if( this.loading ) event.trigger('loading', true);
+        // Capture context.
+        const self = this;
         
-        // Initialize a query string.
-        let query = '';
-    
-        // Build the query string.
-        if( !Object.isEmpty(self.paging) ) {
+        return {
           
-          query += (query === '' ? '?' : '&') + self.query('paging');
-          
-        }
-        if( !Object.isEmpty(self.filter) ) {
-          
-          query += (query === '' ? '?' : '&') + self.query('filter');
-          
-        }
-        if( !Object.isEmpty(self.sort) ) {
-          
-          query += (query === '' ? '?' : '&') + self.query('sort'); 
-          
-        }
-        if( !Object.isEmpty(self.index) ) {
-          
-          query += (query === '' ? '?' : '&') + self.query('index'); 
-          
-        }
+          // Validate methods and endpoints.
+          validate( method, endpoint ) {
 
-        // Send the request.
-        return $.ajax({
-          dataType: 'json',
-          url: `${self.src}${endpoint}${query}`,
-          method: method,
-          data: data
-        }).always((response) => { 
-          
-          // Capture any feature feedback.
-          if( response.data ) {
-            
-            if( response.data.hasOwnProperty('paging') ) {
-              self.paging = response.data.paging;
-              
+            // Capture the endpoints, and convert them into a regex.
+            const endpoints = META.endpoints[method].map((endpoint) => new RegExp( endpoint.endpoint.replace(/:[^/]+/, '[^/]+?') ));
+
+            // Valid endpoints should match against a regex.
+            for(let i = 0; i < endpoints.length; i++ ) {
+
+              // Test the endpoint against the regex.
+              if( endpoints[i].test(endpoint) ) return true;
+
             }
-            if( response.data.hasOwnProperty('filter') ) {
-              self.filter = response.data.filter;
-            }
-            if( response.data.hasOwnProperty('sort') ) {
-              self.sort = response.data.sort;
-            }
-            
+
+            // Invalid endpoints will not match.
+            return false;
+
+          },
+
+          // Build the query string for a request.
+          query() {
+
+            // Define feature set.
+            const features = [
+              'paging', 
+              'filter', 
+              'sort', 
+              'indexing'
+            ];
+
+            // Initialize query string.
+            let query = '';
+
+            // Initialize query component helper.
+            const component = ( feature ) => {
+
+              // Initialize the query string.
+              let query = '';
+
+              // Handle features with sub-properties.
+              if( Object.isObject(self[feature]) ) {
+
+                for( let key in self[feature] ) {
+
+                  // Capture the value.
+                  let value = self[feature][key];
+
+                  // Convert array values into comma-delimited lists.
+                  if( Array.isArray(value) ) value = value.join(',');
+
+                  // Save the query parameter.
+                  query += `${feature}[${key}]=${value}&`;
+
+                }
+
+                // Output the combined query string.
+                return query.slice(0, -1);
+
+              }
+
+              // Otherwise, handle simple features.
+              return `${feature}=${self[feature]}`;
+
+
+            };
+
+            // Build the query string components.
+            features.forEach((feature) => {
+
+              // Verify that the component exists.
+              if( !Object.isEmpty(self[feature]) ) {
+
+                // Add the component to the query string.
+                query += (query === '' ? '?' : '&') + component(feature);
+
+              }
+
+            });
+
+            // Return the compiled query string.
+            return query;
+
+          },
+
+          // Build the URL for a request.
+          url() {
+
+            return `${self.src}${self.endpoint}${self.utils().query()}`;
+
+          },
+
+          // Get the last search or browse state of the API.
+          state( filters = [] ) {
+
+            // Get the history.
+            const history = self.history.reverse();
+
+            // Get the last state.
+            const state = filters.length > 0 ? history.filter((memory) => filters.includes(memory.method))[0] : history[0];
+
+            // Return the state.
+            return state;
+
+          },
+
+          // Format filters.
+          filters( filters ) {
+
+            // Format filter ranges.
+            $.each(filters, (key, value) => {
+
+              // Remove empty values.
+              if( value === undefined || Array.isEmpty(value) ) delete filters[key];
+
+              // Handle arrays values.
+              else if( Array.isArray(value) ) {
+
+                // Look for ranges within the array.
+                value = value.map((v) => {
+
+                  // Capture ranges.
+                  if( Object.isObject(v) && v.hasOwnProperty('min') && v.hasOwnProperty('max') ) {
+
+                    // Only keep non-empty values.
+                    if( v.min === undefined && v.max === undefined ) return undefined;
+                    else if( v.min === undefined && v.max !== undefined ) return v.max;
+                    else if( v.min !== undefined && v.max === undefined ) return v.min;
+                    else return `${v.min}-${v.max}`;
+
+                  }
+
+                  return v;
+
+                });
+
+                // Remove empty ranges.
+                value = value.filter((v) => v !== undefined);
+
+                // Delete invalid ranges.
+                if( Array.isEmpty(value) ) delete filters[key];
+
+                // Otherwise, save the new value.
+                else filters[key] = value;
+
+              }
+
+            });
+
+            // Return the formatted filters.
+            return filters;
+
           }
           
-        });
+        };
         
-      }
-      
-    }
+      },
     
-    query( feature ) {
-      
-      // Capture context.
-      const self = this;
-      
-      // Initialize the query string.
-      let query = '';
-      
-      // Loop through each parameter.
-      if( self[feature] instanceof Object && self[feature] !== null ) {
-        
-        for( let key in self[feature] ) {
-
-          // Capture the value.
-          let value = self[feature][key];
-
-          // Convert array values into comma-delimited lists.
-          if( Array.isArray(value) ) value = value.join(',');
-
-          // Save the query parameter.
-          query += `${feature}[${key}]=${value}&`;
-
-        }
-
-        // Output the query string.
-        return query.slice(0, -1);
-        
-      }
-      
-      return `${feature}=${self[feature]}`;
-      
-    }
+      // Save the API call history.
+      memory( method, args ) { this.history.push({method, args}); },
     
-    valid( method, endpoint ) {
+      // Execute a request on the API.
+      request( method, endpoint, data = {} ) { 
+      
+        // Validate the endpoint.
+        if( this.utils().validate(method, endpoint) ) {
 
-      // Capture the endpoints, and convert them into a regex.
-      const endpoints = META.endpoints[method].map((endpoint) => {
+          // Save the endpoint and method.
+          this.method = method;
+          this.endpoint = endpoint;
 
-        return new RegExp( endpoint.endpoint.replace(/:[^/]+/, '[^/]+?') );
-        
-      });
+          // Start loading.
+          if( this.loading ) event.trigger('loading', true);
 
-      // Valid endpoints should match against a regex.
-      for(let i = 0; i < endpoints.length; i++ ) {
-        
-        // Test the endpoint against the regex.
-        if( endpoints[i].test(endpoint) ) return true;
-        
-      }
-      
-      // Invalid endpoints will not match.
-      return false;
-      
-    }
-    
-    search( query, field = null ) {
-      
-      // Save the called method.
-      this.recall.method = 'search';
-      this.recall.arguments = [query, field];
-      
-      // Execute the request.
-      return this.request('GET', 'search/' + (field ? `${field}/${query}` : query));
-      
-    }
-    
-    browse() {
-      
-      // Save the called method.
-      this.recall.method = 'browse';
-      
-      // Execute the request.
-      return this.request('GET', 'browse/');
-      
-    }
-      
-    letter( id ) {
-      
-      // Save the called method.
-      this.recall.method = 'letter';
-      this.recall.arguments.push( id );
-      
-      // Execute the request.
-      return this.request('GET', `letter/${id}`);
-      
-    }
-    
-    last() {
-      
-      // Call the last method invoked again.
-      return this[this.recall.method].apply(this, this.recall.arguments);
-      
-    }
-      
-    filters( filters ) {
-      
-      // Format filter ranges.
-      $.each(filters, (key, value) => {
-          
-        // Remove empty values.
-        if( value === undefined || Array.isEmpty(value) ) delete filters[key];
+          // Send the request.
+          return $.ajax({
+            dataType: 'json',
+            url: this.utils().url(),
+            method: method,
+            data: data,
+            context: this
+          }).always((response) => {
 
-        // Handle arrays values.
-        else if( Array.isArray(value) ) {
-
-          // Look for ranges within the array.
-          value = value.map((v) => {
-
-            // Capture ranges.
-            if( v instanceof Object && v.hasOwnProperty('min') && v.hasOwnProperty('max') ) {
-
-              // Only keep non-empty values.
-              if( v.min === undefined && v.max === undefined ) return undefined;
-              else if( v.min === undefined && v.max !== undefined ) return v.max;
-              else if( v.min !== undefined && v.max === undefined ) return v.min;
-              else return `${v.min}-${v.max}`;
-
-            }
-
-            return v;
+            if( response.hasOwnProperty('paging') ) this.$set(this, 'paging', $.extend(true, {}, this.paging, response.paging));
+            if( response.hasOwnProperty('filter') ) this.$set(this, 'filter', $.extend(true, {}, this.filter, response.filter));
+            if( response.hasOwnProperty('sort') ) this.$set(this, 'sort', $.extend(true, {}, this.sort, response.sort));
+            if( response.hasOwnProperty('index') ) this.$set(this, 'indexing', $.extend(true, {}, this.indexing, response.index));
 
           });
 
-          // Remove empty ranges.
-          value = value.filter((v) => v !== undefined);
-
-          // Delete invalid ranges.
-          if( Array.isEmpty(value) ) delete filters[key];
-
-          // Otherwise, save the new value.
-          else filters[key] = value;
-
         }
 
-      });
+      },
+    
+      // Perform a `search` request on the API.
+      search( query, field = null ) {
+      
+        // Save the call in memory.
+        this.memory('search', Array.from(arguments));
 
-      // Return the formatted filters.
-      return filters;
+        // Execute the request.
+        return this.request('GET', 'search/' + (field ? `${field}/${query}` : query));
+
+      },
+    
+      // Perform a `browse` request on the API.
+      browse() {
+      
+        // Save the call in memory.
+        this.memory('browse', Array.from(arguments));
+
+        // Execute the request.
+        return this.request('GET', 'browse/');
+
+      },
+      
+      // Perform a `letter` request on the API.
+      letter( id ) {
+      
+        // Save the call in memory.
+        this.memory('letter', Array.from(arguments));
+
+        // Execute the request.
+        return this.request('GET', `letter/${id}`);
+
+      },
+    
+      // Perform an `index` request on the API.
+      index( field = '' ) {
+      
+        // Capture context.
+        const self = this;
+
+        // Save the call in memory.
+        this.memory('index', Array.from(arguments));
+
+        // Capture initial loading value.
+        const loading = self.loading;
+
+        // Temporarily disable loading.
+        if( loading ) self.loading = false;
+
+        // Execute the request.
+        return self.request('GET', `index/${field}`).always(() => {
+
+          // Reset the loading value.
+          self.loading = loading;
+
+        });
+
+      },
+    
+      // Recall any method invoked in the API's history by index.
+      recall( n = -1 ) {
+      
+        const history = this.history;
+
+        if( n < 0 ) return this[history[history.length + n].method].apply(this, history[history.length + n].args);
+
+        else return this[history[n].method].apply(this, history[n].args);
+
+      },
+    
+      // Recall the last method invoked in the API's history.
+      last() { 
+      
+        return this.recall(-1); 
+
+      },
+    
+      // Recall the previous search or browse method invoked in the API's history.
+      back() { 
+    
+        // Get the last state of the API.
+        const state = this.utils().state(['search', 'browse']);
+
+        // Call the last method or default to browse.
+        return state ? this[state.method].apply(this, state.args) : this.browse();
+
+      }
+      
+    }
+
+  });
+
+  // Implement global plugins.
+  const InstanceProperty = {
+    
+    install( Vue, options ) {
+      
+      Vue.prototype[`$${options.name}`] = options.vue; 
       
     }
     
-    aggregate( field = '' ) {
-      
-      // Capture context.
-      const self = this;
-      
-      // Save the called method.
-      self.recall.method = 'index';
-      self.recall.arguments.push( field );
-      
-      // Capture initial loading value.
-      const loading = self.loading;
-      
-      // Temporarily disable loading.
-      if( loading ) self.loading = false;
-      
-      // Execute the request.
-      return self.request('GET', `index/${field}`).always(() => {
-        
-        // Reset the loading value.
-        self.loading = loading;
-        
-      });
-      
-    }
-
-  }
+  };
   
   // Load plugins.
   Vue.use(VueMarkdown);
+  Vue.use(InstanceProperty, {vue: API, name: 'api'});
 
   // Events
   const Events = new Vue();
@@ -650,51 +736,19 @@ $.when(
     props: ['enabled'],
     
     data() {
-      return {
-        api: null,
-        increments: [10, 20, 50, 100].concat([paging.limit]).unique().sort((a, b) => a - b),
-        filters: {},
-        paging: $.extend({}, paging, {
-          previous: false,
-          next: false
-        }),
-        sort: {}
-      };
+      return {};
     },
     
     methods: $.extend({
       
-      limit() {
-        
-        // Broadcast changes to the limit value.
-        event.trigger('limit', this.paging.limit);
-        
-      },
-      
       page( offset ) {
         
-        // Capture context.
-        const self = this;
-        
-        // Ignore invalid offsets.
-        if( offset === false ) return;
-        
-        // Get the paging parameters.
-        let limit = self.paging.limit,
-            count = self.paging.pages.count;
-
-        // Configure the API's paging.
-        self.api.paging = {offset: offset, limit: limit, count: count};
-        
-        // Reapply any filters and sorting.
-        self.api.filter = self.api.filters( self.filters ); 
-        self.api.sort = self.sort; 
+        this.$api.paging.offset = offset; 
 
         // Reinvoke the last call to the API.
-        self.api.last().then((response) => {
+        this.$api.last().then((response) => {
           
-          // Trigger a paging event.
-          event.trigger('paging', {response: response, api: self.api});
+          event.trigger('paging', response.data);
           
         });
         
@@ -706,31 +760,8 @@ $.when(
     
     created() {
       
-      // Capture context.
-      const self = this;
-      
       // Handle events.
-      event.on('paging', () => {
-        
-        // Stop loading.
-        event.trigger('loading', false);
-        
-      });
-      event.on('list paging filtering sort', (data) => { 
-        
-        // Reload the API.
-        self.api = data.api;
-        
-        // Save paging data.
-        if( data.response.paging ) self.paging = data.response.paging;
-        
-        // Save filter data.
-        if( data.response.filter ) self.filters = data.response.filter;
-        
-        // Save sort data.
-        if( data.response.sort ) self.sort = data.response.sort;
-      
-      });
+      event.on('paging', () => event.trigger('loading', false));
       
     }
     
@@ -745,12 +776,9 @@ $.when(
     
     data() {
       return {
-        api: null,
-        limit: paging.limit,
         duration: 500,
         open: false,
         filterable: false,
-        fields: {},
         filters: this.init(),
         active: false
       };
@@ -926,40 +954,32 @@ $.when(
         const self = this;
         
         // Initialize the filters and format them.
-        let filters = self.api.filters( $.extend({}, self.filters) );
+        let filters = this.$api.filter;
         
         // Ignore empty filters.
         if( Object.isEmpty(filters) ) return;
         
-        // Configure the filters.
-        self.api.filter = filters;
-        
         // Reset the paging to go back to the first page.
-        self.api.paging = $.extend({}, paging, {limit: self.limit});
+        this.$api.paging.offset = 0;
         
         // Reinvoke the last call to the API.
-        self.api.last().then((response) => {
-          
-          // Trigger a filter event.
-          event.trigger('filtering', {response: response, api: self.api});
-          
-        });
+        this.$api.last().then((response) => event.trigger('filtering', response.data));
         
       },
       
       isFilterable() {
   
-        return !Object.values(Object.flatten(this.filters)).every((value) => !isset(value, true) );
+        return !Object.values(Object.flatten(this.$api.filter)).every((value) => !isset(value, true) );
         
       },
       
       canFilter( key ) {
         
         // Capture fields.
-        const fields = this.fields;
+        const fields = this.$api.indexing;
         
         // Initialize a method for validating filters fields.
-        const validate = function(field) { 
+        const validate = (field) => {
           
           // Break out the fields.
           field = field.split('.');
@@ -1042,40 +1062,24 @@ $.when(
       const self = this; 
       
       // Handle events.
-      event.on('filtering', () => {
-        
-        // Stop loading.
-        event.trigger('loading', false);
-        
-      });
+      event.on('filtering', () => event.trigger('loading', false));
       event.on('list filtering paging sort', (data) => {
-  
-        // Reload the API.
-        self.api = data.api; 
-        
-        // Capture any indexing data.
-        self.fields = data.response.index ? data.response.index.data : {};
         
         // Filtering was applied.
-        if( data.response.filter ) {
-          
-          self.active = true;
-          
-        }
-            
+        if( !Object.isEmpty(this.$api.filter) ) this.active = true;
+
         // Filtering was not applied.
         else {
           
-          self.active = false;
-          self.clear();
+          this.active = false;
+          this.clear();
           
         }
         
         // Hide the filter form.
-        self.toggle( false );
+        this.toggle(false);
       
       });
-      event.on('limit', (limit) => { self.limit = limit; });
       
     },
     
@@ -1102,11 +1106,8 @@ $.when(
     data() {
       return {
         sortable: false,
-        api: null,
-        active: false,
         ascending: true,
-        limit: paging.limit,
-        filters: {}
+        active: false
       };
     },
     
@@ -1118,24 +1119,13 @@ $.when(
         const self = this;
         
         // Toggle sort order if active.
-        if( self.active ) self.ascending = !self.ascending;
+        if( this.active ) this.ascending = !this.ascending;
 
         // Set sorting.
-        self.api.sort = self.fields;
-        
-        // Reset the paging to go back to the first page.
-        self.api.paging = $.extend({}, paging, {limit: self.limit});
-        
-        // Reapply any filters.
-        self.api.filter = self.api.filters( self.filters );
+        this.$api.sort = this.fields;
 
         // Reinvoke the last call to the API.
-        self.api.last().then((response) => {
-          
-          // Trigger a filter event.
-          event.trigger('sort', {response: response, api: self.api});
-          
-        });
+        this.$api.last().then((response) => event.trigger('sort', response.data));
         
       }
       
@@ -1145,84 +1135,56 @@ $.when(
     
     created() {
       
-      // Capture context.
-      let self = this;
-      
-      // Use the parent's API by default.
-      self.api = self.$parent.api;
-      
       // Handle ready state changes.
-      event.on('sortable', (state) => {
+      /*event.on('sortable', (state) => {
         
         // Update the context.
-        if( Array.isEqual(self.fieldset, state.fieldset) ) {
+        if( Array.isEqual(this.fieldset, state.fieldset) ) {
         
           self = state.context;
-          self.sortable = state.sortable;
+          this.sortable = state.sortable;
           
         }
         
-      });
+      });*/
                
       // Handle events.
-      event.on('sort', () => {
-        
-        // Stop loading.
-        event.trigger('loading', false);
-        
-      });
+      event.on('sort', () => event.trigger('loading', false));
       event.on('list paging filtering sort', (data) => {
         
-        // Reload the API.
-        self.api = data.api;
-    
-        // Save paging data.
-        if( data.response.paging ) self.paging = data.response.paging;
-        
-        // Save filter data.
-        if( data.response.filter ) self.filters = data.response.filter;
-        
         // Load methods for toggling the active state.
-        const activate = function( state ) {
+        const activate = ( state ) => {
 
-          if( self.sortable ) {
+          if( this.sortable ) {
 
             if( state ) {
 
-              self.active = true;
-              self.ascending = Object.values(data.response.sort)[0] == 'DESC' ? false : true;
+              this.active = true;
+              this.ascending = Object.values(this.$api.sort)[0] == 'DESC' ? false : true;
 
             }
 
             else {
 
-              self.active = false;
-              self.ascending = true;
+              this.active = false;
+              this.ascending = true;
 
             } 
 
           }
 
-          else {
-
-            setTimeout(function() { 
-              
-              activate( state ); 
-            
-            }, 100);
-
-          }
+          else setTimeout(() => activate( state ), 100);
 
         };
         
         // Save sort data.
-        if( data.response.sort ) { 
+        if( !Object.isEmpty(this.$api.sort) ) { 
           
           // Handle backward navigation.
-          if( data.back === true && Array.isEqual(self.fieldset, Object.keys(data.response.sort)) ) activate(true);
+          if( /*data.back === true &&*/ Array.isEqual(this.fieldset, Object.keys(this.$api.sort)) ) activate(true);
           
           // Handle matches on sort fields.
-          else if( Object.isEqual(data.response.sort, self.fields) ) activate(true);
+          else if( Object.isEqual(this.$api.sort, this.fields) ) activate(true);
           
           // Otherwise, reset sorting.
           else activate(false);
@@ -1298,15 +1260,13 @@ $.when(
     data() {
       return {
         autoload: true,
-        response: {},
+        back: false,
+        filtering: false,
         data: [],
-        api: null,
         error: {
           message: null,
           state: null
-        },
-        filtering: false,
-        density: 'medium'
+        }
       };
     },
 
@@ -1331,58 +1291,35 @@ $.when(
     filters: $.extend({}, filters),
     
     created() { 
-      
-      // Capture context.
-      const self = this;
                
       // Verify the list's ready state.
       event.trigger('ready', true);
                
       // Set autoload.
-      self.autoload = self.$route.params.hasOwnProperty('autoload') ?
-                      self.$route.params.autoload : true;
+      this.autoload = this.$route.params.hasOwnProperty('autoload') ? this.$route.params.autoload : true;
+      this.back = this.$route.params.hasOwnProperty('back') ? this.$route.params.back : false;
       
       // Handle events.
-      event.on('list', () => {
-        
-        // Stop loading.
-        event.trigger('loading', false);
-        
-      });
-      event.on('list paging filtering sort', (data) => { 
+      event.on('list', () => event.trigger('loading', false));
+      event.on('list paging filtering sort', (data) => {
 
         // Reset any errors.
-        self.reset();
+        this.reset();
 
         // Save response data.
-        self.response = data.response;
-        self.data = data.response.data || []; 
-        self.api = data.api;
- 
-        // Capture density if given.
-        if( data.density ) self.density = data.density;
+        this.data = data;
 
         // Handle any errors.
-        if( self.data.length == 0 ) self.error = {message: 'No Results Found', state: 'danger'};
+        if( this.data.length === 0 ) this.error = {message: 'No Results Found', state: 'danger'};
         
         // Recognize when filters have been applied.
-        self.filtering = self.response.filter ? true : false;
+        this.filtering = !Object.isEmpty(this.$api.filter);
 
       });
-      event.on('read', (id) => {
-        
-        self.$router.push({name: 'Letter', params: {id: +id}});
-        
-      });
-      event.on('list:request', () => {
-        
-        // Send API data to the Letter component.
-        event.trigger('list:response', {api: self.api, density: self.density});
-        
-      });
+      event.on('read', (id) => this.$router.push({name: 'Letter', params: {id: +id}}));
 
-      // Automatically load some data when necessary.
-      if( self.autoload ) event.trigger('force:browse');
+      if( this.autoload ) event.trigger('autoload');
+      if( this.back ) event.trigger('back');
       
     },
     
@@ -1408,14 +1345,7 @@ $.when(
 
     data() {
       return {
-        api: null,
-        state: {
-          recall: {method: null, arguments: []},
-          filter: {},
-          sort: {},
-          paging: $.extend({}, paging),
-          density: null
-        },
+        navigating: false,
         error: {
           message: null,
           state: null
@@ -1427,17 +1357,9 @@ $.when(
     methods: $.extend({
       
       init() {
-        
-        // Capture context.
-        const self = this;
 
         // Load some letter data.
-        self.api.letter(self.id).always((response) => {
-
-          // Trigger a letter event.
-          event.trigger('letter', response.data[0]);
-
-        });
+        this.$api.letter(this.id).always((response) => event.trigger('letter', response.data[0]));
         
       },
       
@@ -1521,12 +1443,9 @@ $.when(
       },
       
       back() {
-        
-        // Capture context.
-        const self = this;
-        
-        // Go back to the list's previous state by forcing a browse event.
-        event.trigger('force:back', self.state);
+       
+        // Go back to the list.
+        this.$router.back();
         
       }
       
@@ -1536,11 +1455,8 @@ $.when(
     
     created() {
       
-      // Capture context.
-      const self = this;
-      
       // Capture the last state of the list data.
-      event.on('list:response', (data) => { 
+      /*event.on('list:response', (data) => { 
         
         // Extract the list's state.
         self.state.recall = $.extend(self.state.recall, data.api.recall);
@@ -1549,16 +1465,16 @@ $.when(
         self.state.sort = $.extend(self.state.sort, data.api.sort);
         self.state.density = data.density || null;
         
-      });
+      });*/
       
       // Request API data.
-      event.trigger('list:request');
+      //event.trigger('list:request');
       
       // Initialize the API.
-      self.api = new API();
+      //self.api = new API();
       
       // Retrieve the letter data.
-      self.init();
+      this.init();
       
       // Handle events.
       event.on('letter', (letter) => {
@@ -1567,20 +1483,40 @@ $.when(
         event.trigger('loading', false);
         
         // Clear any errors.
-        self.reset();
+        this.reset();
         
         // Save the letter data with formatted values.
-        self.letter = self.format( letter );
+        this.letter = this.format( letter );
         
         // Handle errors.
-        if( !self.letter ) {
+        if( !this.letter ) {
           
-          self.error.message = "The requested letter does not exist.";
-          self.error.state = "danger";
+          this.error.message = "The requested letter does not exist.";
+          this.error.state = "danger";
           
         }
         
       });
+      
+    },
+    
+    beforeRouteLeave(to, from, next) {
+      
+      if( to.name == 'List' && !this.navigating ) {
+        
+        this.navigating = true;
+        
+        this.$router.push({name: 'List', params: {autoload: false, back: true}});
+        
+      }
+      
+      else {
+        
+        this.navigating = false;
+        
+        next();
+        
+      }
       
     }
 
@@ -1619,23 +1555,15 @@ $.when(
           return data.value;
           
         }).join(' ');
-
-        // Load the API.
-        const api = new API();
         
-        // Enable paging.
-        api.paging = paging;
+        // Reset paging.
+        this.$api.paging.offset = 0;
         
         // Convert fields to appropriate form.
         const field = isset(this.field) ? this.field.replace('.', '/') : null;
         
         // Execute a request on the API.
-        api.search( query, field ).always((response) => {
-          
-          // Trigger an event with the results.
-          event.trigger('search', {response: response, api: api});
-          
-        });
+        this.$api.search( query, field ).then((response) => event.trigger('search', response.data));
         
       },
       
@@ -1867,45 +1795,16 @@ $.when(
       
       browse() {
         
-        // Load the API.
-        const api = new API();
-        
-        // Enable paging.
-        api.paging = paging;
-
-        // Execute a request on the API.
-        api.browse().always((response) => {
-
-          // Trigger an event with the results.
-          event.trigger('browse', {response: response, api: api});
-
-        });
+        // Execute a browse request on the API.
+        this.$api.browse().always((response) => event.trigger('browse', response.data));
         
       },
       
       back( state ) {
         
-        // Load the API.
-        const api =  new API();
-        
-        // Set the API's state.
-        api.filter = state.filter || {};
-        api.sort = state.sort || {};
-        api.paging = state.paging || $.extend({}, paging);
-        api.recall = state.recall;
-        
         // Repopulate the list like it was previously.
-        api.last().always((response) => {
-          
-          // Trigger an event with the results.
-          event.trigger('back', {
-            response: response, 
-            api: api, 
-            density: state.density
-          });
-          
-        });
-        
+        this.$api.back().always((response) => event.trigger('reload', response.data));
+
       }
       
     }, methods),
@@ -1918,93 +1817,30 @@ $.when(
       const self = this;
       
       // Handle successful search and browse events.
-      event.on('ready', (ready) => {
-        
-        self.ready = ready;
-        
-      });
+      event.on('ready', (ready) => this.ready = ready);
       event.on('browse', () => { 
 
         // Jump to list.
-        self.$router.push({name: 'List'});
+        this.$router.push({name: 'List'});
         
         // Clear the search field.
-        self.clear();
+        this.clear();
         
       });
-      event.on('search back', () => {
-        
-        // Jump to list.
-        self.$router.push({name: 'List', params: {autoload: false}});
-        
-      });
-      event.on('search browse', (data) => {
-
-        // Initialize a check for the list's ready state.
-        const ready = function() {
-          
-          // Check if the list is ready.
-          if( self.ready ) {
-
-            // Set the list data.
-            event.trigger('list', data);
-
-          }
-          
-          // Otherwise, wait for the list to become ready.
-          else {
-            
-            setTimeout(ready, 100);
-            
-          }
-
-        };
-        
-        // Check for the list's ready state, then send over the list data.
-        ready();
-        
-      });
-      event.on('back', (data) => {
-        
-        // Initialize a check for the list's ready state.
-        const ready = function() {
-          
-          // Check if the list is ready.
-          if( self.ready ) {
-
-            // Set the list data.
-            event.trigger('list', $.extend({}, data, {back: true}));
-
-          }
-          
-          // Otherwise, wait for the list to become ready.
-          else {
-            
-            setTimeout(ready, 100);
-            
-          }
-
-        };
-        
-        // Check for the list's ready state, then send over the list data.
-        ready();
-        
-      });
+      event.on('search', () => this.$router.push({name: 'List', params: {autoload: false}}));
+      event.on('search browse reload', (data) => this.when(() => this.ready, () => event.trigger('list', data)));
       
       // Handle forced events.
-      event.on('force:browse', () => {
-        
-        self.browse(); 
-      
-      });
-      event.on('force:search', (data) => {
+      event.on('autoload', () => this.browse());
+      event.on('back', () => this.back());
+      /*event.on('force:search', (data) => {
         
         self.query = data.query;
         self.field = data.field;
         self.search();
         
-      });
-      event.on('force:back', (state) => {
+      });*/
+      /*event.on('force:back', (state) => {
         
         // Reload the state of the API if given.
         if( state && state.recall && state.recall.method ) self.back( state );
@@ -2012,18 +1848,13 @@ $.when(
         // Otherwise, default to force browse.
         else event.trigger('force:browse');
         
-      });
+      });*/
       
       // Handle route changes.
       event.on('route', (route) => {
         
         // Reset the search form if not showing list or letter.
-        if( ['List', 'Letter'].indexOf(route.to.name) < 0 ) {
-          
-          // Clear the form.
-          self.clear();
-          
-        }
+        if( ['List', 'Letter'].indexOf(route.to.name) < 0 ) this.clear();
         
       });
       
@@ -2152,7 +1983,8 @@ $.when(
     {
       path: '/about', 
       name: 'About',
-      component: About},
+      component: About
+    },
     {
       path: '/list', 
       name: 'List',

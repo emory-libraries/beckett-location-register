@@ -3,6 +3,7 @@
 class Config {
   
   private $config = [
+    'DEVELOPMENT' => true, // Set to `true` for DEVELOPMENT mode or `false` for PRODUCTION mode.
     'LOCAL_DATABASE' => false
   ];
   
