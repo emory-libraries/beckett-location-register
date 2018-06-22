@@ -261,6 +261,24 @@ $.when(
           
         };
 
+  // Set default API options.
+  const defaults = {
+    paging: {
+      limit: 20,
+      count: 5,
+      offset: 0,
+      increments: [10, 20, 50, 100]
+    },
+    filter: {},
+    sort: {
+      'date.day': 'ASC',
+      'date.month': 'ASC',
+      'date.year': 'ASC'
+    },
+    indexing: {},
+    density: 'medium'
+  };
+  
   // Build the API.
   const API = new Vue({
 
@@ -269,21 +287,27 @@ $.when(
       history: [],
       method: null,
       endpoint: null,
-      paging: {
-        limit: 20,
-        count: 5,
-        offset: 0,
-        increments: [10, 20, 50, 100]
-      },
-      filter: {},
-      sort: {
-        'date.day': 'ASC',
-        'date.month': 'ASC',
-        'date.year': 'ASC'
-      },
-      indexing: {},
+      paging: defaults.paging,
+      filter: defaults.filter,
+      sort: defaults.sort,
+      indexing: defaults.indexing,
       loading: true,
-      density: 'medium'
+      density: defaults.density, 
+      features: [
+        'paging',
+        'filter', 
+        'sort',
+        'indexing'
+      ],
+      blacklist: {
+        paging: [
+          'pages',
+          'results',
+          'previous',
+          'next',
+          'increments'
+        ]
+      }
     },
     
     methods: {
@@ -315,22 +339,17 @@ $.when(
 
           },
 
-          // Build the query string for a request.
-          query() {
+          // Convert features into a query string to pass along with the request.
+          features() {
 
-            // Define feature set.
-            const features = [
-              'paging', 
-              'filter', 
-              'sort', 
-              'indexing'
-            ];
+            // Get the feature set.
+            const features = self.features;
 
             // Initialize query string.
             let query = '';
 
             // Initialize query component helper.
-            const component = ( feature ) => {
+            const component = ( feature, blacklist ) => {
 
               // Initialize the query string.
               let query = '';
@@ -339,6 +358,9 @@ $.when(
               if( Object.isObject(self[feature]) ) {
 
                 for( let key in self[feature] ) {
+                  
+                  // Ignore blacklisted sub-properties.
+                  if( blacklist.includes(key) ) continue;
 
                   // Capture the value.
                   let value = self[feature][key];
@@ -361,15 +383,21 @@ $.when(
 
 
             };
+            
+            // Get the blacklist of features.
+            const blacklist = self.blacklist;
 
             // Build the query string components.
             features.forEach((feature) => {
 
               // Verify that the component exists.
               if( !Object.isEmpty(self[feature]) ) {
+                
+                // Get the list of properties to ignore.
+                const ignore = blacklist[feature] || [];
 
                 // Add the component to the query string.
-                query += (query === '' ? '?' : '&') + component(feature);
+                query += (query === '' ? '?' : '&') + component(feature, ignore);
 
               }
 
@@ -383,7 +411,7 @@ $.when(
           // Build the URL for a request.
           url() {
 
-            return `${self.src}${self.endpoint}${self.utils().query()}`;
+            return `${self.src}${self.endpoint}${this.features()}`;
 
           },
 
@@ -447,6 +475,48 @@ $.when(
             // Return the formatted filters.
             return filters;
 
+          },
+          
+          // Extract the query params of a request.
+          query() {
+            
+            // Get the feature set.
+            const features = self.features;
+            
+            // Get the feature blacklist.
+            const blacklist = self.blacklist;
+            
+            // Initialize query parameters.
+            const params = {};
+            
+            // Build the query parameters.
+            features.forEach((feature) => {
+
+              // Verify that the feature exists.
+              if( !Object.isEmpty(self[feature]) ) {
+                
+                // Initialize the parameter set for the feature.
+                params[feature] = {};
+                
+                // Get the list of properties to ignore.
+                const ignore = blacklist[feature] || [];
+                
+                // Add the feature the parameter set.
+                for( let prop in self[feature] ) {
+                  
+                  if( ignore.includes(prop) ) continue;
+                  
+                  params[feature][prop] = self[feature][prop];
+                  
+                }
+
+              }
+
+            });
+            
+            // Return the query parameters.
+            return params;
+            
           }
           
         };
@@ -457,7 +527,7 @@ $.when(
       memory( method, args ) { this.history.push({method, args}); },
     
       // Execute a request on the API.
-      request( method, endpoint, data = {} ) { 
+      request( method, endpoint, data = {} ) {
       
         // Validate the endpoint.
         if( this.utils().validate(method, endpoint) ) {
@@ -482,6 +552,9 @@ $.when(
             if( response.hasOwnProperty('filter') ) this.$set(this, 'filter', $.extend(true, {}, this.filter, response.filter));
             if( response.hasOwnProperty('sort') ) this.$set(this, 'sort', $.extend(true, {}, this.sort, response.sort));
             if( response.hasOwnProperty('index') ) this.$set(this, 'indexing', $.extend(true, {}, this.indexing, response.index));
+            
+            // Add the query string to the response data.
+            response.query = this.utils().query();
 
           });
 
@@ -574,6 +647,23 @@ $.when(
         // Call the last method or default to browse.
         return state ? this[state.method].apply(this, state.args) : this.browse();
 
+      },
+      
+      // Merge some parameters with the API, then reload the query.
+      reload( params ) { 
+        
+        // Extract any feature data.
+        this.$set(this, 'sort', $.extend(true, {}, this.sort, params.sort || defaults.sort));
+        this.$set(this, 'filter', $.extend(true, {}, this.filter, params.filter || defaults.filter));
+        this.$set(this, 'paging', $.extend(true, {}, this.paging, params.paging || defaults.paging));
+        this.$set(this, 'indexing', $.extend(true, {}, this.indexing, params.indexing || defaults.indexing));
+      
+        // Handle searches.
+        if( params.hasOwnProperty('query') && params.hasOwnProperty('field') ) return this.search(params.query, params.field);
+        
+        // Otherwise, browse.
+        return this.browse();
+        
       }
       
     }
@@ -1266,7 +1356,7 @@ $.when(
     data() {
       return {
         autoload: true,
-        back: false,
+        query: false,
         filtering: false,
         data: [],
         error: {
@@ -1303,8 +1393,9 @@ $.when(
                
       // Set autoload.
       this.autoload = this.$route.params.hasOwnProperty('autoload') ? this.$route.params.autoload : true;
-      this.back = this.$route.params.hasOwnProperty('back') ? this.$route.params.back : false;
-      
+
+      this.query = !Object.isEmpty(this.$route.query);
+  
       // Handle events.
       event.on('list', () => event.trigger('loading', false));
       event.on('list paging filtering sort', (data) => {
@@ -1324,8 +1415,8 @@ $.when(
       });
       event.on('read', (id) => this.$router.push({name: 'Letter', params: {id: +id}}));
 
-      if( this.autoload ) event.trigger('autoload');
-      if( this.back ) event.trigger('back');
+      if( this.query ) event.trigger('query');
+      else if( this.autoload ) event.trigger('autoload');
       
     },
     
@@ -1337,6 +1428,16 @@ $.when(
       // Continue.
       next();
       
+      
+    },
+    
+    beforeRouteUpdate(to, from, next) { 
+      
+      // Continue.
+      next();
+      
+      // Trigger a reload if a query is detected.
+      if( !to.params.reload && !Object.isEmpty(to.query) ) event.trigger('query');
       
     }
 
@@ -1504,26 +1605,6 @@ $.when(
         
       });
       
-    },
-    
-    beforeRouteLeave(to, from, next) {
-      
-      if( to.name == 'List' && !this.navigating ) {
-        
-        this.navigating = true;
-        
-        this.$router.push({name: 'List', params: {autoload: false, back: true}});
-        
-      }
-      
-      else {
-        
-        this.navigating = false;
-        
-        next();
-        
-      }
-      
     }
 
   });
@@ -1579,7 +1660,16 @@ $.when(
         const field = isset(this.field) ? this.field.replace('.', '/') : null;
         
         // Execute a request on the API.
-        this.$api.search( query, field ).always((response) => event.trigger('search', response.data || []));
+        this.$api.search( query, field ).always((response) => {
+          
+          this.history($.extend(true, {
+            query: query,
+            field: field
+          }, response.query));
+          
+          event.trigger('search', response.data || []);
+          
+        });
         
       },
       
@@ -1812,16 +1902,33 @@ $.when(
       browse() {
         
         // Execute a browse request on the API.
-        this.$api.browse().always((response) => event.trigger('browse', response.data));
+        this.$api.browse().always((response) => {
+          
+          this.history(response.query);
+          
+          event.trigger('browse', response.data);
+          
+        });
         
       },
       
-      back( state ) {
+      reload() {
         
-        // Repopulate the list like it was previously.
-        this.$api.back().always((response) => event.trigger('reload', response.data));
-
+        // Merge the query string parameters, then repopulate the list.
+        this.$api.reload(this.$route.query).always((response) => event.trigger('reload', response.data));
+        
+      },
+      
+      history( query ) { 
+        
+        this.$router.replace({
+          name: 'List', 
+          params: {autoload: false, reload: true},
+          query: $.extend(true, {}, this.$route.query, query)
+        });
+        
       }
+      
       
     }, methods),
 
@@ -1848,23 +1955,7 @@ $.when(
       
       // Handle forced events.
       event.on('autoload', () => this.browse());
-      event.on('back', () => this.back());
-      /*event.on('force:search', (data) => {
-        
-        self.query = data.query;
-        self.field = data.field;
-        self.search();
-        
-      });*/
-      /*event.on('force:back', (state) => {
-        
-        // Reload the state of the API if given.
-        if( state && state.recall && state.recall.method ) self.back( state );
-        
-        // Otherwise, default to force browse.
-        else event.trigger('force:browse');
-        
-      });*/
+      event.on('query', () => this.reload());
       
       // Handle route changes.
       event.on('route', (route) => {
@@ -2040,7 +2131,15 @@ $.when(
   const router = new VueRouter({
     mode: 'history',
     routes,
-    base: PATH
+    base: PATH,
+    parseQuery( query ) { return Qs.parse(query); },
+    stringifyQuery(query) { 
+      
+      const string = Qs.stringify(query, {encode: false});
+      
+      return string? `?${string}` : ''; 
+    
+    }
   });
   
   // Enable navigation updates.
