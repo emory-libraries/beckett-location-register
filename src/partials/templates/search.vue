@@ -2,7 +2,50 @@
   
   <div class="search">
     
-    <div class="search-box">
+    <div class="search-toggle">
+      
+      <div class="label">Search Mode:</div>
+      
+      <label class="toggle" 
+             :class="{active: boolean}" 
+             tabindex="0"
+             @keypress.enter="simclick">
+        <input type="checkbox" v-model="boolean">
+        <div class="mode">
+          <transition name="fade">
+            <span class="active" v-show="boolean">Boolean</span>
+          </transition>
+          <transition name="fade">
+            <span class="inactive" v-show="!boolean">Standard</span>
+          </transition>
+        </div>
+        <div class="indicator"></div>
+      </label>
+    </div>
+    
+    <div class="search-box standard" v-show="!boolean">
+    
+      <div class="search-input">
+
+          <input type="search" 
+                 placeholder="Search" 
+                 v-model="query.input"
+                 @keypress.enter="search()" 
+                 @keyup="autofill().fill()"
+                 list="autofill"/>
+          
+          <datalist id="autofill">
+            <option v-for="suggestion in query.suggestions"
+                    :value="suggestion">
+              {{suggestion}}
+            </option>
+          </datalist>
+        
+      </div>
+    
+    </div>
+    
+    <div class="search-box boolean" v-show="boolean">
       
       <ul class="entries">
         <li class="entry" 

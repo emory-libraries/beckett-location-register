@@ -387,7 +387,7 @@ module.exports = function( grunt ) {
         options: {
           sourceMap: false,
           style: 'expanded',
-          update: true
+          update: false
         },
         files: [
           {

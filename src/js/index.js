@@ -251,6 +251,12 @@ $.when(
             // Otherwise, wait until the condition is met.
             else setTimeout(() => this.when(condition, callback, delay), delay);
             
+          },
+          
+          simclick( event ) {
+        
+            $(event.path[0]).click();
+
           }
           
         };
@@ -1550,8 +1556,11 @@ $.when(
       
       search() {
         
+        // Initialize the search query.
+        let query = '';
+        
         // Build the query.
-        let query = this.query.data.map((data) => {
+        if( this.boolean ) query += this.query.data.map((data) => {
           
           return data.value;
           
@@ -1570,7 +1579,7 @@ $.when(
         const field = isset(this.field) ? this.field.replace('.', '/') : null;
         
         // Execute a request on the API.
-        this.$api.search( query, field ).then((response) => event.trigger('search', response.data));
+        this.$api.search( query, field ).always((response) => event.trigger('search', response.data || []));
         
       },
       
@@ -1865,6 +1874,20 @@ $.when(
         
       });
       
+    },
+    
+    watch: {
+      boolean( newValue, oldValue ) {
+        
+        if( newValue === false ) {
+          
+          this.query.data = [];
+          this.query.tooltip = false;
+          this.query.type = null;
+          
+        }
+        
+      }
     }
 
   });
