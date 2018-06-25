@@ -55,7 +55,6 @@
       border: 1px solid color('semantic');
       @include absolute-center-within-container-y;
       transition: all .5s $transition-timing;
-      z-index: 1;
     }
     
     .mode {
@@ -65,7 +64,6 @@
       width: calc(100% - (#{$spacing} * 2));
       font-size: .75em;
       text-transform: uppercase;
-      user-select: none;
       
       .active, .inactive { @include absolute-center-within-container-y; }
       

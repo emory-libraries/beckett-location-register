@@ -257,6 +257,20 @@ $.when(
         
             $(event.path[0]).click();
 
+          },
+          
+          history( query ) {
+                            
+            // Build history state.
+            const state = {
+              name: 'List', 
+              params: {autoload: false, reload: true},
+              query: $.extend(true, {}, this.$route.query, query)
+            };
+                            
+            // Replace the state.
+            return this.$router.replace(state);
+
           }
           
         };
@@ -409,9 +423,9 @@ $.when(
           },
 
           // Build the URL for a request.
-          url() {
+          url( query ) {
 
-            return `${self.src}${self.endpoint}${this.features()}`;
+            return query ? `${self.src}${self.endpoint}${this.features()}` : `${self.src}${self.endpoint}`;
 
           },
 
@@ -527,7 +541,7 @@ $.when(
       memory( method, args ) { this.history.push({method, args}); },
     
       // Execute a request on the API.
-      request( method, endpoint, data = {} ) {
+      request( method, endpoint, query = true, data = {} ) {
       
         // Validate the endpoint.
         if( this.utils().validate(method, endpoint) ) {
@@ -542,7 +556,7 @@ $.when(
           // Send the request.
           return $.ajax({
             dataType: 'json',
-            url: this.utils().url(),
+            url: this.utils().url(query),
             method: method,
             data: data,
             context: this
@@ -554,7 +568,7 @@ $.when(
             if( response.hasOwnProperty('index') ) this.$set(this, 'indexing', $.extend(true, {}, this.indexing, response.index));
             
             // Add the query string to the response data.
-            response.query = this.utils().query();
+            response.query = query ? this.utils().query() : {};
 
           });
 
@@ -591,7 +605,7 @@ $.when(
         this.memory('letter', Array.from(arguments));
 
         // Execute the request.
-        return this.request('GET', `letter/${id}`);
+        return this.request('GET', `letter/${id}`, false);
 
       },
     
@@ -652,6 +666,9 @@ $.when(
       // Merge some parameters with the API, then reload the query.
       reload( params ) { 
         
+        // TODO: Figure out why `query` and `filter` is lost during paging.
+        console.log(params);
+ 
         // Extract any feature data.
         this.$set(this, 'sort', $.extend(true, {}, this.sort, params.sort || defaults.sort));
         this.$set(this, 'filter', $.extend(true, {}, this.filter, params.filter || defaults.filter));
@@ -659,7 +676,11 @@ $.when(
         this.$set(this, 'indexing', $.extend(true, {}, this.indexing, params.indexing || defaults.indexing));
       
         // Handle searches.
-        if( params.hasOwnProperty('query') && params.hasOwnProperty('field') ) return this.search(params.query, params.field);
+        if( params.hasOwnProperty('query') && params.hasOwnProperty('field') ) {
+          
+          return this.search(params.query, isset(params.field) ? params.field : null);
+          
+        }
         
         // Otherwise, browse.
         return this.browse();
@@ -843,6 +864,8 @@ $.when(
 
         // Reinvoke the last call to the API.
         this.$api.last().then((response) => {
+          
+          this.history(response.query);
           
           event.trigger('paging', response.data);
           
@@ -1059,7 +1082,13 @@ $.when(
         this.$api.paging.offset = 0;
         
         // Reinvoke the last call to the API.
-        this.$api.last().then((response) => event.trigger('filtering', response.data));
+        this.$api.last().then((response) => {
+          
+          this.history(response.query);
+          
+          event.trigger('filtering', response.data);
+          
+        });
         
       },
       
@@ -1221,7 +1250,13 @@ $.when(
         this.$api.sort = this.fields;
 
         // Reinvoke the last call to the API.
-        this.$api.last().then((response) => event.trigger('sort', response.data));
+        this.$api.last().then((response) => {
+          
+          this.history(response.query);
+          
+          event.trigger('sort', response.data);
+          
+        });
         
       }
       
@@ -1917,18 +1952,7 @@ $.when(
         // Merge the query string parameters, then repopulate the list.
         this.$api.reload(this.$route.query).always((response) => event.trigger('reload', response.data));
         
-      },
-      
-      history( query ) { 
-        
-        this.$router.replace({
-          name: 'List', 
-          params: {autoload: false, reload: true},
-          query: $.extend(true, {}, this.$route.query, query)
-        });
-        
       }
-      
       
     }, methods),
 
@@ -2132,10 +2156,19 @@ $.when(
     mode: 'history',
     routes,
     base: PATH,
-    parseQuery( query ) { return Qs.parse(query); },
+    parseQuery( query ) { 
+      
+      return Qs.parse(query, {
+        strictNullHandling: true
+      }); 
+    
+    },
     stringifyQuery(query) { 
       
-      const string = Qs.stringify(query, {encode: false});
+      const string = Qs.stringify(query, {
+        encode: false,
+        strictNullHandling: true
+      });
       
       return string? `?${string}` : ''; 
     
