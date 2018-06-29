@@ -221,7 +221,7 @@ trait GET {
             $match = $endpoint['match'];
             
             // Filter out the appropriate data from the given endpoint.
-            $filter = urldecode( $given[$index] );
+            $filter = urldecode( str_replace('+', '%2B', $given[$index]) );
 
             // Filter the result set.
             $this->data = array_values(array_filter($this->data, function($item) use ($match, $pattern, $filter, $regex, $mode) { 
@@ -591,6 +591,14 @@ trait FEATURES {
     // Extract subset of data.
     $this->data = array_slice($this->data, $offset, $limit);
     
+    // Calculate data.
+    $total = ceil($length / $limit); 
+    $active = $total - ceil(($length - $offset - $limit) / $limit);
+    $next = $total - $active > 0 ? $active + 1 : false;
+    $previous = $active - 1 > 0 ? $active - 1 : false;
+    $start = $length > 0 ? $offset + 1 : 0;
+    $stop = $length > 0 ? ($total * ($active / $total)) * $limit : 0;
+    
     // Save pagination data.
     $this->features['paging'] = [
       'limit' => $limit,
@@ -599,15 +607,15 @@ trait FEATURES {
       'previous' => $offset - $limit >= 0 ? $offset - $limit : false, 
       'pages' => [
         'count' => $count,
-        'total' => ($total = ceil($length / $limit)),
-        'active' => ($active = $total - ceil(($length - $offset - $limit) / $limit)),
+        'total' => $total,
+        'active' => $active,
         'next' => [
           'offset' => $limit + $offset < $length ? $limit + $offset : false,
-          'number' => ($next = $total - $active > 0 ? $active + 1 : false)
+          'number' => $next
         ],
         'previous' => [
           'offset' => $offset - $limit >= 0 ? $offset - $limit : false,
-          'number' => ($previous = $active - 1 > 0 ? $active - 1 : false)
+          'number' => $previous
         ],
         'first' => [
           'offset' => 0,
@@ -621,8 +629,8 @@ trait FEATURES {
       ],
       "results" => [
         "total" => $length,
-        "start" => $offset + 1,
-        "stop" => ($stop = ($total * ($active / $total)) * $limit) > $length ? $length : $stop
+        "start" => $start,
+        "stop" => $stop > $length ? $length : $stop
       ]
     ];
     
@@ -736,7 +744,7 @@ trait FEATURES {
     }
     
     // Capture filter data.
-    $filters = $this->features['filter'];
+    $filters = array_key_exists('filter', $this->features) ? $this->features['filter'] : false;
     
     // Clean up the indexed data.
     foreach( $indexed as $key => $record ) {
@@ -748,41 +756,42 @@ trait FEATURES {
       if( $order === SORT_DESC ) rsort($unique);
       else sort($unique);
       
-      // Rempve values that have applied filters.
-      if( array_key_exists($key, $filters) ) {
+      // Remove values that have applied filters.
+      if( $filters !== false ) {
+      
+        if( array_key_exists($key, $filters) ) {
         
-        foreach($filters[$key] as $filter) {
-    
-          // Handle filter ranges.
-          if( array_keys($filter) == ['min', 'max'] ) {
+          foreach($filters[$key] as $filter) {
 
-            $min = $filter['min'];
-            $max = $filter['max'];
+            // Handle filter ranges.
+            if( array_keys($filter) == ['min', 'max'] ) {
 
-            for( $n = $min; $n <= $max; $n++ ) {
+              $min = $filter['min'];
+              $max = $filter['max'];
 
-              if( in_array($n, $unique) ) array_splice($unique, array_search($n, $unique), 1);
+              for( $n = $min; $n <= $max; $n++ ) {
+
+                if( in_array($n, $unique) ) array_splice($unique, array_search($n, $unique), 1);
+
+              }
+
+            }
+
+            // Otherwise, handle simple filter data.
+            else {
+
+              if( in_array($filter, $unique) ) array_splice($unique, array_search($filter, $unique), 1);
 
             }
 
           }
 
-          // Otherwise, handle simple filter data.
-          else {
-
-            if( in_array($filter, $unique) ) array_splice($unique, array_search($filter, $unique), 1);
-
-          }
-          
         }
         
       }
       
-      // Remove from the indexed data if the values are empty.
-      if( empty($unique) ) unset($indexed[$key]);
-      
-      // Otherwise, typify and save the updated values.
-      else $indexed[$key] = $this->__typify($unique);
+      // Typify and save the updated values.
+      $indexed[$key] = $this->__typify($unique);
       
     }
 
@@ -895,10 +904,26 @@ class API {
     foreach( $this->headers['always'] as $key => $value ) { header("$key: $value"); }
     
     // Only send development headers when in development mode.
-    if( $this->config->DEVELOPMENT ) foreach( $this->headers['development'] as $key => $value ) { header("$key: $value"); }
+    if( $this->config->DEVELOPMENT and array_key_exists('development', $this->headers) ) {
+      
+      foreach( $this->headers['development'] as $key => $value ) { 
+        
+        header("$key: $value"); 
+      
+      }
+      
+    }
     
     // Only send production headers when in production mode.
-    if( !$this->config->DEVELOPMENT ) foreach( $this->headers['production'] as $key => $value ) { header("$key: $value"); }
+    if( !$this->config->DEVELOPMENT and array_key_exists('production', $this->headers) ) {
+      
+      foreach( $this->headers['production'] as $key => $value ) { 
+        
+        header("$key: $value"); 
+      
+      }
+      
+    }
     
   }
   

@@ -295,9 +295,11 @@ $.when(
     return string ? `?${string}` : ''; 
     
   };
-  Qs.parse = (object, options) => {
+  Qs.parse = (string, options) => {
     
-    return Qs.__parse(object, $.extend(true, {}, Qs.config.parse, options));
+    string = string.replace('+', '%2B');
+    
+    return Qs.__parse(string, $.extend(true, {}, Qs.config.parse, options));
     
   };
 
@@ -530,7 +532,7 @@ $.when(
             method: method,
             data: data,
             context: this
-          }).always((response) => { 
+          }).always((response) => {
 
             // Capture response data.
             if( response.hasOwnProperty('paging') ) {
@@ -571,7 +573,7 @@ $.when(
     
       // Perform a `search` request on the API.
       search( query, field = null ) {
-      
+
         // Save the call in memory.
         this.memory('search', Array.from(arguments));
 
@@ -1687,7 +1689,12 @@ $.when(
           autofills: [],
           tooltip: false
         },
-        field: null
+        field: null,
+        regex: {
+          ands: /\+[\"\'].+?[\"|\']|\+.+?(?= |\+|\-|\~|$)/g,
+          nots: /\-[\"\'].+?[\"|\']|\-.+?(?= |\+|\-|\~|$)/g,
+          ors: /\~[\"\'].+?[\"|\']|\~.+?(?= |\+|\-|\~|$)/g
+        }
       };
     },
 
@@ -1821,27 +1828,44 @@ $.when(
         
       },
       
-      save() {
+      quote( string ) {
         
-        // Initialize a helper function to quote strings.
-        const quote = function( string ) {
-          
-          const has_spaces = string.indexOf(' ') > -1,
-                has_single = string.indexOf("'") > -1,
-                has_double = string.indexOf('"') > -1;
+        // Look for special characters.
+        const has_spaces = string.indexOf(' ') > -1;
+        const has_single = string.indexOf("'") > -1;
+        const has_double = string.indexOf('"') > -1;
     
-          if( has_spaces ) {
-            
-            if( has_single && !has_double ) string = `"${string}"`;
-            if( !has_single && has_double ) string = `'${string}'`;
-            if( has_single && has_double ) string = `"${string.replace(/"/g, '\"')}"`;
-            if( !has_single && !has_double ) string = `"${string}"`;
-            
-          }
+        // Only add quotes to strings that contain spaces.
+        if( has_spaces ) {
+
+          if( has_single && !has_double ) string = `"${string}"`;
+          if( !has_single && has_double ) string = `'${string}'`;
+          if( has_single && has_double ) string = `"${string.replace(/"/g, '\"')}"`;
+          if( !has_single && !has_double ) string = `"${string}"`;
+
+        }
           
-          return string;
+        // Return the quoted string.
+        return string;
+        
+      },
+      
+      unquote( string ) {
+        
+        // Remove quotes from the beginning and end of the string.
+        string = string.replace(/^[\'\"]/, '').trim();
+        string = string.replace(/[\'\"]$/, '').trim();
+    
+        // Unescape any escaped quotes.
+        string = string.replace(/\\'/, "'");
+        string = string.replace(/\\"/, '"');
           
-        };
+        // Return the unquoted string.
+        return string;
+        
+      },
+      
+      save() {
         
         // Attempt to search when given empty inputs.
         if( !isset(this.query.input) ) {
@@ -1866,7 +1890,7 @@ $.when(
               this.query.data.push({
                 display: this.query.input,
                 type: this.query.type,
-                value: '+' + quote(this.query.input) 
+                value: encodeURIComponent('+') + this.quote(this.query.input) 
               });
 
               break;
@@ -1877,7 +1901,7 @@ $.when(
               this.query.data.push({
                 display: this.query.input,
                 type: this.query.type,
-                value: '-' + quote(this.query.input) 
+                value: encodeURIComponent('-') + this.quote(this.query.input) 
               });
 
               break;
@@ -1888,7 +1912,7 @@ $.when(
               this.query.data.push({
                 display: this.query.input, 
                 type: this.query.type,
-                value: '~' + quote(this.query.input) 
+                value: encodeURIComponent('~') + this.quote(this.query.input) 
               });
 
               break;
@@ -1956,8 +1980,95 @@ $.when(
       
       auto() { 
         
+        // Clear any search data.
+        this.clear();
+        
+        // Get the query data.
+        const query = this.$route.query;
+        
+        // Determine if the query is for a search.
+        if( query.hasOwnProperty('query') && query.hasOwnProperty('field') ) {
+          
+          // Extract the search query and field.
+          let {query: searchQuery, field: searchField} = query;
+  
+          // Extract any boolean fields from the search query.
+          const ANDS = (searchQuery.match(this.regex.ands) || []).unique();
+          const NOTS = (searchQuery.match(this.regex.nots) || []).unique();
+          const ORS = (searchQuery.match(this.regex.ors) || []).unique();
+          
+          // Clean up the base search query.
+          ANDS.forEach((AND) => {
+            
+            searchQuery = searchQuery.replace(AND, '').trim();
+            
+          });
+          NOTS.forEach((NOT) => {
+            
+            searchQuery = searchQuery.replace(NOT, '').trim();
+            
+          });
+          ORS.forEach((OR) => {
+            
+            searchQuery = searchQuery.replace(OR, '').trim();
+            
+          });
+
+          // Recover boolean searches.
+          if( ANDS.length > 0 || NOTS.length > 0 || ORS.length > 0 ) {
+            
+            // Set the boolean flag.
+            this.boolean = true;
+            
+            // Read the query data.
+            this.query.data = this.query.data.concat(ANDS.map((AND) => {
+              
+              return {
+                display: this.unquote(AND.replace(/^(\+|\%2B)/, '')),
+                type: 'AND',
+                value: AND 
+              };
+              
+            }));
+            this.query.data = this.query.data.concat(NOTS.map((NOT) => {
+              
+              return {
+                display: this.unquote(NOT.replace(/^~/, '')),
+                type: 'NOT',
+                value: NOT 
+              };
+              
+            }));
+            this.query.data = this.query.data.concat(ORS.map((OR) => {
+              
+              return {
+                display: this.unquote(OR.replace(/^-/, '')),
+                type: 'OR',
+                value: OR 
+              };
+              
+            }));
+            
+            // Add the remaining part of the search query.
+            this.query.data.unshift({
+              display: this.unquote(searchQuery),
+              type: false,
+              value: searchQuery
+            });
+            
+          }
+          
+          // Otherwise, recover non-boolean searches.
+          else {
+            
+            this.query.input = this.unquote(searchQuery);
+            
+          }
+          
+        }
+        
         // Merge the query string parameters, then repopulate the list.
-        this.$api.auto(this.$route.query).always((response) => event.trigger('list', response.data));
+        this.$api.auto(query).always((response) => event.trigger('list', response.data));
         
       }
       
@@ -1965,7 +2076,7 @@ $.when(
 
     filters: $.extend({}, filters),
     
-    created() { // TODO: Extract search query and field data from query string on page load.
+    created() { 
       
       // Capture context.
       const self = this;
@@ -1982,7 +2093,7 @@ $.when(
         
       });
       event.on('search', () => {
-        
+
         // Jump to the list.
         this.refresh($.extend(true, {}, {
           query: this.searchQuery,
@@ -2030,7 +2141,7 @@ $.when(
           
           return data.value;
           
-        }).join(' ');
+        }).unique().join(' ');
         
         // Capture any remaining input.
         if( this.query.input ) query += ` ${this.query.input}`;

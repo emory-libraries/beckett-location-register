@@ -23,8 +23,8 @@ class Search {
   }
   
   // Search
-  public function search( $query ) {
-    
+  public function search( $query ) { 
+   
     // Initialize the result.
     $result = false;
     
