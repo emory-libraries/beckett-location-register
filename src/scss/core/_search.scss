@@ -187,6 +187,21 @@
         }
 
       }
+      
+      .btn-clear-input {
+        
+        $icon: 25px;
+        
+        @include absolute-center-within-container-y;
+        height: $height - ($padding * 4);
+        font-size: .75em;
+        right: $padding;
+        padding: 0 $padding 0 ($padding + $icon);
+        @include on-hover-focus(opacity, .5, 1);
+        
+        .icon { width: $icon; }
+        
+      }
 
       .tooltip {
         opacity: .6;

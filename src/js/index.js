@@ -1961,6 +1961,14 @@ $.when(
         
       },
       
+      clearInput() {
+        
+        // Clear only the input.
+        this.query.input = null;
+        this.query.tooltip = false;
+        
+      },
+      
       browse() {
         
         // Reset API features.

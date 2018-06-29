@@ -77,6 +77,15 @@
               {{suggestion}}
             </option>
           </datalist>
+          
+          <transition name="fade">
+            <button class="button icon icon-block-left btn-clear-input"
+                    v-if="query.tooltip"
+                    @click="clearInput">
+              <span class="icon fa-close"></span>
+              Clear
+            </button>
+          </transition>
 
         </li>
         <transition name="fade">
@@ -111,9 +120,10 @@
       </button>
       <button class="button icon icon-block-left btn-clear" 
               @click="clear" 
-              :disabled="!field && (query.data.legnth === 0 || !query.input)">
+              :disabled="(!boolean && !field && !query.input) ||
+                         (boolean && !field && query.data.length === 0 && !query.input)">
         <span class="icon fa-repeat"></span>
-        Clear
+        {{ boolean ? 'Clear All' : 'Clear'}}
       </button>
       <button class="button icon icon-block-left btn-browse info" 
               @click="browse">
