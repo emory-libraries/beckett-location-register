@@ -86,6 +86,59 @@
       
     }
     
+    .applied-group {
+      display: flex;
+      flex-direction: column;
+      
+      & + .multi-group,
+      & + .select {
+        margin-top: 10px;
+      }
+      
+    }
+    
+    .applied-field {
+      
+      @mixin colorize( $color ) {
+        
+        $background: tint($color, 75%);
+        $foreground: color-contrast($background);
+        $border: shade($background, 25%);
+        
+        background-color: $background;
+        border: 1px solid $border;
+        color: $foreground;
+        
+      }
+      
+      width: 100%;
+      display: flex;
+      align-items: center;
+      border-radius: 3px;
+      @include colorize(color('semantic', 'primary'));
+      
+      .applied-text {
+        flex-grow: 1;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+      }
+      
+      .applied-remove { 
+        align-self: stretch;
+        margin-left: 10px;
+        border: none;
+        background-image: none;
+        @include on-hover-focus('background-color', rgba(color('black'), .05), rgba(color('black'), .1));
+        transition: $transition-all;
+        @include border-left-radius(0);
+        height: auto;
+      }
+      
+      + .applied-field { margin-top: 10px; }
+      
+    }
+    
     .buttons {
       @include margin-y( 25px );
       @include absolute-center-contents;

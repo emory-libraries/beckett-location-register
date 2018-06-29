@@ -167,7 +167,7 @@ trait GET {
       
       // Save data.
       $this->data = $data;
-      
+
       // Filter based on bindings.
       if( $dynamic ) {
         
@@ -323,7 +323,7 @@ trait GET {
                 $comps[] = $field;
               
               }
-          
+
               // Load the search utility.
               $search = new Search( $comps );
               
@@ -370,7 +370,7 @@ trait GET {
         }
 
         // Merge remaining parameters without any specific order.
-        $this->query = $params = array_merge($params, $this->query); 
+        $this->query = $params = array_merge($params, $this->query);
         
         // Convert all query data to an array.
         $params = array_map(function($query) { 
@@ -698,7 +698,7 @@ trait FEATURES {
   }
   
   // Enables all data fields to be indexed.
-  private function __index( array $settings ) { 
+  private function __index( array $settings ) {
     
     // Continue if no errors previously occurred.
     if( $this->error ) return;
@@ -735,6 +735,9 @@ trait FEATURES {
 
     }
     
+    // Capture filter data.
+    $filters = $this->features['filter'];
+    
     // Clean up the indexed data.
     foreach( $indexed as $key => $record ) {
       
@@ -745,8 +748,41 @@ trait FEATURES {
       if( $order === SORT_DESC ) rsort($unique);
       else sort($unique);
       
-      // Typify and save the updated values.
-      $indexed[$key] = $this->__typify($unique);
+      // Rempve values that have applied filters.
+      if( array_key_exists($key, $filters) ) {
+        
+        foreach($filters[$key] as $filter) {
+    
+          // Handle filter ranges.
+          if( array_keys($filter) == ['min', 'max'] ) {
+
+            $min = $filter['min'];
+            $max = $filter['max'];
+
+            for( $n = $min; $n <= $max; $n++ ) {
+
+              if( in_array($n, $unique) ) array_splice($unique, array_search($n, $unique), 1);
+
+            }
+
+          }
+
+          // Otherwise, handle simple filter data.
+          else {
+
+            if( in_array($filter, $unique) ) array_splice($unique, array_search($filter, $unique), 1);
+
+          }
+          
+        }
+        
+      }
+      
+      // Remove from the indexed data if the values are empty.
+      if( empty($unique) ) unset($indexed[$key]);
+      
+      // Otherwise, typify and save the updated values.
+      else $indexed[$key] = $this->__typify($unique);
       
     }
 
@@ -953,10 +989,10 @@ class API {
     }
     
     // Get the Google Sheet.
-    $sheet = new Sheet( $_ENV['SHEET_ID'] );
+    $sheet = new Sheet( $_ENV['SHEET_ID'] ); 
     
     // Read all data from the Google Sheet.
-    $data = $sheet->read( $_ENV['SHEET_NAME'] ); 
+    $data = $sheet->read( $_ENV['SHEET_NAME'] );
     
     // Map headers.
     if( $has_headers ) {
@@ -982,15 +1018,15 @@ class API {
         
       }, $data);
       
-    }
-    
+    } 
+
     // Remove private data.
-    $data = array_filter($data, function($item) {
+    $data = array_filter($data, function($item) { 
       
       // Only keep public data.
       return $item['Public?'] == 'public';
       
-    });
+    }); 
     
     // Cache the data.
     if( $this->caching ) $this->cache->def('__DATABASE__', $data);

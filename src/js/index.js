@@ -86,6 +86,11 @@ $.when(
     return result;
     
   };
+  Array.prototype.subset = function( item ) {
+    
+    return this.indexOf(item) > -1 ? this.slice(this.indexOf(item)) : this;
+    
+  };
   Array.isEmpty = function( array ) { return Array.isArray( array ) && array.length === 0; };
   Array.isMultiple = function( array ) { return Array.isArray( array ) && array.length > 1; };
   Array.isEqual = function( array1, array2 ) {
@@ -259,21 +264,42 @@ $.when(
 
           },
           
-          history( query ) {
-                            
-            // Build history state.
-            const state = {
-              name: 'List', 
-              params: {autoload: false, reload: true},
+          refresh( query, params ) { 
+          
+            return this.$router.push({
+              name: this.$route.name,
+              params: $.extend(true, {}, this.$route.params, params),
               query: $.extend(true, {}, this.$route.query, query)
-            };
-                            
-            // Replace the state.
-            return this.$router.replace(state);
-
+            });
+          
           }
           
         };
+  
+  // Optimize the query string plugin for global use.
+  Qs.config = { 
+    parse: {
+      strictNullHandling: true
+    },
+    stringify: {
+      encode: false,
+      strictNullHandling: true
+    }
+  };
+  Qs.__stringify = Qs.stringify;
+  Qs.__parse = Qs.parse;
+  Qs.stringify = (object, options) => {
+    
+    const string = Qs.__stringify(object, $.extend(true, {}, Qs.config.stringify, options));
+    
+    return string ? `?${string}` : ''; 
+    
+  };
+  Qs.parse = (object, options) => {
+    
+    return Qs.__parse(object, $.extend(true, {}, Qs.config.parse, options));
+    
+  };
 
   // Set default API options.
   const defaults = {
@@ -289,7 +315,9 @@ $.when(
       'date.month': 'ASC',
       'date.year': 'ASC'
     },
-    indexing: {},
+    index: {
+      order: 'ASC'
+    },
     density: 'medium'
   };
   
@@ -304,14 +332,15 @@ $.when(
       paging: defaults.paging,
       filter: defaults.filter,
       sort: defaults.sort,
-      indexing: defaults.indexing,
+      index: defaults.index,
+      indexing: {},
       loading: true,
       density: defaults.density, 
       features: [
         'paging',
         'filter', 
         'sort',
-        'indexing'
+        'index'
       ],
       blacklist: {
         paging: [
@@ -354,78 +383,57 @@ $.when(
           },
 
           // Convert features into a query string to pass along with the request.
-          features() {
-
-            // Get the feature set.
-            const features = self.features;
-
-            // Initialize query string.
-            let query = '';
-
-            // Initialize query component helper.
-            const component = ( feature, blacklist ) => {
-
-              // Initialize the query string.
-              let query = '';
-
-              // Handle features with sub-properties.
-              if( Object.isObject(self[feature]) ) {
-
-                for( let key in self[feature] ) {
-                  
-                  // Ignore blacklisted sub-properties.
-                  if( blacklist.includes(key) ) continue;
-
-                  // Capture the value.
-                  let value = self[feature][key];
-
-                  // Convert array values into comma-delimited lists.
-                  if( Array.isArray(value) ) value = value.join(',');
-
-                  // Save the query parameter.
-                  query += `${feature}[${key}]=${value}&`;
-
-                }
-
-                // Output the combined query string.
-                return query.slice(0, -1);
-
-              }
-
-              // Otherwise, handle simple features.
-              return `${feature}=${self[feature]}`;
-
-
-            };
+          query( string = false ) {
             
             // Get the blacklist of features.
             const blacklist = self.blacklist;
-
-            // Build the query string components.
-            features.forEach((feature) => {
-
-              // Verify that the component exists.
-              if( !Object.isEmpty(self[feature]) ) {
+            
+            // Get the features.
+            const features = self.features.reduce((object, feature) => { 
+              
+              // Handle feature data in object form.
+              if( Object.isObject(self[feature]) && !Object.isEmpty(self[feature]) ) {
                 
-                // Get the list of properties to ignore.
-                const ignore = blacklist[feature] || [];
-
-                // Add the component to the query string.
-                query += (query === '' ? '?' : '&') + component(feature, ignore);
-
+                // Get the feature data.
+                let data = self[feature];
+                
+                // Apply formatting to features as applicable.
+                if( feature == 'filter' ) data = this.filters($.extend(true, {}, data));
+                
+                // Capture the feature data.
+                object[feature] = $.extend(true, {}, data);
+              
+                // Remove any blacklisted data.
+                for( let key in object[feature] ) {
+                  
+                  if( blacklist[feature] && blacklist[feature].includes(key) ) delete object[feature][key];
+                  
+                } 
+                  
               }
-
-            });
-
-            // Return the compiled query string.
-            return query;
+              
+              // Otherwise, handle simple feature data.
+              else {
+                
+                // Capture the feature data if it's not blacklisted.
+                if( !blacklist[feature] || blacklist[feature] === false ) object[feature] = self[feature];
+                
+              }
+              
+              // Continue.
+              return object;
+              
+            }, {});
+       
+            // Return helpers.
+            return string ? Qs.stringify(features) : features;
 
           },
 
           // Build the URL for a request.
           url( query ) {
 
-            return query ? `${self.src}${self.endpoint}${this.features()}` : `${self.src}${self.endpoint}`;
+            return query ? `${self.src}${self.endpoint}${this.query(true)}` : `${self.src}${self.endpoint}`;
 
           },
 
@@ -447,40 +455,44 @@ $.when(
           filters( filters ) {
 
             // Format filter ranges.
-            $.each(filters, (key, value) => {
+            $.each(filters, (key, filter) => {
 
               // Remove empty values.
-              if( value === undefined || Array.isEmpty(value) ) delete filters[key];
+              if( filter === undefined || Array.isEmpty(filter) ) delete filters[key];
 
               // Handle arrays values.
-              else if( Array.isArray(value) ) {
+              else if( Array.isArray(filter) ) {
 
-                // Look for ranges within the array.
-                value = value.map((v) => {
+                // Look for filters in array form.
+                filter = filter.map((value) => {
 
-                  // Capture ranges.
-                  if( Object.isObject(v) && v.hasOwnProperty('min') && v.hasOwnProperty('max') ) {
+                  // Identify ranges filters.
+                  if( Object.isObject(value) && value.hasOwnProperty('min') && value.hasOwnProperty('max') ) {
 
                     // Only keep non-empty values.
-                    if( v.min === undefined && v.max === undefined ) return undefined;
-                    else if( v.min === undefined && v.max !== undefined ) return v.max;
-                    else if( v.min !== undefined && v.max === undefined ) return v.min;
-                    else return `${v.min}-${v.max}`;
+                      if( value.min === undefined && value.max === undefined ) return undefined;
+                      else if( value.min === undefined && value.max !== undefined ) return value.max;
+                      else if( value.min !== undefined && value.max === undefined ) return value.min;
+                      else return `${value.min}-${value.max}`;
 
                   }
+                  
+                  // Otherwise, identify empty values.
+                  else if( Object.isObject(value) && Object.isEmpty(value) ) return undefined;
 
-                  return v;
+                  // Otherwise, use the value as is.
+                  else return value;
 
                 });
 
                 // Remove empty ranges.
-                value = value.filter((v) => v !== undefined);
+                filter = filter.filter((value) => value !== undefined);
 
                 // Delete invalid ranges.
-                if( Array.isEmpty(value) ) delete filters[key];
+                if( Array.isEmpty(filter) ) delete filters[key];
 
                 // Otherwise, save the new value.
-                else filters[key] = value;
+                else filters[key] = filter;
 
               }
 
@@ -489,48 +501,6 @@ $.when(
             // Return the formatted filters.
             return filters;
 
-          },
-          
-          // Extract the query params of a request.
-          query() {
-            
-            // Get the feature set.
-            const features = self.features;
-            
-            // Get the feature blacklist.
-            const blacklist = self.blacklist;
-            
-            // Initialize query parameters.
-            const params = {};
-            
-            // Build the query parameters.
-            features.forEach((feature) => {
-
-              // Verify that the feature exists.
-              if( !Object.isEmpty(self[feature]) ) {
-                
-                // Initialize the parameter set for the feature.
-                params[feature] = {};
-                
-                // Get the list of properties to ignore.
-                const ignore = blacklist[feature] || [];
-                
-                // Add the feature the parameter set.
-                for( let prop in self[feature] ) {
-                  
-                  if( ignore.includes(prop) ) continue;
-                  
-                  params[feature][prop] = self[feature][prop];
-                  
-                }
-
-              }
-
-            });
-            
-            // Return the query parameters.
-            return params;
-            
           }
           
         };
@@ -541,7 +511,7 @@ $.when(
       memory( method, args ) { this.history.push({method, args}); },
     
       // Execute a request on the API.
-      request( method, endpoint, query = true, data = {} ) {
+      request( method, endpoint, query = true, data = {} ) { 
       
         // Validate the endpoint.
         if( this.utils().validate(method, endpoint) ) {
@@ -560,15 +530,38 @@ $.when(
             method: method,
             data: data,
             context: this
-          }).always((response) => {
+          }).always((response) => { 
 
-            if( response.hasOwnProperty('paging') ) this.$set(this, 'paging', $.extend(true, {}, this.paging, response.paging));
-            if( response.hasOwnProperty('filter') ) this.$set(this, 'filter', $.extend(true, {}, this.filter, response.filter));
-            if( response.hasOwnProperty('sort') ) this.$set(this, 'sort', $.extend(true, {}, this.sort, response.sort));
-            if( response.hasOwnProperty('index') ) this.$set(this, 'indexing', $.extend(true, {}, this.indexing, response.index));
+            // Capture response data.
+            if( response.hasOwnProperty('paging') ) {
+              
+              const paging = {increments: this.paging.increments};
+              
+              this.$set(this, 'paging', $.extend(true, {}, paging, response.paging));
+         
+            }
+            if( response.hasOwnProperty('filter') ) {
+              
+              this.$set(this, 'filter', $.extend(true, {}, response.filter));
+              
+            }
+            if( response.hasOwnProperty('sort') ) {
+              
+              this.$set(this, 'sort', $.extend(true, {}, response.sort));
+              
+            }
+            if( response.hasOwnProperty('index') ) {
+              
+              this.$set(this, 'indexing', $.extend(true, {}, response.index.data));
+              this.index.order = response.index.order;
+              
+            }
             
             // Add the query string to the response data.
             response.query = query ? this.utils().query() : {};
+                                   
+            // End the loading animation.
+            if( this.loading ) event.trigger('loading', false);
 
           });
 
@@ -609,14 +602,14 @@ $.when(
 
       },
     
-      // Perform an `index` request on the API.
-      index( field = '' ) {
+      // Perform an `aggregate` request on the API.
+      aggregate( field = '' ) {
       
         // Capture context.
         const self = this;
 
         // Save the call in memory.
-        this.memory('index', Array.from(arguments));
+        this.memory('aggregate', Array.from(arguments));
 
         // Capture initial loading value.
         const loading = self.loading;
@@ -663,14 +656,11 @@ $.when(
 
       },
       
-      // Merge some parameters with the API, then reload the query.
-      reload( params ) { 
-        
-        // TODO: Figure out why `query` and `filter` is lost during paging.
-        console.log(params);
- 
+      // Merge some parameters with the API, then execute the query.
+      auto( params ) { 
+
         // Extract any feature data.
-        this.$set(this, 'sort', $.extend(true, {}, this.sort, params.sort || defaults.sort));
+        this.$set(this, 'sort', params.sort || this.sort || defaults.sort);
         this.$set(this, 'filter', $.extend(true, {}, this.filter, params.filter || defaults.filter));
         this.$set(this, 'paging', $.extend(true, {}, this.paging, params.paging || defaults.paging));
         this.$set(this, 'indexing', $.extend(true, {}, this.indexing, params.indexing || defaults.indexing));
@@ -684,6 +674,31 @@ $.when(
         
         // Otherwise, browse.
         return this.browse();
+        
+      },
+      
+      // Restore API feature defaults.
+      defaults( include = ['paging', 'filter', 'sort'] ) {
+        
+        // Reset all features to their defaults.
+        include.forEach((feature) => {
+          
+          // Ignore invalid features and features that don't have a default.
+          if( this.hasOwnProperty(feature) && defaults.hasOwnProperty(feature) ) {
+            
+            // Reset features with complex data.
+            if( Object.isObject(this[feature]) || Array.isArray(this[feature]) ) {
+              
+              this.$set(this, feature, $.extend({}, defaults[feature]));
+              
+            }
+            
+            // Otherwise, reset features with simple data.
+            else this[feature] = defaults[feature];
+            
+          }
+          
+        });
         
       }
       
@@ -704,7 +719,7 @@ $.when(
   
   // Load plugins.
   Vue.use(VueMarkdown);
-  Vue.use(InstanceProperty, {vue: API, name: 'api'});
+  Vue.use(InstanceProperty, {name: 'api', vue: API});
 
   // Events
   const Events = new Vue();
@@ -860,16 +875,11 @@ $.when(
       
       page( offset ) {
         
-        this.$api.paging.offset = offset; 
-
-        // Reinvoke the last call to the API.
-        this.$api.last().then((response) => {
+        // Set the API's paging offset.
+        this.$api.paging.offset = offset;
           
-          this.history(response.query);
-          
-          event.trigger('paging', response.data);
-          
-        });
+        // Trigger the paging event.
+        event.trigger('paging');
         
       }
       
@@ -879,8 +889,12 @@ $.when(
     
     created() {
       
-      // Handle events.
-      event.on('paging', () => event.trigger('loading', false));
+      // Handle paging events.
+      event.on('paging', () => {
+        
+        this.refresh(this.$api.utils().query(), {autoload: false});
+
+      });
       
     }
     
@@ -898,7 +912,10 @@ $.when(
         duration: 500,
         open: false,
         filterable: false,
-        filters: this.init(),
+        filters: {
+          applied: {},
+          selected: this.init(),
+        },
         active: false
       };
     },
@@ -924,7 +941,7 @@ $.when(
         
       },
       
-      validate( key ) {
+      validate( key ) { 
         
         // Capture context.
         const self = this;
@@ -936,14 +953,14 @@ $.when(
             
             const {min, max} = range;
 
-            switch( trigger) {
+            switch( trigger ) {
                 
               case 'min':
                 if( min === undefined || max === undefined || min > max ) range.max = min;
                 break;
                 
               case 'max':
-                if( min === undefined && max !== undefined ) range.min = Object.get(self.fields, key)[0];
+                if( min === undefined && max !== undefined ) range.min = Object.get(self.$api.indexing, key)[0];
                 break;
                 
             }
@@ -953,7 +970,7 @@ $.when(
           // Validate multiple selection inputs.
           multiselect() {
             
-            const selected = self.filters[key];
+            const selected = self.filters.selected[key];
             
             let index;
             
@@ -969,41 +986,69 @@ $.when(
         
       },
       
-      toggle( state ) { this.open = isset( state ) ? state : !this.open; },
+      toggleDrawer() { this.open = !this.open; },
       
-      clear() { 
+      openDrawer() { this.open = true; },
+      
+      closeDrawer() { this.open = false; },
+      
+      clearSelected() { 
         
-        this.filters = this.init();
+        this.filters.selected = this.init();
       
       },
       
-      remove() {
+      clearApplied() { 
         
-        // Capture context. 
-        const self = this;
+        this.filters.applied = {};
+      
+      },
+      
+      clearAll() { 
         
-        // Clear all filters.
-        self.api.filter = {};
+        this.clearSelected();
+        this.clearApplied();
+      
+      },
+      
+      removeFilter( key, index ) { 
+        
+        // Delete the filter from the API.
+        this.$delete(this.$api.filter[key], index);
+        
+        // Delete the filter field when no more data exists.
+        if( this.$api.filter[key].length === 0 ) this.$delete(this.$api.filter, key);
+     
+        // Remove the filter from the query.
+        this.$delete(this.$route.query.filter[key], index);
+        
+        // Delete the filter field when no more data exists.
+        if( this.$route.query.filter[key].length === 0 ) this.$delete(this.$route.query.filter, key);
+        
+        // Reload all filters
+        this.$set(this.$route.query, 'filter', $.extend(true, {}, this.$route.query.filter)); 
+    
+        // Reset the paging to go back to the first page.
+        this.$api.paging.offset = 0;
+     
+        // Trigger a filtering event.
+        event.trigger('filtering');
+        
+      },
+      
+      removeAll() {
+        
+        // Clear all filter data from the API.
+        this.$api.$set(this.$api, 'filter', {});
+        
+        // Remove any filter data from the query.
+        this.$delete(this.$route.query, 'filter');
         
         // Reset the paging to go back to the first page.
-        self.api.paging = $.extend({}, paging, {limit: self.limit});
+        this.$api.paging.offset = 0;
         
-        // Load the unfiltered data.
-        self.api.last().then((response) => {
-          
-          // Trigger a filter event.
-          event.trigger('filtering', {response: response, api: self.api});
-          
-        });
-        
-        // Clear the filter form.
-        self.clear();
-        
-      },
-      
-      subset( array, item ) {
-        
-        return array.indexOf(item) > -1 ? array.slice(array.indexOf(item)) : array;
+        // Trigger a filtering event.
+        event.trigger('filtering');
         
       },
       
@@ -1016,13 +1061,13 @@ $.when(
         
           add() {
           
-            self.filters[key].push({min: undefined, max: undefined});
+            self.filters.selected[key].push({min: undefined, max: undefined});
 
           },
         
           remove( index ) {
           
-            self.filters[key].splice(index, 1);
+            self.filters.selected[key].splice(index, 1);
 
           }
           
@@ -1043,7 +1088,7 @@ $.when(
             values = Array.isArray( values ) ? values : [values];
             
             // Look for intersection.
-            const intersection = self.filters[key].intersection(values);
+            const intersection = self.filters.selected[key].intersection(values);
             
             // Return result.
             return intersection.length > 0;
@@ -1056,7 +1101,7 @@ $.when(
             values = Array.isArray( values ) ? values : [values];
             
             // Look for intersection.
-            const intersection = self.filters[key].intersection(values);
+            const intersection = self.filters.selected[key].intersection(values);
             
             // Return result.
             return intersection.length === 0;
@@ -1069,32 +1114,20 @@ $.when(
       
       filter() {
         
-        // Capture context.
-        const self = this;
-        
-        // Initialize the filters and format them.
-        let filters = this.$api.filter;
-        
-        // Ignore empty filters.
-        if( Object.isEmpty(filters) ) return;
-        
-        // Reset the paging to go back to the first page.
+        // Reset the the API's paging.
         this.$api.paging.offset = 0;
+
+        // Save the filters to the API.
+        this.$api.$set(this.$api, 'filter', this.filters.selected);
         
-        // Reinvoke the last call to the API.
-        this.$api.last().then((response) => {
-          
-          this.history(response.query);
-          
-          event.trigger('filtering', response.data);
-          
-        });
+        // Trigger the filtering event.
+        event.trigger('filtering');
         
       },
       
       isFilterable() {
   
-        return !Object.values(Object.flatten(this.$api.filter)).every((value) => !isset(value, true) );
+        return !Object.values(Object.flatten(this.filters.selected)).every((value) => !isset(value, true) );
         
       },
       
@@ -1103,28 +1136,24 @@ $.when(
         // Capture fields.
         const fields = this.$api.indexing;
         
-        // Initialize a method for validating filters fields.
+        // Initialize a method for validating filter fields.
         const validate = (field) => {
           
-          // Break out the fields.
-          field = field.split('.');
-          
           // Initialize a pointer.
-          let pointer = fields;
-          
-          // Narrow down the pointer.
-          for( let i = 0; i < field.length; i++ ) {
-    
-            // Validate the pointer.
-            if( !pointer.hasOwnProperty(field[i]) ) return false;
-            
-            // Reset the pointer.
-            pointer = pointer[field[i]];
-            
-          }
-    
+          let pointer = field == 'any' ? fields : Object.get(fields, field);
+  
           // Check the pointer for multiplicity.
           if( !Array.isMultiple(pointer) ) return false;
+          
+          // Check the pointer for equivalence.
+          if( this.filters.applied.hasOwnProperty(field) ) {
+            
+            const indexed = pointer.slice().sort();
+            const applied = this.filters.applied[field].slice().sort();
+            
+            if( Array.isEqual(indexed, applied) ) return false;
+            
+          }
           
           // Validation successful.
           return true;
@@ -1175,48 +1204,97 @@ $.when(
           
         return $.isFunction(enabled[key]) ? enabled[key]() : enabled[key];
         
+      },
+      
+      hasApplied( key = null ) {
+        
+        const applied = !Object.isEmpty(this.filters.applied);
+        
+        if( isset(key) ) {
+          
+          const exact = this.filters.applied.hasOwnProperty(key);
+          const close = Object.keys(this.filters.applied).filter((name) => {
+            
+            return name.indexOf(key) > -1;
+            
+          }).length > 0;
+ 
+          return applied && (exact || close);
+          
+        }
+        
+        return applied;
+        
+      },
+      
+      makeActive() {
+        
+        this.active = true;
+        this.clearSelected();
+        
+      },
+      
+      makeInactive() {
+        
+        this.active = false;
+        this.clearAll();
+        
+      },
+      
+      toggleState() {
+        
+        if( !Object.isEmpty(this.$api.filter) ) this.makeActive();
+        
+        else this.makeInactive();
+        
       }
       
     }, methods),
     
     filters: $.extend({}, filters),
     
-    created() {
-      
-      // Capture context.
-      const self = this; 
-      
-      // Handle events.
-      event.on('filtering', () => event.trigger('loading', false));
-      event.on('list filtering paging sort', (data) => {
-        
-        // Filtering was applied.
-        if( !Object.isEmpty(this.$api.filter) ) this.active = true;
+    created() { 
 
-        // Filtering was not applied.
-        else {
-          
-          this.active = false;
-          this.clear();
-          
-        }
+      // Handle filtering events.
+      event.on('filtering', () => { 
+                       
+        // Jump to the list.
+        this.refresh(this.$api.utils().query(), {autoload: false});
+
+        
+      });
+
+      // Set the filter's initial state.
+      this.toggleState();
+      
+      // Listen for list events.
+      event.on('list', () => {
+
+        // Capture any filter data.
+        this.$set(this.filters, 'applied', this.$api.filter || {});
+        this.$set(this.filters, 'selected',  $.extend(true, {}, this.filters.selected, this.init()));
+
+        // Toggle the filter's state.
+        this.toggleState();
         
         // Hide the filter form.
-        this.toggle(false);
+        this.closeDrawer();
       
       });
       
     },
     
     watch: {
+      
       filters: {
-        handler() {
+        handler() { 
           
           this.filterable = this.isFilterable();
       
         },
         deep: true
       }
+      
     }
     
   });
@@ -1230,7 +1308,6 @@ $.when(
     
     data() {
       return {
-        sortable: false,
         ascending: true,
         active: false
       };
@@ -1246,17 +1323,38 @@ $.when(
         // Toggle sort order if active.
         if( this.active ) this.ascending = !this.ascending;
 
-        // Set sorting.
-        this.$api.sort = this.fields;
+        // Set sorting for the API.
+        this.$api.sort = this.fieldsObject;
+        
+        // Remove the existing query's sort data.
+        delete this.$route.query.sort;
+          
+        // Trigger the sort event.
+        event.trigger('sort');
+        
+      },
+      
+      activate() {
+        
+        this.active = true;
+        this.ascending = Object.values(this.$api.sort)[0] != 'DESC';
+        
+      },
+      
+      deactivate() {
+        
+        this.active = false;
+        this.ascending = true;
+        
+      },
+      
+      toggle() {
+        
+        // Check for matches on the given sort field.
+        if( Array.isEqual(Object.keys(this.$api.sort).sort(), this.fieldsArray.sort()) ) this.activate();
 
-        // Reinvoke the last call to the API.
-        this.$api.last().then((response) => {
-          
-          this.history(response.query);
-          
-          event.trigger('sort', response.data);
-          
-        });
+        // Otherwise, reset the field's sorting.
+        else this.deactivate();
         
       }
       
@@ -1264,75 +1362,20 @@ $.when(
     
     filters: $.extend({}, filters),
     
-    created() {
-      
-      // Handle ready state changes.
-      /*event.on('sortable', (state) => {
-        
-        // Update the context.
-        if( Array.isEqual(this.fieldset, state.fieldset) ) {
-        
-          self = state.context;
-          this.sortable = state.sortable;
-          
-        }
-        
-      });*/
+    created() { 
                
-      // Handle events.
-      event.on('sort', () => event.trigger('loading', false));
-      event.on('list paging filtering sort', (data) => {
-        
-        // Load methods for toggling the active state.
-        const activate = ( state ) => {
+      // Toggle the sort field's state.
+      this.toggle();
+               
+      // Handle sort events.
+      event.on('sort', () => {
 
-          if( this.sortable ) {
-
-            if( state ) {
-
-              this.active = true;
-              this.ascending = Object.values(this.$api.sort)[0] == 'DESC' ? false : true;
-
-            }
-
-            else {
-
-              this.active = false;
-              this.ascending = true;
-
-            } 
-
-          }
-
-          else setTimeout(() => activate( state ), 100);
-
-        };
-        
-        // Save sort data.
-        if( !Object.isEmpty(this.$api.sort) ) { 
-          
-          // Handle backward navigation.
-          if( /*data.back === true &&*/ Array.isEqual(this.fieldset, Object.keys(this.$api.sort)) ) activate(true);
-          
-          // Handle matches on sort fields.
-          else if( Object.isEqual(this.$api.sort, this.fields) ) activate(true);
-          
-          // Otherwise, reset sorting.
-          else activate(false);
-          
-        }
-        
-        // Otherwise, no sorting occurred.
-        else activate(false);
+        this.refresh($.extend(true, {}, this.$route.query, this.$api.utils().query()), {autoload: false});
         
       });
       
-    },
-    
-    mounted() {
-      
-      // Set the ready state.
-      event.trigger('sortable', {sortable: true, fieldset: this.fieldset, context: this}); 
+      // Listen for list events.
+      event.on('list', () => this.toggle());
       
     },
     
@@ -1345,28 +1388,25 @@ $.when(
     
     computed: {
       
-      fieldset() {
+      fieldsArray() {
         
         return Array.isArray(this.on) ? this.on : [this.on];
         
       },
       
-      fields() {
-        
-        // Capture context.
-        const self = this;
+      fieldsObject() {
 
         // Get the sort fields.
-        let fields = self.fieldset;
+        let fields = this.fieldsArray;
 
         // Convert array values to an object.
         if( Array.isArray(fields) ) {
 
-          fields = fields.reduce((accumulator, current) => {
+          fields = fields.reduce((object, field) => {
 
-            accumulator[current] = self.ascending ? 'ASC' : 'DESC';
+            object[field] = this.ascending ? 'ASC' : 'DESC';
 
-            return accumulator;
+            return object;
 
           }, {});
 
@@ -1412,7 +1452,7 @@ $.when(
       
       read( letter ) {
         
-        // Trigger a read event.
+        // Trigger the read event.
         event.trigger('read', letter.id);
         
       },
@@ -1431,10 +1471,9 @@ $.when(
 
       this.query = !Object.isEmpty(this.$route.query);
   
-      // Handle events.
-      event.on('list', () => event.trigger('loading', false));
-      event.on('list paging filtering sort', (data) => {
-
+      // Handle the list event.
+      event.on('list', (data) => { 
+        
         // Reset any errors.
         this.reset();
 
@@ -1448,6 +1487,8 @@ $.when(
         this.filtering = !Object.isEmpty(this.$api.filter);
 
       });
+      
+      // Enable reading of letters.
       event.on('read', (id) => this.$router.push({name: 'Letter', params: {id: +id}}));
 
       if( this.query ) event.trigger('query');
@@ -1597,24 +1638,6 @@ $.when(
     
     created() {
       
-      // Capture the last state of the list data.
-      /*event.on('list:response', (data) => { 
-        
-        // Extract the list's state.
-        self.state.recall = $.extend(self.state.recall, data.api.recall);
-        self.state.filter = $.extend(self.state.filter, data.api.filter);
-        self.state.paging = $.extend(self.state.paging, data.api.paging);
-        self.state.sort = $.extend(self.state.sort, data.api.sort);
-        self.state.density = data.density || null;
-        
-      });*/
-      
-      // Request API data.
-      //event.trigger('list:request');
-      
-      // Initialize the API.
-      //self.api = new API();
-      
       // Retrieve the letter data.
       this.init();
       
@@ -1671,40 +1694,20 @@ $.when(
     methods: $.extend({
       
       search() {
+   
+        // Reset API features.
+        this.$api.defaults(['filter', 'sort', 'indexing']);
         
-        // Initialize the search query.
-        let query = '';
-        
-        // Build the query.
-        if( this.boolean ) query += this.query.data.map((data) => {
-          
-          return data.value;
-          
-        }).join(' ');
-        
-        // Capture any remaining input.
-        if( this.query.input ) query += ` ${this.query.input}`;
-        
-        // Clean up the query.
-        query = query.trim();
-    
-        // Reset paging.
+        // Reset query features.
+        delete this.$route.query.filter;
+        delete this.$route.query.sort;
+
+        // Reset the API's paging.
         this.$api.paging.offset = 0;
-        
-        // Convert fields to appropriate form.
-        const field = isset(this.field) ? this.field.replace('.', '/') : null;
-        
-        // Execute a request on the API.
-        this.$api.search( query, field ).always((response) => {
           
-          this.history($.extend(true, {
-            query: query,
-            field: field
-          }, response.query));
-          
-          event.trigger('search', response.data || []);
-          
-        });
+        // Trigger the search event.
+        event.trigger('search');
+
         
       },
       
@@ -1936,21 +1939,25 @@ $.when(
       
       browse() {
         
-        // Execute a browse request on the API.
-        this.$api.browse().always((response) => {
-          
-          this.history(response.query);
-          
-          event.trigger('browse', response.data);
-          
-        });
+        // Reset API features.
+        this.$api.defaults(['filter', 'sort', 'indexing']);
+        
+        // Reset query features.
+        delete this.$route.query.filter;
+        delete this.$route.query.sort;
+        
+        // Reset the API's paging.
+        this.$api.paging.offset = 0;
+        
+        // Trigger the browser event.
+        event.trigger('browse');
         
       },
       
-      reload() {
+      auto() { 
         
         // Merge the query string parameters, then repopulate the list.
-        this.$api.reload(this.$route.query).always((response) => event.trigger('reload', response.data));
+        this.$api.auto(this.$route.query).always((response) => event.trigger('list', response.data));
         
       }
       
@@ -1958,7 +1965,7 @@ $.when(
 
     filters: $.extend({}, filters),
     
-    created() {
+    created() { // TODO: Extract search query and field data from query string on page load.
       
       // Capture context.
       const self = this;
@@ -1967,19 +1974,26 @@ $.when(
       event.on('ready', (ready) => this.ready = ready);
       event.on('browse', () => { 
 
-        // Jump to list.
-        this.$router.push({name: 'List'});
+        // Jump to the list.
+        this.refresh(this.$api.utils().query(), {autoload: false});
         
-        // Clear the search field.
+        // Clear any search fields.
         this.clear();
         
       });
-      event.on('search', () => this.$router.push({name: 'List', params: {autoload: false}}));
-      event.on('search browse reload', (data) => this.when(() => this.ready, () => event.trigger('list', data)));
+      event.on('search', () => {
+        
+        // Jump to the list.
+        this.refresh($.extend(true, {}, {
+          query: this.searchQuery,
+          field: this.searchField
+        }, this.$api.utils().query()), {autoload: false});
+        
+      });
       
       // Handle forced events.
       event.on('autoload', () => this.browse());
-      event.on('query', () => this.reload());
+      event.on('query', () => this.auto());
       
       // Handle route changes.
       event.on('route', (route) => {
@@ -2001,6 +2015,33 @@ $.when(
           this.query.type = null;
           
         }
+        
+      }
+    },
+    
+    computed: {
+      searchQuery() {
+        
+        // Initialize the search query.
+        let query = '';
+        
+        // Build the query.
+        if( this.boolean ) query += this.query.data.map((data) => {
+          
+          return data.value;
+          
+        }).join(' ');
+        
+        // Capture any remaining input.
+        if( this.query.input ) query += ` ${this.query.input}`;
+        
+        // Return the search query.
+        return query.trim();
+        
+      },
+      searchField() {
+        
+        return isset(this.field) ? this.field.replace('.', '/') : null;
         
       }
     }
@@ -2156,23 +2197,8 @@ $.when(
     mode: 'history',
     routes,
     base: PATH,
-    parseQuery( query ) { 
-      
-      return Qs.parse(query, {
-        strictNullHandling: true
-      }); 
-    
-    },
-    stringifyQuery(query) { 
-      
-      const string = Qs.stringify(query, {
-        encode: false,
-        strictNullHandling: true
-      });
-      
-      return string? `?${string}` : ''; 
-    
-    }
+    parseQuery: (query) => Qs.parse(query),
+    stringifyQuery: (query) => Qs.stringify(query)
   });
   
   // Enable navigation updates.
