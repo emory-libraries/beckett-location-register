@@ -1,8 +1,8 @@
 .loading {
   width: 100%;
   height: $layout-min-height;
-  font-size: 5em;
   @include absolute-center-contents;
+  flex-direction: column;
   position: fixed;
   top: $header-height;
   left: 0;
@@ -13,6 +13,7 @@
   
   .icon {
     padding: 25px;
+    font-size: 5em;
     background-color: color('blue', 'powder');
     border-radius: 3px;
     
@@ -21,6 +22,30 @@
     @keyframes spin {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
+    }
+    
+  }
+  
+  .text {
+    color: rgba(color('white'), .75);
+    font-size: 2em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  
+  .progress {
+    width: 80%;
+    height: $controls-height;
+    border-radius: 3px;
+    border: 1px solid color('grey');
+    background-color: rgba(color('blue', 'powder'), .5);
+    overflow: hidden;
+    
+    .bar {
+      transition: $transition-all;
+      height: 100%;
+      width: 0%;
+      background-color: color('blue');
     }
     
   }

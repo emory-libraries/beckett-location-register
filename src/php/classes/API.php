@@ -124,12 +124,18 @@ trait GET {
     
     // Otherwise, use the data set as is.
     else { $data = $this->csv; }
+    
+    // Save progress thus far.
+    $this->__setProgress($this->process, 10);
 
     // Handle aggregate data requests.
     if( $aggregate ) {
       
       // Flatten all data.
       $data = array_map( 'array_flatten', $data );
+      
+      // Save progress thus far.
+      $this->__setProgress($this->process, 25);
 
       // Loop through the data set.
       foreach($data as $item) {
@@ -146,6 +152,9 @@ trait GET {
         }
 
       }
+      
+      // Save progress thus far.
+      $this->__setProgress($this->process, 55);
 
       // Only keep unique values.
       $this->data = array_map( 'array_values', array_map( 'array_unique', $this->data ) );
@@ -157,8 +166,14 @@ trait GET {
       
       });
       
+      // Save progress thus far.
+      $this->__setProgress($this->process, 70);
+      
       // Expand and typify the aggregate data.
       $this->data = $this->__typify( array_expand($this->data) );
+      
+      // Save progress thus far.
+      $this->__setProgress($this->process, 90);
       
     }
     
@@ -210,6 +225,9 @@ trait GET {
           'dynamic'       => '/:.+/',
           'interpolation' => '/\{(.+?)\}/'
         ];
+        
+        // Save progress thus far.
+        $this->__setProgress($this->process, 25);
 
         // Compare endpoints.
         foreach( $target as $index => $pattern ) {
@@ -344,11 +362,17 @@ trait GET {
           }
 
         }
+        
+        // Save progress thus far.
+        $this->__setProgress($this->process, 55);
 
       }
       
       // Convert data types for all data.
       $this->data = $this->__typify( $this->data );
+      
+      // Save progress thus far.
+      $this->__setProgress($this->process, 65);
 
       // Enable features.
       if( !empty($this->query) ) { 
@@ -378,6 +402,9 @@ trait GET {
           return (is_array($query) ? $query : [$query]);
           
         }, $params);
+        
+        // Save progress thus far.
+        $this->__setProgress($this->process, 75);
 
         // Loop through features.
         foreach( $params as $feature => $settings ) { 
@@ -386,6 +413,9 @@ trait GET {
           if( method_exists($this, "__$feature") ) { $this->{"__$feature"}( $settings ); }
 
         }
+        
+        // Save progress thus far.
+        $this->__setProgress($this->process, 90);
 
       }
       
@@ -393,6 +423,37 @@ trait GET {
     
     // Set the status code to 200.
     if( !$this->error ) $this->__status( 200 );
+    
+    // Save progress thus far.
+    $this->__setProgress($this->process, 100);
+    
+  }
+  
+  private function PROGRESS() { 
+    
+    // Verify that no preivous errors were thrown.
+    if( $this->error ) return;
+    
+    // Check that a process ID was given.
+    if( !isset($this->params[1]) ) {
+      
+      $this->__status( 400 );
+      
+      return;
+      
+    }
+    
+    // Get the process ID.
+    $id = $this->params[1]; 
+    
+    // Attempt to get the progress for the given ID.
+    $progress = $this->__getProgress($id);
+
+    // Set the status.
+    $this->__status( 200 );
+    
+    // Return the progress.
+    $this->data = $progress;
     
   }
   
@@ -764,7 +825,7 @@ trait FEATURES {
           foreach($filters[$key] as $filter) {
 
             // Handle filter ranges.
-            if( array_keys($filter) == ['min', 'max'] ) {
+            if( is_array($filter) and array_keys($filter) == ['min', 'max'] ) {
 
               $min = $filter['min'];
               $max = $filter['max'];
@@ -862,9 +923,10 @@ class API {
   ];
   public $data = [];
   public $features = [];
+  public $process = null;
   
   // Constructor
-  function __construct( Config $config ) {
+  function __construct( Config $config ) { 
    
     // Configure the API.
     if( in_array($config->LOCAL_DATABASE, [true, false]) ) $this->local = $config->LOCAL_DATABASE;
@@ -883,17 +945,28 @@ class API {
     // Set default status.
     $this->status = ['code' => 400, 'message' => $this->codes[400]];
     
+    // Save process data.
+    $this->process = isset($this->query['pid']) ? $this->query['pid'] : posix_getpid();
+    
     // Send initial headers.
     $this->__headers();
     
-    // Initialize the cache.
-    if( $this->caching ) $this->cache = new Cache($config);
-
-    // Load data from source.
-    $this->csv = $this->local ? $this->__spreadsheet() : $this->__googlesheet();
+    // Expedite the handling of progress requests.
+    if( $this->params[0] == 'progress' ) $this->PROGRESS();
     
-    // Handle the request.
-    $this->__request();
+    // Otherwise, handle all other requests.
+    else {
+    
+      // Initialize the cache.
+      if( $this->caching ) $this->cache = new Cache($config);
+
+      // Load data from source.
+      $this->csv = $this->local ? $this->__spreadsheet() : $this->__googlesheet();
+
+      // Handle the request.
+      $this->__request();
+      
+    }
     
   }
   
@@ -1244,11 +1317,76 @@ class API {
     
   }
   
+  // Set progress data about a process.
+  private function __setProgress( $id, $progress, $status = null ) {
+    
+    // Get the path to the progress file.
+    $path = $this->config->PROGRESS;
+    
+    // Get current progress data.
+    $data = file_exists($path) ? json_decode(file_get_contents($path), true) : [];
+
+    // Overwrite existing or save new progress data for processes.
+    $data[$id] = [
+      'progress' => $progress, 
+      'status' => $status
+    ];
+      
+    // Save the progress data.
+    return file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT));
+    
+  }
+  
+  // Get progress data about a process.
+  private function __getProgress( $id ) {
+    
+    // Get the path to the progress file.
+    $path = $this->config->PROGRESS;
+    
+    // Get current progress data.
+    $data = file_exists($path) ? json_decode(file_get_contents($path), true) : [];
+    
+    // Convert floats to integers.
+    if( gettype($id) == 'double' ) $id = (int) $id;
+    
+    // Return the progress data.
+    if( array_key_exists($id, $data) ) return $data[$id];
+    
+    // Otherwise, return empty progress.
+    return ['progress' => 0, 'status' => 'Process not yet registered.'];
+    
+  }
+  
+  // Delete progress data about a process.
+  private function __delProgress( $id ) {
+    
+    // Get the path to the progress file.
+    $path = $this->config->PROGRESS;
+    
+    // Get current progress data.
+    $data = file_exists($path) ? json_decode(file_get_contents($path), true) : [];
+
+    // Convert floats to integers.
+    if( gettype($id) == 'double' ) $id = (int) $id;
+
+    // Check if progress data for the process exists.
+    if( array_key_exists($id, $data) ) {
+      
+      // Delete the progress data.
+      unset($data[$id]);
+      
+      // Save remaining progress data.
+      return file_put_contents($path, json_encode($data));
+      
+    }
+    
+  }
+  
   // Send an API response.
   function response() {
     
     // Build output.
-    $output = ['status' => $this->status];
+    $output = ['status' => $this->status, 'process' => $this->process];
     
     if( !$this->error ) {
     
@@ -1259,7 +1397,7 @@ class API {
     }
     
     // Save the data to the cache.
-    if( $this->caching ) $this->__cache();
+    if( $this->caching && !$this->params[0] == 'progress' ) $this->__cache();
     
     // Set response code.
     http_response_code( $this->status['code'] );

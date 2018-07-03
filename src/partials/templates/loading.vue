@@ -2,7 +2,15 @@
 
   <div class="loading" v-if="loading">
   
-    <span class="icon fa-spinner"></span>
+    <!--span class="icon fa-spinner"></span-->
+    
+    <div class="text">Loading...</div>
+    
+    <div class="progress" v-if="$api.percent !== null">
+   
+      <div class="bar" :style="{width: $api.percent.progress + '%'}"></div>
+    
+    </div>
   
   </div>
 

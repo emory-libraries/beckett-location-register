@@ -91,6 +91,19 @@ $.when(
     return this.indexOf(item) > -1 ? this.slice(this.indexOf(item)) : this;
     
   };
+  Array.prototype.shuffle = function() {
+    
+    for( let i = this.length - 1; i > 0; i-- ) {
+        
+      const n = Math.floor(Math.random() * (i + 1));
+      
+      [this[i], this[n]] = [this[n], this[i]];
+      
+    }
+       
+    return this;
+    
+  };
   Array.isEmpty = function( array ) { return Array.isArray( array ) && array.length === 0; };
   Array.isMultiple = function( array ) { return Array.isArray( array ) && array.length > 1; };
   Array.isEqual = function( array1, array2 ) {
@@ -352,6 +365,15 @@ $.when(
           'next',
           'increments'
         ]
+      },
+      percent: null,
+      poll: {
+        interval: 100,
+        timeout: 30000
+      },
+      pid: {
+        base: 36,
+        length: 16
       }
     },
     
@@ -433,9 +455,19 @@ $.when(
           },
 
           // Build the URL for a request.
-          url( query ) {
+          url( pid, query ) {
+            
+            // Initialize the URL.
+            let url = `${self.src}${self.endpoint}`;
+            
+            // Add query data if applicable.
+            if( query ) url += this.query(true);
+            
+            // Add a unique id.
+            url += (query ? '&' : '?') + `pid=${pid}`;
 
-            return query ? `${self.src}${self.endpoint}${this.query(true)}` : `${self.src}${self.endpoint}`;
+            // Return the URL.
+            return url;
 
           },
 
@@ -503,6 +535,20 @@ $.when(
             // Return the formatted filters.
             return filters;
 
+          },
+          
+          // Generate a unique process ID.
+          pid() { 
+          
+            // Get the timestamp.
+            const timestamp = Date.now().toString(self.pid.base);
+            
+            // Get a random string.
+            const random = Math.random().toString(self.pid.base);
+            
+            // Merge the two and randomize further.
+            return timestamp.split('').concat(random.split('')).shuffle().join('').substr(0, self.pid.length);
+          
           }
           
         };
@@ -524,16 +570,19 @@ $.when(
 
           // Start loading.
           if( this.loading ) event.trigger('loading', true);
+          
+          // Generate a unique ID for the request.
+          const pid = this.utils().pid();
 
           // Send the request.
-          return $.ajax({
+          const request = $.ajax({
             dataType: 'json',
-            url: this.utils().url(query),
+            url: this.utils().url(pid, query),
             method: method,
             data: data,
             context: this
           }).always((response) => {
-
+            
             // Capture response data.
             if( response.hasOwnProperty('paging') ) {
               
@@ -563,12 +612,84 @@ $.when(
             response.query = query ? this.utils().query() : {};
                                    
             // End the loading animation.
-            if( this.loading ) event.trigger('loading', false);
+            if( this.loading ) setTimeout(() => {
+              
+              event.trigger('loading', false);
+              
+            }, 250);
 
           });
 
+          // Poll for request progress.
+          this.progress(pid);
+          
+          // Return the request.
+          return request;
+
         }
 
+      },
+      
+      // Get progress of a request by process ID.
+      progress( pid ) { 
+        
+        // Initialize a poll timer.
+        let timer = 0;
+        
+        // Initialize a polling method.
+        const poll = () => { 
+                            
+          // Initialize a helper to determine if polling should continue.
+          const check = () => {
+            
+            const next = () => {
+              
+              // Increment the timer.
+              timer+= this.poll.interval;
+              
+              // Poll again.
+              setTimeout(poll, this.poll.interval);
+              
+            };
+            const end = () => {
+              
+              setTimeout(() => this.percent = null, 1000);
+              
+            };
+            
+            // Continue to poll for additional progress updates.
+            if( isset(this.percent) ) {
+              
+              if( this.percent.progress < 100 ) next();
+              
+              else end();
+              
+            }
+            
+            // Check that the polling has not timed out.
+            else if( timer < this.poll.timeout ) next();
+            
+            // Otherwise, clear our progress data and stop polling.
+            else end();
+            
+          };
+          
+          // Get the progress.
+          $.getJSON(`${this.src}progress/${pid}`).then((response) => { 
+            
+            // Save progress data.
+            this.percent = response.data; 
+            
+            // Check the progress thus far.
+            check();
+            
+          });
+          
+        };
+                       
+        // Start polling.
+        poll();
+        
       },
     
       // Perform a `search` request on the API.
