@@ -1024,8 +1024,8 @@ class API {
       
       $data = array_filter(csv_to_array($path, $has_headers), function($item) {
         
-        // Only load public data.
-        return $item['Public?'] == 'public';
+        // Only keep public, published data.
+      return (strtolower($item['Public?']) == 'public' and strtolower($item['Published?']) == 'yes');
         
       });
  
@@ -1121,11 +1121,11 @@ class API {
     // Remove private data.
     $data = array_filter($data, function($item) { 
       
-      // Only keep public data.
-      return $item['Public?'] == 'public';
+      // Only keep public, published data.
+      return (strtolower($item['Public?']) == 'public' and strtolower($item['Published?']) == 'yes');
       
     }); 
-    
+
     // Cache the data.
     if( $this->caching ) $this->cache->def('__DATABASE__', $data);
     
@@ -1189,7 +1189,7 @@ class API {
     $result = ['valid' => false];
         
     // Determine validity of the given endpoint.
-    foreach( $endpoints as $ep ) {
+    foreach( $endpoints as $ep ) { 
       
       // Get the endpoint pattern.
       $pattern = $ep['endpoint'];
