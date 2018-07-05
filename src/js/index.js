@@ -2215,7 +2215,11 @@ $.when(
       event.on('browse', () => { 
 
         // Jump to the list.
-        this.refresh(this.$api.utils().query(), {autoload: false});
+        this.$router.push({
+          name: 'List',
+          params: {autoload: false},
+          query: this.$api.utils().query()
+        });
         
         // Clear any search fields.
         this.clear();
@@ -2224,10 +2228,14 @@ $.when(
       event.on('search', () => {
 
         // Jump to the list.
-        this.refresh($.extend(true, {}, {
-          query: this.searchQuery,
-          field: this.searchField
-        }, this.$api.utils().query()), {autoload: false});
+        this.$router.push({
+          name: 'List',
+          params: {autoload: false},
+          query: $.extend(true, {}, {
+            query: this.searchQuery,
+            field: this.searchField
+          }, this.$api.utils().query())
+        });
         
       });
       
