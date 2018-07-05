@@ -2399,6 +2399,33 @@ $.when(
     
   });
   
+  // Outdated Browser
+  const Outdated = Vue.component('outdated', {
+    
+    template: '#template-outdated',
+    
+    data() {
+      return {};
+    },
+    
+    methods: $.extend({}, methods),
+    
+    filters: $.extend({}, filters),
+    
+    created() {
+      
+      // Load the Outdated Browser plugin.
+      outdatedBrowser({
+        bgColor: '#f25648',
+        color: '#ffffff',
+        lowerThan: 'transform',
+        languagePath: '',
+      }); 
+      
+    }
+    
+  });
+  
     // Define routes.
   const routes = [
     {

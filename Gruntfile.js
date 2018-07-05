@@ -115,7 +115,7 @@ module.exports = function( grunt ) {
           css: true,
           include: {
             js: {
-              'codemirror/mode/**/*.js': 'codemirror/'
+              'outdatedbrowser/outdatedbrowser/lang/*.html': 'outdatedbrowser'
             }
           }
         },
@@ -131,7 +131,7 @@ module.exports = function( grunt ) {
           css: true,
           include: {
             js: {
-              'codemirror/mode/**/*.js': 'codemirror/'
+              'outdatedbrowser/outdatedbrowser/lang/*.html': 'outdatedbrowser/'
             }
           }
         },
