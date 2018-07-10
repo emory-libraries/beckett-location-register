@@ -46,7 +46,7 @@
   },
   "css": [
     "style.css",
-    "dependencies/outdatedbrowser.min.css"
+    "dependencies/outdatedbrowser.css"
   ],
   "js": [
     "<%= pkg.main %>"

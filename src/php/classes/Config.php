@@ -3,15 +3,15 @@
 class Config {
   
   private $config = [
-    'DEVELOPMENT' => true, // Set to `true` for DEVELOPMENT mode or `false` for PRODUCTION mode.
-    'LOCAL_DATABASE' => false
+    'DEVELOPMENT' => DEVELOPMENT, 
+    'LOCAL_DATABASE' => LOCALDB,
+    'ROOT' => ROOT
   ];
   
   // Constructor
   function __construct() { 
 
     // Load meta data.
-    $this->config['ROOT'] = ROOT;
     $this->config['ROUTER'] = json_decode(file_get_contents("{$this->ROOT}/router.json"), true);
     $this->config['META'] = json_decode(file_get_contents("{$this->ROOT}/meta.json"), true);
     $this->config['PROGRESS'] = "{$this->ROOT}/.progress.json";
