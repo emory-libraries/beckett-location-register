@@ -431,7 +431,7 @@ trait GET {
   
   private function PROGRESS() { 
     
-    // Verify that no preivous errors were thrown.
+    // Verify that no previous errors were thrown.
     if( $this->error ) return;
     
     // Check that a process ID was given.
@@ -1320,37 +1320,37 @@ class API {
   // Set progress data about a process.
   private function __setProgress( $id, $progress, $status = null ) {
     
-    // Get the path to the progress file.
-    $path = $this->config->PROGRESS;
+    // Initialize a session.
+    if( session_status() === PHP_SESSION_NONE ) session_start();
     
-    // Get current progress data.
-    $data = file_exists($path) ? json_decode(file_get_contents($path), true) : [];
+    // Initialize progress data.
+    if( !array_key_exists('progress', $_SESSION) ) $_SESSION['progress'] = [];
+    
+    // Delete the existing progress.
+    $this->__delProgress($id);
 
     // Overwrite existing or save new progress data for processes.
-    $data[$id] = [
+    $_SESSION['progress'][$id] = [
       'progress' => $progress, 
       'status' => $status
-    ];
-      
-    // Save the progress data.
-    return file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT));
-    
+    ]; 
+
   }
   
   // Get progress data about a process.
   private function __getProgress( $id ) {
     
-    // Get the path to the progress file.
-    $path = $this->config->PROGRESS;
-    
-    // Get current progress data.
-    $data = file_exists($path) ? json_decode(file_get_contents($path), true) : [];
+    // Initialize a session.
+    if( session_status() === PHP_SESSION_NONE ) session_start();
+
+    // Initialize progress data.
+    if( !array_key_exists('progress', $_SESSION) ) $_SESSION['progress'] = [];
     
     // Convert floats to integers.
     if( gettype($id) == 'double' ) $id = (int) $id;
     
     // Return the progress data.
-    if( array_key_exists($id, $data) ) return $data[$id];
+    if( array_key_exists($id, $_SESSION['progress']) ) return $_SESSION['progress'][$id];
     
     // Otherwise, return empty progress.
     return ['progress' => 0, 'status' => 'Process not yet registered.'];
@@ -1360,23 +1360,20 @@ class API {
   // Delete progress data about a process.
   private function __delProgress( $id ) {
     
-    // Get the path to the progress file.
-    $path = $this->config->PROGRESS;
+    // Initialize a session.
+    if( session_status() === PHP_SESSION_NONE ) session_start();
     
-    // Get current progress data.
-    $data = file_exists($path) ? json_decode(file_get_contents($path), true) : [];
+    // Initialize progress data.
+    if( !array_key_exists('progress', $_SESSION) ) $_SESSION['progress'] = [];
 
     // Convert floats to integers.
     if( gettype($id) == 'double' ) $id = (int) $id;
 
     // Check if progress data for the process exists.
-    if( array_key_exists($id, $data) ) {
+    if( array_key_exists($id, $_SESSION['progress']) ) {
       
       // Delete the progress data.
-      unset($data[$id]);
-      
-      // Save remaining progress data.
-      return file_put_contents($path, json_encode($data));
+      unset($_SESSION['progress'][$id]);
       
     }
     

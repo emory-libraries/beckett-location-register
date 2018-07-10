@@ -661,43 +661,43 @@ $.when(
         // Initialize a poll timer.
         let timer = 0;
         
+        // Initialize a helper to determine if polling should continue.
+        const check = () => {
+
+          const next = () => {
+
+            // Increment the timer.
+            timer+= this.poll.interval;
+
+            // Poll again.
+            setTimeout(poll, this.poll.interval);
+
+          };
+          const end = () => {
+
+            setTimeout(() => this.percent = null, 1000);
+
+          };
+
+          // Continue to poll for additional progress updates.
+          if( isset(this.percent) ) {
+
+            if( this.percent.progress < 100 ) next();
+
+            else end();
+
+          }
+
+          // Check that the polling has not timed out.
+          else if( timer < this.poll.timeout ) next();
+
+          // Otherwise, clear our progress data and stop polling.
+          else end();
+
+        };
+        
         // Initialize a polling method.
         const poll = () => { 
-                            
-          // Initialize a helper to determine if polling should continue.
-          const check = () => {
-            
-            const next = () => {
-              
-              // Increment the timer.
-              timer+= this.poll.interval;
-              
-              // Poll again.
-              setTimeout(poll, this.poll.interval);
-              
-            };
-            const end = () => {
-              
-              setTimeout(() => this.percent = null, 1000);
-              
-            };
-            
-            // Continue to poll for additional progress updates.
-            if( isset(this.percent) ) {
-              
-              if( this.percent.progress < 100 ) next();
-              
-              else end();
-              
-            }
-            
-            // Check that the polling has not timed out.
-            else if( timer < this.poll.timeout ) next();
-            
-            // Otherwise, clear our progress data and stop polling.
-            else end();
-            
-          };
           
           // Get the progress.
           $.getJSON(`${this.src}progress/${pid}`).then((response) => { 
@@ -708,7 +708,7 @@ $.when(
             // Check the progress thus far.
             check();
             
-          });
+          }).catch((error) => console.log(error));
           
         };
                        

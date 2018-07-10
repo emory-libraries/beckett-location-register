@@ -15,11 +15,14 @@ class Cache {
     // Save the ID.
     $this->id = $id;
     
-    // Start a session.
+    // Set the session ID.
+    session_id( $id );
+    
+    // Start the session.
     session_start();
     
     // FOR DEVELOPMENT USE ONLY.
-    if( $config->DEVELOPMENT ) unset($_SESSION);
+    if( $config->DEVELOPMENT ) unset($_SESSION[$this->id]);
 
     // Reload the cache if it already exists.
     if( isset($_SESSION[$this->id]) ) $this->cache = &$_SESSION[$this->id];
