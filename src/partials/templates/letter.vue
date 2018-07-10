@@ -108,6 +108,13 @@
           </td>
         </tr>
         
+        <tr>
+          <th scope="row">Postmark</th>
+          <td>
+            {{letter.postmark}}
+          </td>
+        </tr>
+        
       </tbody>
       <tfoot>
         <tr>

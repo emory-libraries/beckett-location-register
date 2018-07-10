@@ -47,7 +47,8 @@
       },
       "leaves": "leaves",
       "sides": "sides",
-      "envelope": "Envelope | E | 2 E"
+      "envelope": "Envelope | E | 2 E",
+      "postmark": "Postmark (Actual)"
     },
     "summary": {
       "id": "ID",
