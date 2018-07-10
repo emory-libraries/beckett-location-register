@@ -946,7 +946,7 @@ class API {
     $this->status = ['code' => 400, 'message' => $this->codes[400]];
     
     // Save process data.
-    $this->process = isset($this->query['pid']) ? $this->query['pid'] : posix_getpid();
+    $this->process = isset($this->query['pid']) ? $this->query['pid'] : uniqid();
     
     // Send initial headers.
     $this->__headers();
