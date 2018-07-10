@@ -4,7 +4,9 @@
   
     <!--span class="icon fa-spinner"></span-->
     
-    <div class="text">Loading...</div>
+    <!--div class="text">Loading...</div-->
+    
+    <img class="animation" src="images/envelope.gif">
     
     <div class="progress" v-if="$api.percent !== null">
    
