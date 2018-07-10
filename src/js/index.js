@@ -708,7 +708,7 @@ $.when(
             // Check the progress thus far.
             check();
             
-          }).catch((error) => console.log(error));
+          });
           
         };
                        
