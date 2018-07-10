@@ -16,29 +16,35 @@
         "year": "Year"
       },
       "location": {
-        "origin": {
-          "address": "Reg. Place written",
-          "city": "Reg. Place written city",
-          "country": "Reg. Place written country"
+        "addressed": {
+          "to": "Addressed to (Actual)",
+          "from": "Addressed from (Actual)"
         },
-        "destination": {
-          "address": "Reg place sent",
-          "city": "Reg. PlaceSent City",
-          "country": "Reg. PlaceSent Country"
+        "regularized": {
+          "from": {
+            "address": "Reg. Place written",
+            "city": "Reg. Place written city",
+            "country": "Reg. Place written country"
+          },
+          "to": {
+            "address": "Reg place sent",
+            "city": "Reg. PlaceSent City",
+            "country": "Reg. PlaceSent Country"
+          }
         }
       },
       "recipient": "Reg. recipient",
       "repository": "Repository",
       "collection": "Collection",
-      "addressed": {
-        "to": "Addressed to (Actual)",
-        "from": "Addressed from (Actual)"
-      },
       "language": "PrimaryLang",
-      "autographed": "Autograph or Typed",
-      "description": "PhysDes",
-      "signed": "initialed or signed | S",
-      "initialed": "initialed or signed | I",
+      "autographed": "Autograph or Typed | A",
+      "typed": "Autograph or Typed | T",
+      "description": {
+        "pen": "Autograph or Typed",
+        "physical": "PhysDes",
+        "signature": "initialed or signed",
+        "code": "{Autograph or Typed}{PhysDes}{initialed or signed}"
+      },
       "leaves": "leaves",
       "sides": "sides",
       "envelope": "Envelope | E | 2 E"
@@ -51,15 +57,17 @@
         "year": "Year"
       },
       "location": {
-        "origin": {
-          "address": "Reg. Place written",
-          "city": "Reg. Place written city",
-          "country": "Reg. Place written country"
-        },
-        "destination": {
-          "address": "Reg place sent",
-          "city": "Reg. PlaceSent City",
-          "country": "Reg. PlaceSent Country"
+        "regularized": {
+          "from": {
+            "address": "Reg. Place written",
+            "city": "Reg. Place written city",
+            "country": "Reg. Place written country"
+          },
+          "to": {
+            "address": "Reg place sent",
+            "city": "Reg. PlaceSent City",
+            "country": "Reg. PlaceSent Country"
+          }
         }
       },
       "recipient": "Reg. recipient",
@@ -99,15 +107,21 @@
         "endpoint": "index/location",
         "model": {
           "location": {
-            "origin": {
-              "address": "Reg. Place written",
-              "city": "Reg. Place written city",
-              "country": "Reg. Place written country"
+            "addressed": {
+              "to": "Addressed to (Actual)",
+              "from": "Addressed from (Actual)"
             },
-            "destination": {
-              "address": "Reg place sent",
-              "city": "Reg. PlaceSent City",
-              "country": "Reg. PlaceSent Country"
+            "regularized": {
+              "from": {
+                "address": "Reg. Place written",
+                "city": "Reg. Place written city",
+                "country": "Reg. Place written country"
+              },
+              "to": {
+                "address": "Reg place sent",
+                "city": "Reg. PlaceSent City",
+                "country": "Reg. PlaceSent Country"
+              }
             }
           }
         },
@@ -150,34 +164,34 @@
         "model": "default",
         "match": {
           ":query": [
-            "location.origin.address",
-            "location.origin.city",
-            "location.origin.country",
-            "location.destination.address",
-            "location.destination.city",
-            "location.destination.country"
+            "location.regularized.to.address",
+            "location.regularized.to.city",
+            "location.regularized.to.country",
+            "location.regularized.from.address",
+            "location.regularized.from.city",
+            "location.regularized.from.country"
           ]
         }
       },
       {
-        "endpoint": "search/location/origin/:query",
+        "endpoint": "search/location/regularized/to/:query",
         "model": "default",
         "match": {
           ":query": [
-            "location.origin.address",
-            "location.origin.city",
-            "location.origin.country"
+            "location.regularized.to.address",
+            "location.regularized.to.city",
+            "location.regularized.to.country"
           ]
         }
       },
       {
-        "endpoint": "search/location/destination/:query",
+        "endpoint": "search/location/regularized/from/:query",
         "model": "default",
         "match": {
           ":query": [
-            "location.destination.address",
-            "location.destination.city",
-            "location.destination.country"
+            "location.regularized.from.address",
+            "location.regularized.from.city",
+            "location.regularized.from.country"
           ]
         }
       },

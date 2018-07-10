@@ -1,0 +1,24 @@
+.glossary {
+  width: 100%;
+  
+  dl {
+    display: grid;
+    grid-template-columns: [term-start] auto [term-end] 1fr;
+    grid-row-gap: 5px;
+    grid-column-gap: 25px;
+    
+    dt { 
+      grid-column-start: term-start;
+      grid-column-end: term-end;
+      font-weight: 600; 
+    }
+    
+    dd {
+      grid-column-start: term-end;
+      padding: 0;
+      margin: 0;
+    }
+    
+  }
+  
+}

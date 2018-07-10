@@ -1,7 +1,8 @@
 <?php
 
 // Silence errors for production.
-error_reporting(0);
+error_reporting(1);
+ini_set('display_errors', E_ALL);
 
 // Increase memory limit to handle large files.
 ini_set('memory_limit', '1000M');
@@ -14,6 +15,9 @@ session_save_path('/tmp');
 
 // Set the default timezone.
 date_default_timezone_set('America/New_York');
+
+// Get root directory.
+define('ROOT', dirname(__DIR__));
 
 // Autoload classes.
 include 'autoload.php';

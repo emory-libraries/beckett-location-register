@@ -40,6 +40,9 @@ table {
   tfoot { 
     border: $border;
     border-top: 0;
+    font-size: .8em;
+    tr { display: table-row }
+    td, th { display: table-cell; }
   }
   
   thead + tbody {
@@ -50,6 +53,7 @@ table {
 
   td, th { 
     padding: 10px; 
+    min-height: calc(1.5em + (10px * 2));
     align-self: stretch;
     display: flex;
     align-items: center;
@@ -61,9 +65,24 @@ table {
     }
   }
 
-  &[density="light"] { td, th { @include padding-y(15px); } }
-  &[density="medium"] { td, th { @include padding-y(10px); } }
-  &[density="heavy"] { td, th { @include padding-y(5px); } }
+  &[density="light"] {
+    td, th { 
+      @include padding-y(15px); 
+      min-height: calc(1.5em + (15px * 2));
+    } 
+  }
+  &[density="medium"] { 
+    td, th { 
+      @include padding-y(10px); 
+      min-height: calc(1.5em + (10px * 2));
+    }
+  }
+  &[density="heavy"] { 
+    td, th { 
+      @include padding-y(5px); 
+      min-height: calc(1.5em + (5px * 2));
+    }
+  }
   
   &.striped tbody tr {
     @include even { background-color: color('white', 'off'); }; 
@@ -71,6 +90,14 @@ table {
   &.highlight tbody tr {
     &:hover, &:focus { background-color: color('blue', 'powder'); }
     cursor: pointer;
+  }
+  
+  .asterisk { font-size: .5em; margin-right: 5px; }
+  
+  &.borderless {
+    
+    thead, tbody, tfoot, tr, td, th { border: 0; }
+    
   }
 
 }

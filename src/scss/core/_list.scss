@@ -21,10 +21,10 @@
     .destination { width: var(--destination); }
 
     @include breakpoint( $controls-breakpoint ) {
-      --date: 150px;
+      --date: 125px;
       --recipient: calc(100% - var(--date) - var(--origin) - var(--destination));
-      --origin: 150px;
-      --destination: 150px;
+      --origin: 200px;
+      --destination: 200px;
     };
     
   }

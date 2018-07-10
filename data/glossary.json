@@ -1,0 +1,118 @@
+{
+  "descriptions": {
+    "title": "Physical Descriptions Explained",
+    "glossary": [
+      {
+        "term": "ALS",
+        "proper": "Autographed, Letter, Signed",
+        "definition": "Hand-written letter signed by the author"
+      },
+      {
+        "term": "TLS",
+        "proper": "Typed, Letter, Signed",
+        "definition": "Typed letter signed by the author"
+      },
+      {
+        "term": "ALI",
+        "proper": "Autographed, Letter, Initialed",
+        "definition": "Hand-written letter initialed by the author"
+      },
+      {
+        "term": "TLI",
+        "proper": "Typed, Letter, Initialed",
+        "definition": "Typed letter initialed by the author"
+      },
+      {
+        "term": "ACS",
+        "proper": "Autographed, Card, Signed",
+        "definition": "Hand-written card signed by the author"
+      },
+      {
+        "term": "ACI",
+        "proper": "Autographed, Card, Initialed",
+        "definition": "Hand-written card initialed by the author"
+      },
+      {
+        "term": "ALCS",
+        "proper": "Autographed, (?), Signed",
+        "definition": "Hand-written (?) signed by the author"
+      },
+      {
+        "term": "ALCI",
+        "proper": "Autographed, (?), Initialed",
+        "definition": "Hand-written (?) initialed by the author"
+      },
+      {
+        "term": "TLCS",
+        "proper": "Typed, (?), Signed",
+        "definition": "Typed (?) signed by the author"
+      },
+      {
+        "term": "TLCI",
+        "proper": "Typed, (?), Initialed",
+        "definition": "Typed (?) initialed by the author"
+      },
+      {
+        "term": "AMS",
+        "proper": "Autographed, Manuscript",
+        "definition": "Hand-written manuscript"
+      },
+      {
+        "term": "TMS",
+        "proper": "Typed, Manuscript",
+        "definition": "Typed manuscript"
+      },
+      {
+        "term": "AMSS",
+        "proper": "Autographed, Manuscript, Signed",
+        "definition": "Hand-written manuscript signed by the author"
+      },
+      {
+        "term": "TMSS",
+        "proper": "Typed, Manuscript, Signed",
+        "definition": "Typed manuscript signed by the author"
+      },
+      {
+        "term": "ANS",
+        "proper": "Autographed, Note, Signed",
+        "definition": "Hand-written note signed by the author"
+      },
+      {
+        "term": "ANI",
+        "proper": "Autographed, Note, Initialed",
+        "definition": "Hand-written note initialed by the author"
+      },
+      {
+        "term": "TNS",
+        "proper": "Typed, Note, Signed",
+        "definition": "Typed note signed by the author"
+      },
+      {
+        "term": "TNI",
+        "proper": "Typed, Note, Initialed",
+        "definition": "Typed note initialed by the author"
+      },
+      {
+        "term": "APCS",
+        "proper": "Autographed, Postcard, Signed",
+        "definition": "Hand-written postcard signed by the author"
+      },
+      {
+        "term": "APCI",
+        "proper": "Autographed, Postcard, Initialed",
+        "definition": "Hand-written postcard initialed by the author"
+      },
+      {
+        "term": "TPCS",
+        "proper": "Typed, Postcard, Signed",
+        "definition": "Typed postcard signed by the author"
+      },
+      {
+        "term": "TPCI",
+        "proper": "Typed, Postcard, Initialed",
+        "definition": "Typed postcard initialed by the author"
+      }
+
+    ]
+  }
+}

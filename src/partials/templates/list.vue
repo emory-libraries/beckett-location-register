@@ -48,31 +48,49 @@
       
       <thead>
         <th class="date">
+          <span class="asterisk fa-asterisk"></span>
           Date
-          <sort :on="['date.year', 'date.month', 'date.day']"></sort>
+          <sort :on="['date.day', 'date.month', 'date.year']"></sort>
         </th>
         <th class="recipient">
           Recipient
           <sort :on="'recipient'"></sort>
         </th>
         <th class="origin">
-          Origin
-          <sort :on="'location.origin.city'"></sort>
+          <span class="asterisk fa-asterisk"></span>
+          Addressed From
+          <sort :on="'location.regularized.from.city'"></sort>
         </th>
         <th class="destination">
-          Destination
-          <sort :on="'location.destination.city'"></sort>
+          <span class="asterisk fa-asterisk"></span>
+          Addressed To
+          <sort :on="'location.regularized.to.city'"></sort>
         </th>
       </thead>
       
       <tbody>
         <tr v-for="letter in data" @click="read(letter)" @keypress.enter="read(letter)" tabindex="0">
-          <td class="date">{{letter.date.month}}-{{letter.date.day}}-{{letter.date.year}}</td>
+          <td class="date">{{letter.date.day}}-{{letter.date.month}}-{{letter.date.year}}</td>
           <td class="recipient">{{letter.recipient}}</td>
-          <td class="origin">{{letter.location.origin.city}}</td>
-          <td class="destination">{{letter.location.destination.city}}</td>
+          <td class="origin">{{letter.location.regularized.from.city}}</td>
+          <td class="destination">{{letter.location.regularized.to.city}}</td>
         </tr>
       </tbody>
+      
+      <tfoot>
+        <tr>
+          <td colspan="4">
+            <span class="asterisk fa-asterisk"></span>
+            All dates are displayed in European date format (<code>dd-mm-yy</code>).
+          </td>
+        </tr>
+        <tr>
+          <td colspan="4">
+            <span class="asterisk fa-asterisk"></span>
+            Regularized locations have been used for the <strong>Addressed From</strong> and <strong>Addressed To</strong> columns.
+          </td>
+        </tr>
+      </tfoot>
       
     </table>
   

@@ -25,8 +25,6 @@
           <span class="icon fa-close"></span>
           Remove
         </button>
-        
-         <!--TODO: Move applied filters inline with filter options. -->
 
         <div class="fields">
 
@@ -250,29 +248,26 @@
 
           </div>
 
-          <div class="group" v-if="canFilter('location.origin') || 
-                                   hasApplied('location.origin')">
+          <div class="group" v-if="canFilter('location.regularized.from') || hasApplied('location.regularized.from')">
 
-            <label>Origin</label>
+            <label>Regularized Addressed From</label>
 
-            <div class="field" v-if="canFilter('location.origin.address') || 
-                                     hasApplied('location.origin.address')">
+            <div class="field" v-if="canFilter('location.regularized.from.address') || hasApplied('location.regularized.from.address')">
 
               <label>Address</label>
               
               <div class="filter-group">
               
-                <div class="applied-group" v-if="hasApplied('location.origin.address')">
+                <div class="applied-group" v-if="hasApplied('location.regularized.from.address')">
 
-                  <div class="applied-field" 
-                       v-for="(applied, index) in filters.applied['location.origin.address']">
+                  <div class="applied-field" v-for="(applied, index) in filters.applied['location.regularized.from.address']">
 
                     <div class="applied-text">
                       {{!isset(applied) ? '(Blank)' : applied}}
                     </div>
 
                     <button class="button applied-remove icon"
-                            @click="removeFilter('location.origin.address', index)">
+                            @click="removeFilter('location.regularized.from.address', index)">
                       <span class="icon fa-close"></span>
                     </button>
 
@@ -280,13 +275,12 @@
 
                 </div>
 
-                <div class="select" v-if="canFilter('location.origin.address')">
-                  <select v-model="filters.selected['location.origin.address']" 
+                <div class="select" v-if="canFilter('location.regularized.from.address')">
+                  <select v-model="filters.selected['location.regularized.from.address']" 
                           multiple
-                          @change="validate('location.origin.address').multiselect()">
+                          @change="validate('location.regularized.from.address').multiselect()">
                     <option :value="undefined">Any</option>
-                    <option :value="value" 
-                            v-for="value in $api.indexing.location.origin.address">
+                    <option :value="value" v-for="value in $api.indexing.location.regularized.from.address">
                       {{!isset(value) ? '(Blank)' : value}}
                     </option>
                   </select>
@@ -296,24 +290,22 @@
 
             </div>
 
-            <div class="field" v-if="canFilter('location.origin.city') ||
-                                     hasApplied('location.origin.city')">
+            <div class="field" v-if="canFilter('location.regularized.from.city') || hasApplied('location.regularized.from.city')">
 
               <label>City</label>
               
               <div class="filter-group">
               
-                <div class="applied-group" v-if="hasApplied('location.origin.city')">
+                <div class="applied-group" v-if="hasApplied('location.regularized.from.city')">
 
-                  <div class="applied-field" 
-                       v-for="(applied, index) in filters.applied['location.origin.city']">
+                  <div class="applied-field" v-for="(applied, index) in filters.applied['location.regularized.from.city']">
 
                     <div class="applied-text">
                       {{!isset(applied) ? '(Blank)' : applied}}
                     </div>
 
                     <button class="button applied-remove icon"
-                            @click="removeFilter('location.origin.city', index)">
+                            @click="removeFilter('location.regularized.from.city', index)">
                       <span class="icon fa-close"></span>
                     </button>
 
@@ -321,15 +313,14 @@
 
                 </div>
 
-                <div class="select" v-if="canFilter('location.origin.city')">
-                  <select v-model="filters.selected['location.origin.city']" 
+                <div class="select" v-if="canFilter('location.regularized.from.city')">
+                  <select v-model="filters.selected['location.regularized.from.city']" 
                           multiple
-                          @change="validate('location.origin.city').multiselect()">
+                          @change="validate('location.regularized.from.city').multiselect()">
                     <option :value="undefined">
                       Any
                     </option>
-                    <option :value="value" 
-                            v-for="value in $api.indexing.location.origin.city">
+                    <option :value="value" v-for="value in $api.indexing.location.regularized.from.city">
                       {{!isset(value) ? '(Blank)' : value}}
                     </option>
                   </select>
@@ -339,24 +330,22 @@
 
             </div>
 
-            <div class="field" v-if="canFilter('location.origin.country') ||
-                                     hasApplied('location.origin.country')">
+            <div class="field" v-if="canFilter('location.regularized.from.country') || hasApplied('location.regularized.from.country')">
 
               <label>Country</label>
               
               <div class="filter-group">
               
-                <div class="applied-group" v-if="hasApplied('location.origin.country')">
+                <div class="applied-group" v-if="hasApplied('location.regularized.from.country')">
 
-                  <div class="applied-field" 
-                       v-for="(applied, index) in filters.applied['location.origin.country']">
+                  <div class="applied-field" v-for="(applied, index) in filters.applied['location.regularized.from.country']">
 
                     <div class="applied-text">
                       {{!isset(applied) ? '(Blank)' : applied}}
                     </div>
 
                     <button class="button applied-remove icon"
-                            @click="removeFilter('location.origin.country', index)">
+                            @click="removeFilter('location.regularized.from.country', index)">
                       <span class="icon fa-close"></span>
                     </button>
 
@@ -364,15 +353,14 @@
 
                 </div>
 
-                <div class="select" v-if="canFilter('location.origin.country')">
-                  <select v-model="filters.selected['location.origin.country']" 
+                <div class="select" v-if="canFilter('location.regularized.from.country')">
+                  <select v-model="filters.selected['location.regularized.from.country']" 
                           multiple
-                          @change="validate('location.origin.country').multiselect()">
+                          @change="validate('location.regularized.from.country').multiselect()">
                     <option :value="undefined">
                       Any
                     </option>
-                    <option :value="value" 
-                            v-for="value in $api.indexing.location.origin.country">
+                    <option :value="value" v-for="value in $api.indexing.location.regularized.from.country">
                       {{!isset(value) ? '(Blank)' : value}}
                     </option>
                   </select>
@@ -384,29 +372,26 @@
 
           </div>
 
-          <div class="group" v-if="canFilter('location.destination') || 
-                                   hasApplied('location.destination')">
+          <div class="group" v-if="canFilter('location.regularized.to') || hasApplied('location.regularized.to')">
 
-            <label>Destination</label>
+            <label>Regularized Addressed To</label>
 
-            <div class="field" v-if="canFilter('location.destination.address') ||
-                                     hasApplied('location.destination.address')">
+            <div class="field" v-if="canFilter('location.regularized.to.address') || hasApplied('location.regularized.to.address')">
 
               <label>Address</label>
               
               <div class="filter-group">
               
-                <div class="applied-group" v-if="hasApplied('location.destination.address')">
+                <div class="applied-group" v-if="hasApplied('location.regularized.to.address')">
 
-                  <div class="applied-field" 
-                       v-for="(applied, index) in filters.applied['location.destination.address']">
+                  <div class="applied-field" v-for="(applied, index) in filters.applied['location.regularized.to.address']">
 
                     <div class="applied-text">
                       {{!isset(applied) ? '(Blank)' : applied}}
                     </div>
 
                     <button class="button applied-remove icon"
-                            @click="removeFilter('location.destination.address', index)">
+                            @click="removeFilter('location.regularized.to.address', index)">
                       <span class="icon fa-close"></span>
                     </button>
 
@@ -414,13 +399,12 @@
 
                 </div>
 
-                <div class="select" v-if="canFilter('location.destination.address')">
-                  <select v-model="filters.selected['location.destination.address']" 
+                <div class="select" v-if="canFilter('location.regularized.to.address')">
+                  <select v-model="filters.selected['location.regularized.to.address']" 
                           multiple
-                          @change="validate('location.destination.address').multiselect()">
+                          @change="validate('location.regularized.to.address').multiselect()">
                     <option :value="undefined">Any</option>
-                    <option :value="value" 
-                            v-for="value in $api.indexing.location.destination.address">
+                    <option :value="value" v-for="value in $api.indexing.location.regularized.to.address">
                       {{!isset(value) ? '(Blank)' : value}}
                     </option>
                   </select>
@@ -430,24 +414,22 @@
 
             </div>
 
-            <div class="field" v-if="canFilter('location.destination.city') ||
-                                     hasApplied('location.destination.city')">
+            <div class="field" v-if="canFilter('location.regularized.to.city') || hasApplied('location.regularized.to.city')">
 
               <label>City</label>
               
               <div class="filter-group">
               
-                <div class="applied-group" v-if="hasApplied('location.destination.city')">
+                <div class="applied-group" v-if="hasApplied('location.regularized.to.city')">
 
-                  <div class="applied-field" 
-                       v-for="(applied, index) in filters.applied['location.destination.city']">
+                  <div class="applied-field" v-for="(applied, index) in filters.applied['location.regularized.to.city']">
 
                     <div class="applied-text">
                       {{!isset(applied) ? '(Blank)' : applied}}
                     </div>
 
                     <button class="button applied-remove icon"
-                            @click="removeFilter('location.destination.city', index)">
+                            @click="removeFilter('location.regularized.to.city', index)">
                       <span class="icon fa-close"></span>
                     </button>
 
@@ -455,13 +437,12 @@
 
                 </div>
 
-                <div class="select" v-if="canFilter('location.destination.city')">
-                  <select v-model="filters.selected['location.destination.city']" 
+                <div class="select" v-if="canFilter('location.regularized.to.city')">
+                  <select v-model="filters.selected['location.regularized.to.city']" 
                           multiple
-                          @change="validate('location.destination.city').multiselect()">
+                          @change="validate('location.regularized.to.city').multiselect()">
                     <option :value="undefined">Any</option>
-                    <option :value="value" 
-                            v-for="value in $api.indexing.location.destination.city">
+                    <option :value="value" v-for="value in $api.indexing.location.regularized.to.city">
                       {{!isset(value) ? '(Blank)' : value}}
                     </option>
                   </select>
@@ -471,24 +452,22 @@
 
             </div>
 
-            <div class="field" v-if="canFilter('location.destination.country') ||
-                                     hasApplied('location.destination.country')">
+            <div class="field" v-if="canFilter('location.regularized.to.country') || hasApplied('location.regularized.to.country')">
 
               <label>Country</label>
               
               <div class="filter-group">
               
-                <div class="applied-group" v-if="hasApplied('location.destination.country')">
+                <div class="applied-group" v-if="hasApplied('location.regularized.to.country')">
 
-                  <div class="applied-field" 
-                       v-for="(applied, index) in filters.applied['location.destination.country']">
+                  <div class="applied-field" v-for="(applied, index) in filters.applied['location.regularized.to.country']">
 
                     <div class="applied-text">
                       {{!isset(applied) ? '(Blank)' : applied}}
                     </div>
 
                     <button class="button applied-remove icon"
-                            @click="removeFilter('location.destination.country', index)">
+                            @click="removeFilter('location.regularized.to.country', index)">
                       <span class="icon fa-close"></span>
                     </button>
 
@@ -496,13 +475,12 @@
 
                 </div>
 
-                <div class="select" v-if="canFilter('location.destination.country')">
-                  <select v-model="filters.selected['location.destination.country']" 
+                <div class="select" v-if="canFilter('location.regularized.to.country')">
+                  <select v-model="filters.selected['location.regularized.to.country']" 
                           multiple
-                          @change="validate('location.destination.country').multiselect()">
+                          @change="validate('location.regularized.to.country').multiselect()">
                     <option :value="undefined">Any</option>
-                    <option :value="value" 
-                            v-for="value in $api.indexing.location.destination.country">
+                    <option :value="value" v-for="value in $api.indexing.location.regularized.to.country">
                       {{!isset(value) ? '(Blank)' : value}}
                     </option>
                   </select>

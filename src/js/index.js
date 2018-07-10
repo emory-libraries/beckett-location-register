@@ -5,8 +5,10 @@ const ROOT = location.protocol + '//' + location.host + PATH;
 // Load meta data.
 $.when(
   $.getJSON('meta.json').then((data) => data),
-  $.getJSON('router.json').then((data) => data)
-).done((META, ROUTER) => {
+  $.getJSON('router.json').then((data) => data),
+  $.getJSON('glossary.json').then((data) => data),
+  $.getJSON('transliteration.json').then((data) => data)
+).done((META, ROUTER, GLOSSARY, TRANSLITERATION) => {
   
   // Helper functions.
   function isset( value, objectify = false ) {
@@ -242,6 +244,29 @@ $.when(
       return value instanceof Object && value !== null ? Object.condense(value) : value;
       
     }).flatten();
+    
+  };
+  String.prototype.romanize = function( mode = 'partial' ) {
+    
+    // Get the string.
+    let string = this;
+    
+    // Define transliterations.
+    const transliterations = TRANSLITERATION[mode];
+    
+    // Loop through replacements.
+    for( let to in transliterations ) {
+      
+      // Extract characters to be replaced.
+      const from = transliterations[to];
+      
+      // Replace foreign characters.
+      from.forEach((char) => string = string.replace(char, to));
+      
+    }
+    
+    // Return the new string.
+    return string;
     
   };
 
@@ -699,7 +724,7 @@ $.when(
         this.memory('search', Array.from(arguments));
 
         // Execute the request.
-        return this.request('GET', 'search/' + (field ? `${field}/${query}` : query));
+        return this.request('GET', 'search/' + (field ? `${field.split('.').join('/')}/${query}` : query));
 
       },
     
@@ -727,24 +752,18 @@ $.when(
     
       // Perform an `aggregate` request on the API.
       aggregate( field = '' ) {
-      
-        // Capture context.
-        const self = this;
-
-        // Save the call in memory.
-        this.memory('aggregate', Array.from(arguments));
 
         // Capture initial loading value.
-        const loading = self.loading;
+        const loading = this.loading;
 
         // Temporarily disable loading.
-        if( loading ) self.loading = false;
+        if( loading ) this.loading = false;
 
         // Execute the request.
-        return self.request('GET', `index/${field}`).always(() => {
+        return this.request('GET', `index/${field}`).always(() => {
 
           // Reset the loading value.
-          self.loading = loading;
+          this.loading = loading;
 
         });
 
@@ -1051,12 +1070,12 @@ $.when(
           'date.month': [{min: undefined, max: undefined}],
           'date.day': [{min: undefined, max: undefined}],
           'date.year': [{min: undefined, max: undefined}],
-          'location.origin.address': [undefined],
-          'location.origin.city': [undefined],
-          'location.origin.country': [undefined],
-          'location.destination.address': [undefined],
-          'location.destination.city': [undefined],
-          'location.destination.country': [undefined],
+          'location.regularized.from.address': [undefined],
+          'location.regularized.from.city': [undefined],
+          'location.regularized.from.country': [undefined],
+          'location.regularized.to.address': [undefined],
+          'location.regularized.to.city': [undefined],
+          'location.regularized.to.country': [undefined],
           'recipient': [undefined],
           'repository': [undefined],
           'language': [undefined]
@@ -1264,7 +1283,7 @@ $.when(
           
           // Initialize a pointer.
           let pointer = field == 'any' ? fields : Object.get(fields, field);
-  
+
           // Check the pointer for multiplicity.
           if( !Array.isMultiple(pointer) ) return false;
           
@@ -1277,7 +1296,7 @@ $.when(
             if( Array.isEqual(indexed, applied) ) return false;
             
           }
-          
+  
           // Validation successful.
           return true;
           
@@ -1293,25 +1312,25 @@ $.when(
                    this['date.day'] || 
                    this['date.year']; 
           },
-          'location.origin.address': validate('location.origin.address'),
-          'location.origin.city': validate('location.origin.city'),
-          'location.origin.country': validate('location.origin.country'),
-          'location.origin'() {
-            return this['location.origin.address'] || 
-                   this['location.origin.city'] ||
-                   this['location.origin.country'];
+          'location.regularized.from.address': validate('location.regularized.from.address'),
+          'location.regularized.from.city': validate('location.regularized.from.city'),
+          'location.regularized.from.country': validate('location.regularized.from.country'),
+          'location.regularized.from'() {
+            return this['location.regularized.from.address'] || 
+                   this['location.regularized.from.city'] ||
+                   this['location.regularized.from.country'];
           },
-          'location.destination.address': validate('location.destination.address'),
-          'location.destination.city': validate('location.destination.city'),
-          'location.destination.country': validate('location.destination.country'),
-          'location.destination'() {
-            return this['location.destination.address'] || 
-                   this['location.destination.city'] ||
-                   this['location.destination.country'];
+          'location.regularized.to.address': validate('location.regularized.to.address'),
+          'location.regularized.to.city': validate('location.regularized.to.city'),
+          'location.regularized.to.country': validate('location.regularized.to.country'),
+          'location.regularized.to'() {
+            return this['location.regularized.to.address'] || 
+                   this['location.regularized.to.city'] ||
+                   this['location.regularized.to.country'];
           },
           'location'() {
-            return this['location.origin']() ||
-                   this['location.destination']();
+            return this['location.regularized.from']() ||
+                   this['location.regularized.to']();
           },
           'recipient': validate('recipient'),
           'repository': validate('repository'),
@@ -1656,7 +1675,10 @@ $.when(
           message: null,
           state: null
         },
-        letter: false
+        letter: false,
+        glossary: {
+          descriptions: false
+        }
       };
     },
 
@@ -1680,14 +1702,14 @@ $.when(
             const date = letter.date;
             
             // Return a dash-delimited date.
-            return `${date.month}-${date.day}-${date.year}`;
+            return `${date.day}-${date.month}-${date.year}`;
             
           },
         
-          'location.origin.formatted'() { 
+          'location.regularized.from.formatted'() { 
 
             // Get origin data.
-            const origin = letter.location.origin;
+            const origin = letter.location.regularized.from;
 
             // Return a comma-separated list.
             return [origin.address, origin.city, origin.country].filter((item) => {
@@ -1698,10 +1720,10 @@ $.when(
 
           },
 
-          'location.destination.formatted'() {
+          'location.regularized.to.formatted'() {
 
             // Get destination data.
-            const destination = letter.location.destination;
+            const destination = letter.location.regularized.to;
 
             // Return a comma-separated list.
             return [destination.address, destination.city, destination.country].filter((item) => {
@@ -1713,7 +1735,7 @@ $.when(
           }
           
         };
-        
+     
         // Check for letter data.
         if( letter ) {
         
@@ -1752,6 +1774,12 @@ $.when(
        
         // Go back to the list.
         this.$router.back();
+        
+      },
+      
+      toggleGlossary( id ) {
+        
+        this.glossary[id] = !this.glossary[id];
         
       }
       
@@ -1805,10 +1833,13 @@ $.when(
           input: null,
           data: [],
           type: null,
+          index: [],
+          indexed: false,
           suggestions: [],
           suggesting: false,
           autofills: [],
-          tooltip: false
+          tooltip: false,
+          delay: 100
         },
         field: null,
         regex: {
@@ -1839,6 +1870,53 @@ $.when(
         
       },
       
+      index() {
+        
+        // Reset the indexed flag.
+        this.query.indexed = false;
+        
+        // Disable indexing when the field is set to `Any`.
+        if( !isset(this.field) ) {
+          
+          // Clear any existing indexing.
+          this.$set(this.query, 'index', []);
+          
+          // Return.
+          return;
+          
+        }
+        
+        // Get the field to index.
+        const field = this.field.substring(0, this.field.indexOf('.'));
+        
+        // Index the field data for autofill.
+        this.$api.aggregate(field).then((response) => {
+          
+          // Extract the relevant response data.
+          let data = Object.get(response.data, this.field);
+          
+          // Condense nested data into a single array.
+          if( Object.isObject(data) ) data = Object.condense(data);
+          
+          // Add romanized versions of the data if applicable.
+          data.forEach((value) => {
+            
+            if( value != value.romanize() ) data.push(value.romanize());
+            
+          });
+        
+          // Save the indexed data.
+          this.$set(this.query, 'index', data);
+          
+        }).catch((error) => {
+          
+          // Clear the index.
+          this.$set(this.query, 'index', []);
+          
+        }).always(() => this.query.indexed = true);
+        
+      },
+      
       autofill() {
         
         // Capture context.
@@ -1848,81 +1926,115 @@ $.when(
           
           fill() {
         
-            // Disable autofill when the field is set to `Any`.
-            if( !isset(self.field) ) return;
-
-            // Disable autofill if no input is given.
-            if( !isset(self.query.input) ) return;
+            // Disable autofill when the field is set to `Any` or if no input is given.
+            if( !isset(self.field) || !isset(self.query.input) ) {
+              
+              // Reset the autofill.
+              this.reset();
+              
+              // Return.
+              return;
+              
+            }
 
             // Capture everytime an autofill event is fired.
             self.query.autofills.push( true );
 
             // Initialize a suggestion method.
             const suggest = function() { 
-
-              // Get the field to search on.
-              const field = self.field.substring(0, self.field.indexOf('.'));
-
+              
               // Ignore repeat suggests.
               if( self.query.suggesting ) return;
 
-              // Set suggesting flag.
+              // Set the suggesting flag.
               self.query.suggesting = true;
+              
+              // Get the indexed data and input.
+              const index = self.query.index;
+              const input = self.query.input;
+              
+              // Define a word break regex.
+              const words = /[-_ ]/g;
+              
+              // Filter the list of suggestions.
+              self.$set(self.query, 'suggestions', index.filter((comp) => {
 
-              // Initialize the API.
-              const api = new API();
+                // Desensitize the data.
+                const insensitive = {
+                  input: self.query.input.toLowerCase(),
+                  comp: comp.toLowerCase()
+                }; 
+                
+                // Romanize the data.
+                const romanized = {
+                  input: insensitive.input.romanize(),
+                  comp: insensitive.comp.romanize()
+                };
 
-              // Load some suggestions.
-              api.aggregate( field ).then((response) => {
+                // Compare all data.
+                if( insensitive.comp.indexOf(insensitive.input) > -1 ) return true;
+                if( insensitive.comp.split(words).intersection(insensitive.input.split(words)).length > 0 ) return true;
+                if( romanized.comp.indexOf(romanized.input) > -1 ) return true;
+                if( romanized.comp.split(words).intersection(romanized.input.split(words)).length > 0 ) return true;
 
-                // Desensitize the input.
-                const input = self.query.input.toLowerCase();
+                // Otherwise, continue.
+                return false;
 
-                // Build a regex for word breaks.
-                const words = /[-_ ]/g;
-
-                // Extract the relevant response data.
-                let data = Object.get(response.data, self.field);
-
-                // Condense nested data into a single array.
-                if( data instanceof Object && data !== null ) data = Object.condense(data);
-
-                // Save the list of suggestions.
-                self.query.suggestions = data.filter((comp) => {
-
-                  // Desensitize the data.
-                  comp = comp.toLowerCase();
-
-                  return comp.indexOf(input) > -1 || comp.split(words).intersection(input.split(words)).length > 0;
-
-                });
-
-              }).catch(() => {
-
-                // Clear the list of suggestions.
-                self.query.suggestions = [];
-
-              }).always(() => {
-
-                // Reset the suggesting flag.
-                self.query.suggesting = false;
-
-              });
+              }));
 
             };
-
-            // Wait until the user pauses.
-            setTimeout(() => {
-
-              self.query.autofills.pop(); 
-
+            
+            // Initialize a fill helper method.
+            const fill = function() {
+              
+              // Remove the request from the queue.
+              self.query.autofills.pop();
+              
               setTimeout(() => { 
-
+                
                 if( self.query.autofills.length === 0 ) suggest();
-
-              }, 250);
-
-            }, 250);
+                
+              }, self.query.delay);
+              
+            };
+            
+            // Set maximum number of times an autofill can be deferred.
+            const defer = {max: 30, count: 0};
+            
+            // Initialize a wait method.
+            const wait = function() { 
+              
+              // Wait for the user to pause.
+              setTimeout(() => {
+                
+                // Verify that some indexed data exists.
+                if( self.query.indexed ) fill();
+                
+                // Otherwise, attempt to defer the request.
+                else if( defer.count < defer.max ) {
+                  
+                  // Increment the deferred count.
+                  defer.count++;
+                  
+                  // Continue to wait.
+                  wait();
+                  
+                }
+                
+                // Otherwise, ignore the request entirely.
+                else {
+                  
+                  // Clear the request from the queue.
+                  self.query.autofills.pop();
+                  
+                }
+                
+              }, self.query.delay);
+              
+            };
+            
+            // Start waiting.
+            wait();
             
           },
           
@@ -1932,10 +2044,10 @@ $.when(
             self.query.suggesting = false;
             
             // Clear suggestions.
-            self.query.suggestions = [];
+            self.$set(self.query, 'suggestions', []);
             
             // Clear autofills.
-            self.query.autofills = [];
+            self.$set(self.query, 'autofills', []);
             
           }
   
@@ -2184,6 +2296,7 @@ $.when(
               type: false,
               value: searchQuery
             });
+            this.field = searchField;
             
           }
           
@@ -2191,6 +2304,7 @@ $.when(
           else {
             
             this.query.input = this.unquote(searchQuery);
+            this.field = searchField;
             
           }
           
@@ -2289,7 +2403,7 @@ $.when(
       },
       searchField() {
         
-        return isset(this.field) ? this.field.replace('.', '/') : null;
+        return isset(this.field) ? this.field : null;
         
       }
     }
@@ -2402,6 +2516,41 @@ $.when(
       
       // Set type.
       this.type = this.errors[this.code];
+      
+    }
+    
+  });
+  
+  // Glossary
+  const Glossary = Vue.component('glossary', {
+    
+    template: '#template-glossary',
+    
+    props: ['id'],
+    
+    data() {
+      return {
+        level: 3,
+        title: null,
+        glossary: []
+      };
+    },
+    
+    methods: $.extend({}, methods),
+    
+    filters: $.extend({}, filters),
+    
+    created() {
+      
+      // Get the title and glossary data.
+      this.title = GLOSSARY[this.id].title;
+      this.glossary = GLOSSARY[this.id].glossary.sort((a, b) => {
+        
+        if( a.term < b.term ) return -1;
+        if( a.term > b.term ) return 1;
+        return 0;
+        
+      });
       
     }
     

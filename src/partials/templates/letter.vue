@@ -2,7 +2,7 @@
 
   <div class="letter" :class="{open: letter, closed: !letter}">
   
-    <button class="button btn-back" @click="back">Back to List</button>
+    <!--button class="button btn-back" @click="back">Back</button-->
 
     <h3>Letter from Samuel Beckett</h3>
     
@@ -12,7 +12,10 @@
       <tbody>
         
         <tr>
-          <th scope="row">Date</th>
+          <th scope="row">
+            <span class="asterisk fa-asterisk"></span>
+            Date
+          </th>
           <td>
             {{letter.date.formatted}}
           </td>
@@ -26,37 +29,40 @@
         </tr>
         
         <tr>
-          <th scope="row">Description</th>
+          <th scope="row">
+            <span class="asterisk fa-asterisk"></span>
+            Physical Description
+          </th>
           <td>
-            {{letter.description}}
+            {{letter.description.code}}
           </td>
         </tr>
         
          <tr>
-          <th scope="row">Addressed To</th>
+          <th scope="row">Actual Addressed To</th>
           <td>
-            {{letter.addressed.to}}
+            {{letter.location.addressed.to}}
           </td>
         </tr>
         
         <tr>
-          <th scope="row">Addressed From</th>
+          <th scope="row">Regularized Addressed To</th>
           <td>
-            {{letter.addressed.from}}
+            {{letter.location.regularized.to.formatted}}
           </td>
         </tr>
         
         <tr>
-          <th scope="row">Origin</th>
+          <th scope="row">Actual Addressed From</th>
           <td>
-            {{letter.location.origin.formatted}}
+            {{letter.location.addressed.from}}
           </td>
         </tr>
         
         <tr>
-          <th scope="row">Destination</th>
+          <th scope="row">Regularized Addressed From</th>
           <td>
-            {{letter.location.destination.formatted}}
+            {{letter.location.regularized.from.formatted}}
           </td>
         </tr>
         
@@ -82,27 +88,6 @@
         </tr>
         
         <tr>
-          <th scope="row">Autographed</th>
-          <td>
-            {{letter.autographed}}
-          </td>
-        </tr>
-        
-        <tr>
-          <th scope="row">Signed</th>
-          <td>
-            {{letter.signed ? 'Yes' : 'No'}}
-          </td>
-        </tr>
-        
-        <tr>
-          <th scope="row">Initialed</th>
-          <td>
-            {{letter.initialed ? 'Yes' : 'No'}}
-          </td>
-        </tr>
-        
-        <tr>
           <th scope="row">Envelope</th>
           <td>
             {{letter.envelope ? 'Yes' : 'No'}}
@@ -124,6 +109,28 @@
         </tr>
         
       </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4">
+            <span class="asterisk fa-asterisk"></span>
+            All dates are displayed in European date format (<code>dd-mm-yy</code>).
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" class="has-glossary">
+            <span class="asterisk fa-asterisk"></span>
+            Some physical descriptions have been abbreviated. 
+            <button class="button btn-glossary icon"
+                    @click="toggleGlossary('descriptions')"
+                    title="More information available.">
+              <span class="icon fa-info-circle"></span>
+            </button>
+            <transition name="fade">
+              <glossary id="descriptions" v-if="glossary.descriptions"></glossary>
+            </transition>
+          </td>
+        </tr>
+      </tfoot>
     </table>
   
   </div>

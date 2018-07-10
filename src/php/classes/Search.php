@@ -30,7 +30,7 @@ class Search {
     
     // Localize the data set.
     $comps = $this->data;
-    
+
     // Prepare the query for string comparison.
     $this->__prepare( $query );
 
@@ -93,7 +93,7 @@ class Search {
     foreach( $comps as $comp ) {
     
       // Prepare data for string comparison.
-      $this->__prepare( $comp );
+      $this->__prepare( $comp ); 
 
       // Compare the query as is.
       $result = !$result ? ($this->__compare($query, $comp) or $this->__proximate($query, $comp)) : $result;

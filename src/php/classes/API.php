@@ -500,14 +500,14 @@ trait FEATURES {
       // Initialize an ordered set of fields.
       $ordered = [];
 
-      // Rearrange the order of any date fields: year -> month -> day.
+      // Rearrange the order of any date fields: day -> month -> year.
       $years = [];
       $months = [];
       $days = [];
       
       foreach( $settings as $field => $value ) {
         
-        if( strpos($field, 'year') !== false ) $years[$field] = $value;
+        if( strpos($field, 'day') !== false ) $days[$field] = $value;
         
       }
       foreach( $settings as $field => $value ) {
@@ -517,7 +517,7 @@ trait FEATURES {
       }
       foreach( $settings as $field => $value ) {
         
-        if( strpos($field, 'day') !== false ) $days[$field] = $value;
+        if( strpos($field, 'year') !== false ) $years[$field] = $value;
         
       }
       

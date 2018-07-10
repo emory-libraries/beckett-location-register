@@ -100,13 +100,13 @@
     </div>
     
     <div class="select field">
-      <select v-model="field" @change="autofill().reset()">
+      <select v-model="field" @change="index(); autofill().reset()">
         <option :value="null">Any</option>
         <option :value="'recipient'">Recipient</option>
         <option :value="'repository'">Repository</option>
         <option :value="'language'">Language</option>
-        <option :value="'location.origin'">Origin</option>
-        <option :value="'location.destination'">Destination</option>
+        <option :value="'location.regularized.to'">Regularized Addressed To</option>
+        <option :value="'location.regularized.from'">Regularized Addressed From</option>
       </select>
     </div>
     
