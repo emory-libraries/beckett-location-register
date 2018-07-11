@@ -258,6 +258,7 @@
       width: calc((100% / #{$count}) - ((#{$padding} * (#{$count} - 1)) / #{$count}));
       @include absolute-center-contents;
       float: left;
+      white-space: nowrap;
 
       .icon { font-size: 1rem; }
     
