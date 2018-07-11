@@ -5,24 +5,38 @@
   $breakpoint: min-width 765px;
   
   padding: $padding;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-areas: "mode"
+                       "box"
+                       "dropdown"
+                       "buttons";
+  grid-template-columns: 100%;
+  grid-template-rows: ($controls-height / 2) repeat(3, $controls-height);
+  grid-auto-rows: $controls-height;
+  grid-gap: $padding;
   background-color: color('white', 'off');
   margin-bottom: 25px;
   
-  @include breakpoint( screen('large') ) { min-height: $height; };
+  @include breakpoint( screen('large') ) { 
+    grid-template-areas: "mode mode"
+                         "box dropdown"
+                         "buttons buttons";
+    grid-template-rows: ($controls-height / 2) repeat(2, $controls-height);
+    grid-template-columns: 1fr auto;
+  };
   
   #{$all-verbage-inputs}, 
   .field,
   .buttons,
   #{$all-buttons} { 
-    height: $height - ($padding * 2); 
+    height: $controls-height; 
   }
   
   .search-toggle {
     
     $toggle: ($controls-height / 2);
     
+    grid-area: mode;
     font-size: .75em;
     width: 100%;
     height: $toggle;
@@ -96,6 +110,7 @@
   }
   
   .search-box {
+    grid-area: box;
     width: 100%;
     display: flex;
     flex-wrap: wrap;
@@ -220,29 +235,13 @@
       
     }
     
-    @include breakpoint( screen('large') ) {
-      width: auto;
-      flex-grow: 1;
-    };
-    
   }
   
   .field {
+    grid-area: dropdown;
     width: 100%;
-    margin-top: $padding;
-    align-self: auto;
-
-    @include breakpoint( $breakpoint ) {
-      width: auto;
-      flex-grow: 5; 
-    };
     
-    @include breakpoint( screen('large') ) { 
-      margin-left: $padding;
-      margin-top: 0;
-      min-width: 150px;
-      flex-grow: unset;
-    };
+    @include breakpoint( screen('large') ) { min-width: 150px; };
 
   }
     
@@ -251,13 +250,15 @@
     $count: 3;
     $width: 135px;
 
+    grid-area: buttons;
     width: 100%;
-    margin-top: $padding;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
     
     #{$all-buttons} { 
-      width: calc((100% / #{$count}) - ((#{$padding} * (#{$count} - 1)) / #{$count}));
+      max-width: calc((100% / #{$count}) - ((#{$padding} * (#{$count} - 1)) / #{$count}));
       @include absolute-center-contents;
-      float: left;
       white-space: nowrap;
 
       .icon { font-size: 1rem; }
@@ -269,20 +270,6 @@
       @include breakpoint( screen('large') ) { min-width: $width; }
 
     }
-
-    @include clearfix;
-
-    @include breakpoint( $breakpoint ) { 
-      margin-left: $padding;
-      width: auto;
-      flex-grow: 2; 
-    };
-  
-    @include breakpoint( screen('large') ) {
-      margin-top: 0;
-      flex-grow: unset;
-      min-width: ($width * $count) + ($spacing * ($count - 1));
-    };
 
   }
   
