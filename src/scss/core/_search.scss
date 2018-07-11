@@ -10,10 +10,7 @@
   background-color: color('white', 'off');
   margin-bottom: 25px;
   
-  @include breakpoint( screen('large') ) {
-    min-height: $height;
-    flex-wrap: nowrap;
-  };
+  @include breakpoint( screen('large') ) { min-height: $height; };
   
   #{$all-verbage-inputs}, 
   .field,
@@ -252,7 +249,7 @@
   .buttons {
     $spacing: 10px;
     $count: 3;
-    $width: 110px;
+    $width: 135px;
 
     width: 100%;
     margin-top: $padding;

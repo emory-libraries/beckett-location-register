@@ -6,7 +6,7 @@
     
     <!--div class="text">Loading...</div-->
     
-    <img class="animation" src="@@path/images/envelope.gif">
+    <img class="animation" src="@@path/images/envelope.gif" v-if="loading">
     
     <div class="progress" v-if="$api.percent !== null">
    

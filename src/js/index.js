@@ -2139,7 +2139,7 @@ $.when(
 
               break;
 
-            case 'OR':
+            case 'OR': 
 
               // Save the input.
               this.query.data.push({
@@ -2274,7 +2274,7 @@ $.when(
             this.query.data = this.query.data.concat(NOTS.map((NOT) => {
               
               return {
-                display: this.unquote(NOT.replace(/^~/, '')),
+                display: this.unquote(NOT.replace(/^-/, '')),
                 type: 'NOT',
                 value: NOT 
               };
@@ -2283,7 +2283,7 @@ $.when(
             this.query.data = this.query.data.concat(ORS.map((OR) => {
               
               return {
-                display: this.unquote(OR.replace(/^-/, '')),
+                display: this.unquote(OR.replace(/^~/, '')),
                 type: 'OR',
                 value: OR 
               };
@@ -2296,6 +2296,7 @@ $.when(
               type: false,
               value: searchQuery
             });
+            this.query.type = 'OR';
             this.field = searchField;
             
           }

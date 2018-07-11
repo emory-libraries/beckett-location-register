@@ -589,7 +589,7 @@ trait FEATURES {
         }
 
         // Handle all other values.
-        else {
+        else { 
           
           // Convert the data type of the value.
           $value = $this->__typify($value);
@@ -809,7 +809,7 @@ trait FEATURES {
     
     // Clean up the indexed data.
     foreach( $indexed as $key => $record ) {
-      
+     
       // Only keep unique values.
       $unique = array_unique($record);
       
@@ -852,7 +852,7 @@ trait FEATURES {
       }
       
       // Typify and save the updated values.
-      $indexed[$key] = $this->__typify($unique);
+      $indexed[$key] = $this->__typify($unique, $key);
       
     }
 
@@ -1135,7 +1135,7 @@ class API {
   }
   
   // Convert values into their true data types.
-  private function __typify( $values ) {
+  private function __typify( $values, $field = null ) {
     
     // Catch the original format.
     $array = is_array($values);
@@ -1144,10 +1144,13 @@ class API {
     if( !$array ) $values = [$values];
     
     // Loop through each value.
-    foreach( $values as $key => $value ) {
+    foreach( $values as $key => $value ) { 
+      
+      // Always ignore postmarks.
+      if( $key === 'postmark' or $field === 'postmark' ) continue;
       
       // Convert each value within arrays.
-      if( is_array($value) ) { $values[$key] = $this->__typify( $value ); }
+      elseif( is_array($value) ) { $values[$key] = $this->__typify($value, $field); }
       
       // Convert numeric values to numbers.
       elseif( is_numeric($value) ) { $values[$key] = (float) $value; }

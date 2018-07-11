@@ -55,7 +55,6 @@
           <button class="fa-close" @click="remove(index)"></button>
         </li>
         <li class="search-input">
-
           <div class="select boolean" v-if="query.type !== null">
             <select v-model="query.type">
               <option value="OR">OR</option>
