@@ -1,8 +1,10 @@
 .loading {
   width: 100%;
   height: $layout-min-height;
-  @include absolute-center-contents;
+  display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   position: fixed;
   top: $header-height;
   left: 0;
