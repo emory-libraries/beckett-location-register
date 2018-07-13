@@ -42,6 +42,6 @@ In addition to the user interface, the system's back-end also exposes a public R
 
 ### Maintenance
 
-The Emory Libraries Library Technology and Digital Strategies division will be responsible for making any necessary bug fixes needed to maintain the Beckett Location Register in its current operable and working state. At this time, this scope of maintenance excludes enhancements and feature requests but does include any minor adjustments needed to ensure that the system's data is continuously present, consistently formatted, and appropriately represented based on the product owner's needs.
+The Emory Libraries Library Technology and Digital Strategies division will be responsible for making any necessary bug fixes needed to maintain the Beckett Location Register in its current operable and working state. At this time, this scope of maintenance excludes enhancements and feature requests.
 
 The product owner will be responsible for maintaining the database itself. This includes the process of adding, editing, and/or deleting data about the Beckett Letters from the preferred database. At this time, this database is in the form of a Google Sheet, which the Beckett Location Register has already been setup to use.
