@@ -6,7 +6,7 @@ This Beckett Location Register is for the Emory University Center for Digital Sc
 
 ### Technologies
 
-The Beckett Location Register is a homegrown system built by Emory Libraries' Library Technology and Digital Services division using custom front-end and back-end technologies. The source code for this system and its technologies have been made publicly accessible through [Emory Libraries Github](https://github.com/emory-libraries/beckett-location-register).
+The Beckett Location Register is a homegrown system built by Emory Libraries Library Technology and Digital Strategies division using custom front-end and back-end technologies. The source code for this system and its technologies have been made publicly accessible through [Emory Libraries Github](https://github.com/emory-libraries/beckett-location-register).
 
 #### About the Back-End
 
@@ -22,11 +22,11 @@ Furthermore, other front-end specifications to note is that the system uses [Mar
 
 #### Notes for Developers
 
-The source code for the [Beckett Location Register](https://github.com/emory-libraries/beckett-location-register) project can be found on [Emory Libraries' Github](https://github.com/emory-libraries). This project was build using development tools for dependency management and task automation, namely [npm](https://www.npmjs.com/), [Composer](https://getcomposer.org/), and [Grunt](https://gruntjs.com/).
+The source code for the [Beckett Location Register](https://github.com/emory-libraries/beckett-location-register) project can be found on [Emory Libraries' Github](https://github.com/emory-libraries). This project was built using development tools for dependency management and task automation, namely [npm](https://www.npmjs.com/), [Composer](https://getcomposer.org/), and [Grunt](https://gruntjs.com/).
 
 ### User Interface 
 
-The Beckett Location Register provides a mobile-first website by which users can interact with the publicly available records within the Beckett Letters database. This user interface has been optimized for all devices, mobile through desktop, and is compatible with all modern web browsers. On older web browsers where compatibility issues may arise, users will be alerted of the potential compatibility issues and prompted to upgrade to a newer web browser before proceeding to use the site. 
+The Beckett Location Register provides a mobile-first website by which users can interact with the publicly available records within the Beckett Letters Location Register database. This user interface has been optimized for all devices, mobile through desktop, and is compatible with all modern web browsers. On older web browsers where compatibility issues may arise, users will be alerted of the potential compatibility issues and prompted to upgrade to a newer web browser before proceeding to use the site. 
 
 Upon initially visiting the site, users will be immediately presented with the option to either search or browse through the Beckett Letters data set through a clear and prominent search box, which persists across all pages of the site. This search box allows users to perform a general search across all data fields or a narrow search on a target field in addition to providing users with the option to browse all data within the database. Additionally, users will also have the option to perform a Boolean search, which permits them to enter complex search queries that may utilize inclusion (`AND`), exclusion (`NOT`), and/or variation (`OR`) criteria.
 
@@ -38,10 +38,10 @@ Finally, when users find a record of interest while in the list view, the user i
 
 A simple navigation bar has also been included at the top of the user interface, which allows users to quickly jump between the *Home* page, *About* page, and *List* screen, which also displays the full list of database results like the search box's browse button. At the bottom of the user interface is a simple footer which displays necessary copyright information. Lastly, the search box has been made persistent across all screens to enable users to easily initialize a new search or browse operation at any time and from anywhere within the site.
 
-In addition to the user interface, the system's back-end also exposes a public REST API, which returns JSON output to web browser. By default, this API is configured to use the `api/` URI path from the Beckett Location Register's domain root and can be queried for raw data using any known endpoints and query parameters. Please note that this API is necessary as its used by the system's front-end to consume data from the database, but its not intended for use by end users. However, it may be of interest for use by the product owner.
+In addition to the user interface, the system's back-end also exposes a public REST API, which returns JSON output to web browser. By default, this API is configured to use the `api/` URI path from the Beckett Location Register's domain root and can be queried for raw data using any known endpoints and query parameters. Please note that this API is necessary as it is used by the system's front-end to consume data from the database, but it is not intended for use by end users. However, it may be of interest for use by the product owner.
 
 ### Maintenance
 
-The Library Technology and Digital Services team will be responsible for making any necessary bug fixes needed to maintain the Beckett Location Register in its current operable and working state. At this time, this scope of maintenance excludes enhancements and feature requests but does include any minor adjustments needed to ensure that the system's data is continuously present, consistently formatted, and appropriately represented based on the product owner's needs.
+The Emory Libraries Library Technology and Digital Strategies division will be responsible for making any necessary bug fixes needed to maintain the Beckett Location Register in its current operable and working state. At this time, this scope of maintenance excludes enhancements and feature requests but does include any minor adjustments needed to ensure that the system's data is continuously present, consistently formatted, and appropriately represented based on the product owner's needs.
 
 The product owner will be responsible for maintaining the database itself. This includes the process of adding, editing, and/or deleting data about the Beckett Letters from the preferred database. At this time, this database is in the form of a Google Sheet, which the Beckett Location Register has already been setup to use.
