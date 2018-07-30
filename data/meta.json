@@ -34,7 +34,17 @@
         }
       },
       "recipient": "Reg. recipient",
-      "repository": "Repository",
+      "repository": {
+        "primary": {
+          "repo": "Repository",
+          "format": "Format"
+        },
+        "secondary": {
+          "repo": "Second Repository",
+          "format": "Second Format",
+          "public": "SECOND PUBLIC? | Public | public"
+        }
+      },
       "collection": "Collection",
       "language": "PrimaryLang",
       "autographed": "Autograph or Typed | A",
@@ -48,7 +58,10 @@
       "leaves": "leaves",
       "sides": "sides",
       "envelope": "Envelope | E | 2 E",
-      "postmark": "Postmark (Actual)"
+      "postmark": "Postmark (Actual)",
+      "image": {
+        "postcard": "Postcard Image"
+      }
     },
     "summary": {
       "id": "ID",

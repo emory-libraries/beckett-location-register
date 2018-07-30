@@ -12,107 +12,93 @@
       <tbody>
         
         <tr>
-          <th scope="row">
-            <span class="asterisk fa-asterisk"></span>
-            Date
-          </th>
-          <td>
-            {{letter.date.formatted}}
-          </td>
+          <th scope="row"><span class="asterisk fa-asterisk"></span>Date</th>
+          <td>{{letter.date.formatted}}</td>
         </tr>
         
         <tr>
           <th scope="row">Recipient</th>
-          <td>
-            {{letter.recipient}}
-          </td>
+          <td>{{letter.recipient}}</td>
         </tr>
         
         <tr>
-          <th scope="row">
-            <span class="asterisk fa-asterisk"></span>
-            Physical Description
-          </th>
-          <td>
-            {{letter.description.code}}
-          </td>
+          <th scope="row"><span class="asterisk fa-asterisk"></span>Physical Description</th>
+          <td>{{letter.description.code}}</td>
         </tr>
         
          <tr>
           <th scope="row">Actual Addressed To</th>
-          <td>
-            {{letter.location.addressed.to}}
-          </td>
+          <td>{{letter.location.addressed.to}}</td>
         </tr>
         
         <tr>
           <th scope="row">Regularized Addressed To</th>
-          <td>
-            {{letter.location.regularized.to.formatted}}
-          </td>
+          <td>{{letter.location.regularized.to.formatted}}</td>
         </tr>
         
         <tr>
           <th scope="row">Actual Addressed From</th>
-          <td>
-            {{letter.location.addressed.from}}
-          </td>
+          <td>{{letter.location.addressed.from}}</td>
         </tr>
         
         <tr>
           <th scope="row">Regularized Addressed From</th>
-          <td>
-            {{letter.location.regularized.from.formatted}}
-          </td>
+          <td>{{letter.location.regularized.from.formatted}}</td>
         </tr>
         
         <tr>
           <th scope="row">Repository</th>
-          <td>
-            {{letter.repository}}
-          </td>
+          <td>{{letter.repository.primary.repo}}</td>
+        </tr>
+        
+        <tr>
+          <th scope="row">Format</th>
+          <td>{{letter.repository.primary.format}}</td>
+        </tr>
+        
+        <tr v-if="letter.repository.secondary.repo && letter.repository.secondary.public">
+          <th scope="row">Second Repository</th>
+          <td>{{letter.repository.secondary.repo}}</td>
+        </tr>
+        
+        <tr v-if="letter.repository.secondary.repo && letter.repository.secondary.public && letter.repository.secondary.format">
+          <th scope="row">Second Format</th>
+          <td>{{letter.repository.secondary.format}}</td>
         </tr>
         
         <tr>
           <th scope="row">Collection</th>
-          <td>
-            {{letter.collection}}
-          </td>
+          <td>{{letter.collection}}</td>
         </tr>
         
         <tr>
           <th scope="row">Language</th>
-          <td>
-            {{letter.language}}
-          </td>
+          <td>{{letter.language}}</td>
         </tr>
         
         <tr>
           <th scope="row">Envelope</th>
-          <td>
-            {{letter.envelope ? 'Yes' : 'No'}}
-          </td>
+          <td>{{letter.envelope ? 'Yes' : 'No'}}</td>
         </tr>
         
         <tr>
           <th scope="row">Leaves</th>
-          <td>
-            {{letter.leaves}}
-          </td>
+          <td>{{letter.leaves}}</td>
         </tr>
         
         <tr>
           <th scope="row">Sides</th>
-          <td>
-            {{letter.sides}}
-          </td>
+          <td>{{letter.sides}}</td>
         </tr>
         
         <tr>
           <th scope="row">Postmark</th>
-          <td>
-            {{letter.postmark}}
-          </td>
+          <td>{{letter.postmark}}</td>
+        </tr>
+        
+        <tr v-if="letter.image.postcard">
+          <th scope="row">Postcard Image</th>
+          <td>{{letter.image.postcard}}</td>
         </tr>
         
       </tbody>
