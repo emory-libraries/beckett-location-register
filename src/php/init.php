@@ -17,7 +17,7 @@ date_default_timezone_set('America/New_York');
 
 // Define constants.
 define('ROOT', dirname(__DIR__));
-define('DEVELOPMENT', false);
+define('DEVELOPMENT', true);
 define('LOCALDB', false);
 
 // Autoload classes.
