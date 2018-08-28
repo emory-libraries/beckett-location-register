@@ -151,6 +151,11 @@
         "term": "PM",
         "proper": "Postmark",
         "definition": "Contains a postmark"
+      },
+      {
+        "term": "TL",
+        "proper": "Typed, Letter",
+        "definition": "Typed letter"
       }
 
     ]
