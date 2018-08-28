@@ -34,23 +34,23 @@
       },
       {
         "term": "ALCS",
-        "proper": "Autographed, (?), Signed",
-        "definition": "Hand-written (?) signed by the author"
+        "proper": "Autographed, Letter Copy, Signed",
+        "definition": "Hand-written copy of a letter signed by the author"
       },
       {
         "term": "ALCI",
-        "proper": "Autographed, (?), Initialed",
-        "definition": "Hand-written (?) initialed by the author"
+        "proper": "Autographed, Letter Copy, Initialed",
+        "definition": "Hand-written copy of a letter initialed by the author"
       },
       {
         "term": "TLCS",
-        "proper": "Typed, (?), Signed",
-        "definition": "Typed (?) signed by the author"
+        "proper": "Typed, Letter Copy, Signed",
+        "definition": "Typed copy of a letter signed by the author"
       },
       {
         "term": "TLCI",
-        "proper": "Typed, (?), Initialed",
-        "definition": "Typed (?) initialed by the author"
+        "proper": "Typed, Letter Copy, Initialed",
+        "definition": "Typed copy of a letter initialed by the author"
       },
       {
         "term": "AMS",
@@ -111,6 +111,46 @@
         "term": "TPCI",
         "proper": "Typed, Postcard, Initialed",
         "definition": "Typed postcard initialed by the author"
+      },
+      {
+        "term": "ENV",
+        "proper": "Envelope",
+        "definition": "Envelope only"
+      },
+      {
+        "term": "CORR",
+        "proper": "Corrected",
+        "definition": "All or some parts may be corrected"
+      },
+      {
+        "term": "ILLEG",
+        "proper": "Illegible",
+        "definition": "All or some parts may be illegible"
+      },
+      {
+        "term": "APSS",
+        "proper": "Autographed, Postscript, Signed",
+        "definition": "Hand-written postscript signed by the author"
+      },
+      {
+        "term": "APSI",
+        "proper": "Autographed, Postscript, Initialed",
+        "definition": "Hand-written postscript initialed by the author"
+      },
+      {
+        "term": "TLCCS",
+        "proper": "Typed, Letter Carbon Copy, Signed",
+        "definition": "Typed carbon copy of a letter signed by the author"
+      },
+      {
+        "term": "TLCCI",
+        "proper": "Typed, Letter Carbon Copy, Initialed",
+        "definition": "Typed carbon copy of a letter initialed by the author"
+      },
+      {
+        "term": "PM",
+        "proper": "Postmark",
+        "definition": "Contains a postmark"
       }
 
     ]
