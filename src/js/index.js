@@ -7,8 +7,9 @@ $.when(
   $.getJSON('meta.json').then((data) => data),
   $.getJSON('router.json').then((data) => data),
   $.getJSON('glossary.json').then((data) => data),
-  $.getJSON('transliteration.json').then((data) => data)
-).done((META, ROUTER, GLOSSARY, TRANSLITERATION) => {
+  $.getJSON('transliteration.json').then((data) => data),
+  $.getJSON('abbr.json').then((data) => data)
+).done((META, ROUTER, GLOSSARY, TRANSLITERATION, ABBR) => { 
   
   // Helper functions.
   function isset( value, objectify = false ) {
@@ -1780,6 +1781,31 @@ $.when(
       toggleGlossary( id ) {
         
         this.glossary[id] = !this.glossary[id];
+        
+      },
+      
+      getDesc( data ) {
+        
+        // Initialize the descriptions.
+        let d = '';
+        
+        // Prepare to capture description data.
+        let a, b, c;
+        
+        // Extract the description data.
+        if( data.pen ) a = ABBR.pen.filter((abbr) => abbr.abbr.toLowerCase() == data.pen.toLowerCase())[0];
+        if( data.physical ) b = ABBR.physical.filter((abbr) => abbr.abbr.toLowerCase() == data.physical.toLowerCase())[0];
+        if( data.signature ) c = ABBR.signature.filter((abbr) => abbr.abbr.toLowerCase() == data.signature.toLowerCase())[0];
+        
+        // Build the description.
+        if( a ) d += a.desc;
+        if( a && b ) d += ', ';
+        if( b ) d += b.desc; 
+        if( b && c ) d += c.desc;
+        if( isset(d) ) d = `(${d})`;
+        
+        // Return.
+        return d;
         
       }
       

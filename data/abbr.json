@@ -1,0 +1,25 @@
+{
+  "pen": [
+    {"abbr": "A", "desc": "autograph"},
+    {"abbr": "T", "desc": "typed"},
+    {"abbr": "ENV", "desc": "envelope"}
+  ],
+  "physical": [
+    {"abbr": "C", "desc": "card"},
+    {"abbr": "Check", "desc": "check"},
+    {"abbr": "CSI", "desc": "(?)"},
+    {"abbr": "L", "desc": "letter"},
+    {"abbr": "MS", "desc": "manuscript"},
+    {"abbr": "MSS", "desc": "(?)"},
+    {"abbr": "N", "desc": "note"},
+    {"abbr": "PC", "desc": "postcard"},
+    {"abbr": "PS", "desc": "postscript"},
+    {"abbr": "H", "desc": "in another hand"}
+  ],
+  "signature": [
+    {"abbr": "I", "desc": "initialed"},
+    {"abbr": "S", "desc": "signed"},
+    {"abbr": "C", "desc": "copy"},
+    {"abbr": "CC", "desc": "carbon copy"}
+  ]
+}

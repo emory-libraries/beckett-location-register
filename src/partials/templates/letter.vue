@@ -22,8 +22,8 @@
         </tr>
         
         <tr>
-          <th scope="row"><span class="asterisk fa-asterisk"></span>Physical Description</th>
-          <td>{{letter.description.code}}</td>
+          <th scope="row"><!--<span class="asterisk fa-asterisk"></span>-->Physical Description</th>
+          <td>{{letter.description.code}} {{getDesc(letter.description)}}</td>
         </tr>
         
          <tr>
@@ -109,7 +109,7 @@
             All dates are displayed in European date format (<code>dd-mm-yy</code>).
           </td>
         </tr>
-        <tr>
+        <!--tr>
           <td colspan="2" class="has-glossary">
             <span class="asterisk fa-asterisk"></span>
             Some physical descriptions have been abbreviated. 
@@ -122,7 +122,7 @@
               <glossary id="descriptions" v-if="glossary.descriptions"></glossary>
             </transition>
           </td>
-        </tr>
+        </tr-->
       </tfoot>
     </table>
   
