@@ -26,6 +26,16 @@
           <td>{{letter.description.code}} {{getDesc(letter.description)}}</td>
         </tr>
         
+        <tr>
+          <th scope="row">Leaves</th>
+          <td>{{letter.leaves}}</td>
+        </tr>
+        
+        <tr>
+          <th scope="row">Sides</th>
+          <td>{{letter.sides}}</td>
+        </tr>
+        
          <tr>
           <th scope="row">Actual Addressed To</th>
           <td>{{letter.location.addressed.to}}</td>
@@ -79,16 +89,6 @@
         <tr>
           <th scope="row">Envelope</th>
           <td>{{letter.envelope ? 'Yes' : 'No'}}</td>
-        </tr>
-        
-        <tr>
-          <th scope="row">Leaves</th>
-          <td>{{letter.leaves}}</td>
-        </tr>
-        
-        <tr>
-          <th scope="row">Sides</th>
-          <td>{{letter.sides}}</td>
         </tr>
         
         <tr>
