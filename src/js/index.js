@@ -1801,7 +1801,8 @@ $.when(
         if( a ) d += a.desc;
         if( a && b ) d += ', ';
         if( b ) d += b.desc; 
-        if( b && c ) d += c.desc;
+        if( b && c ) d += ', ';
+        if( c ) d += c.desc;
         if( isset(d) ) d = `(${d})`;
         
         // Return.
