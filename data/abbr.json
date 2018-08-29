@@ -10,7 +10,7 @@
     {"abbr": "CSI", "desc": "(?)"},
     {"abbr": "L", "desc": "letter"},
     {"abbr": "MS", "desc": "manuscript"},
-    {"abbr": "MSS", "desc": "(?)"},
+    {"abbr": "MSS", "desc": "manuscripts"},
     {"abbr": "N", "desc": "note"},
     {"abbr": "PC", "desc": "postcard"},
     {"abbr": "PS", "desc": "postscript"},
@@ -18,8 +18,6 @@
   ],
   "signature": [
     {"abbr": "I", "desc": "initialed"},
-    {"abbr": "S", "desc": "signed"},
-    {"abbr": "C", "desc": "copy"},
-    {"abbr": "CC", "desc": "carbon copy"}
+    {"abbr": "S", "desc": "signed"}
   ]
 }
