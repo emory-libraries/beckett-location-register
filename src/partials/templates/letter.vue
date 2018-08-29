@@ -37,22 +37,22 @@
         </tr>
         
          <tr>
-          <th scope="row">Actual Addressed To</th>
+          <th scope="row">Actual, Addressed To</th>
           <td>{{letter.location.addressed.to}}</td>
         </tr>
         
         <tr>
-          <th scope="row">Regularized Addressed To</th>
+          <th scope="row">Regularized, Addressed To</th>
           <td>{{letter.location.regularized.to.formatted}}</td>
         </tr>
         
         <tr>
-          <th scope="row">Actual Addressed From</th>
+          <th scope="row">Actual, Addressed From</th>
           <td>{{letter.location.addressed.from}}</td>
         </tr>
         
         <tr>
-          <th scope="row">Regularized Addressed From</th>
+          <th scope="row">Regularized, Addressed From</th>
           <td>{{letter.location.regularized.from.formatted}}</td>
         </tr>
         
