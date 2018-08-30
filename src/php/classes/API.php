@@ -226,11 +226,22 @@ trait GET {
           'interpolation' => '/\{(.+?)\}/'
         ];
         
+        // Initialize progress bar data.
+        $start = 25;
+        $end = 55;
+        $range = $end - $start;
+        $iterations = count($target);
+        $loops = 0;
+        $increment = $range / $iterations;
+        
         // Save progress thus far.
-        $this->progress->setProgress($this->process, 25);
+        $this->progress->setProgress($this->process, $start);
 
         // Compare endpoints.
         foreach( $target as $index => $pattern ) {
+          
+          // Get our loop count.
+          $loops++;
 
           // Catch dynamic endpoint data.
           if( preg_match($regex['dynamic'], $pattern) ) {
@@ -360,11 +371,14 @@ trait GET {
             }));
 
           }
+          
+          // Incrementally update the progress bar.
+          $this->progress->setProgress($this->process, $start + ($increment * $loops));
 
         }
         
         // Save progress thus far.
-        $this->progress->setProgress($this->process, 55);
+        $this->progress->setProgress($this->process, $end);
 
       }
       

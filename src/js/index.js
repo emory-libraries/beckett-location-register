@@ -311,6 +311,12 @@ $.when(
               query: $.extend(true, {}, this.$route.query, query)
             });
           
+          },
+          
+          toggleGlossary( id ) {
+        
+            this.glossary[id] = !this.glossary[id];
+
           }
           
         };
@@ -1780,38 +1786,6 @@ $.when(
         // Go back to the list.
         this.$router.back();
         
-      },
-      
-      toggleGlossary( id ) {
-        
-        this.glossary[id] = !this.glossary[id];
-        
-      },
-      
-      getDesc( data ) {
-        
-        // Initialize the descriptions.
-        let d = '';
-        
-        // Prepare to capture description data.
-        let a, b, c;
-        
-        // Extract the description data.
-        if( data.pen ) a = ABBR.pen.filter((abbr) => abbr.abbr.toLowerCase() == data.pen.toLowerCase())[0];
-        if( data.physical ) b = ABBR.physical.filter((abbr) => abbr.abbr.toLowerCase() == data.physical.toLowerCase())[0];
-        if( data.signature ) c = ABBR.signature.filter((abbr) => abbr.abbr.toLowerCase() == data.signature.toLowerCase())[0];
-        
-        // Build the description.
-        if( a ) d += a.desc;
-        if( a && b ) d += ', ';
-        if( b ) d += b.desc; 
-        if( b && c ) d += ', ';
-        if( c ) d += c.desc;
-        if( isset(d) ) d = `(${d})`;
-        
-        // Return.
-        return d;
-        
       }
       
     }, methods),
@@ -1844,6 +1818,60 @@ $.when(
         }
         
       });
+      
+    },
+    
+    computed: {
+      
+      descriptionExplained() {
+        
+        // Get the physical description data.
+        const data = this.letter.description;
+        
+        // Initialize the descriptions.
+        let d = '';
+
+        // Prepare to capture description data.
+        let a, b, c;
+
+        // Extract the description data.
+        if( data.pen ) a = ABBR.pen.filter((abbr) => abbr.abbr.toLowerCase() == data.pen.toLowerCase())[0];
+        if( data.physical ) b = ABBR.physical.filter((abbr) => abbr.abbr.toLowerCase() == data.physical.toLowerCase())[0];
+        if( data.signature ) c = ABBR.signature.filter((abbr) => abbr.abbr.toLowerCase() == data.signature.toLowerCase())[0];
+
+        // Build the description.
+        if( a ) d += a.desc;
+        if( a && b ) d += ', ';
+        if( b ) d += b.desc; 
+        if( b && c ) d += ', ';
+        if( c ) d += c.desc;
+        if( isset(d) ) d = `(${d})`;
+
+        // Return the physical description explanation in parentheses.
+        return d;
+        
+      },
+      
+      descriptionFormatted() {
+        
+        // Get the physical description pieces.
+        const code = this.letter.description.code;
+        const leaves = this.letter.leaves;
+        const sides = this.letter.sides;
+        const parens = this.descriptionExplained;
+        
+        // Initialize the formatted physical description.
+        let formatted = code;
+        
+        // Build the formatted physical description.
+        if( leaves ) formatted += `; ${leaves} ${leaves > 1 ? 'leaves' : 'leaf'}`;
+        if( sides ) formatted += `${leaves ? ',' : ';'} ${sides} ${sides > 1 ? 'sides' : 'side'}`;
+        if( parens ) formatted += `${leaves || sides ? ';' : ''}<br>${parens}`;
+        
+        // Return the formatted physical description.
+        return formatted;
+        
+      }
       
     }
 
