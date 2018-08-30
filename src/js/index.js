@@ -667,7 +667,7 @@ $.when(
       },
       
       // Get progress of a request by process ID.
-      progress( pid ) { 
+      progress( pid ) {
         
         // Initialize a poll timer.
         let timer = 0;
@@ -711,7 +711,7 @@ $.when(
         const poll = () => { 
           
           // Get the progress.
-          $.getJSON(`${this.src}progress/${pid}`).then((response) => { 
+          $.getJSON(`${this.src}progress/${pid}`).then((response) => {
             
             // Save progress data.
             this.percent = response.data; 
@@ -2532,16 +2532,8 @@ $.when(
     
     created() {
       
-      // Capture context.
-      const self = this;
-      
-      // Handle loading events.
-      event.on('loading', (loading) => {
-        
-        // Trigger loading.
-        self.loading = loading;
-        
-      });
+      // Toggle loading.
+      event.on('loading', (loading) => this.loading = loading);
       
     }
     
