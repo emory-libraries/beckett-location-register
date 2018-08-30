@@ -1290,7 +1290,7 @@ $.when(
         const fields = this.$api.indexing;
         
         // Initialize a method for validating filter fields.
-        const validate = (field) => {
+        const validate = (field) => { 
           
           // Initialize a pointer.
           let pointer = field == 'any' ? fields : Object.get(fields, field);
@@ -1910,8 +1910,6 @@ $.when(
     },
 
     methods: $.extend({
-      
-      
       
       search() {
    
