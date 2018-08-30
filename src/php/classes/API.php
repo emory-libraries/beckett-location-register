@@ -1332,68 +1332,6 @@ class API {
     
   }
   
-  // Set progress data about a process.
-  private function __setProgress( $id, $progress, $status = null ) {
-    
-    // Initialize a session.
-    if( session_status() === PHP_SESSION_NONE ) session_start();
-    
-    // Initialize progress data.
-    if( !array_key_exists('progress', $_SESSION) ) $_SESSION['progress'] = [];
-    
-    // Delete the existing progress.
-    $this->__delProgress($id);
-
-    // Overwrite existing or save new progress data for processes.
-    $_SESSION['progress'][$id] = [
-      'progress' => $progress, 
-      'status' => $status
-    ]; 
-
-  }
-  
-  // Get progress data about a process.
-  private function __getProgress( $id ) {
-    
-    // Initialize a session.
-    if( session_status() === PHP_SESSION_NONE ) session_start();
-
-    // Initialize progress data.
-    if( !array_key_exists('progress', $_SESSION) ) $_SESSION['progress'] = [];
-    
-    // Convert floats to integers.
-    if( gettype($id) == 'double' ) $id = (int) $id;
-    
-    // Return the progress data.
-    if( array_key_exists($id, $_SESSION['progress']) ) return $_SESSION['progress'][$id];
-    
-    // Otherwise, return empty progress.
-    return ['progress' => 0, 'status' => 'Process not yet registered.'];
-    
-  }
-  
-  // Delete progress data about a process.
-  private function __delProgress( $id ) {
-    
-    // Initialize a session.
-    if( session_status() === PHP_SESSION_NONE ) session_start();
-    
-    // Initialize progress data.
-    if( !array_key_exists('progress', $_SESSION) ) $_SESSION['progress'] = [];
-
-    // Convert floats to integers.
-    if( gettype($id) == 'double' ) $id = (int) $id;
-
-    // Check if progress data for the process exists.
-    if( array_key_exists($id, $_SESSION['progress']) ) {
-      
-      // Delete the progress data.
-      unset($_SESSION['progress'][$id]);
-      
-    }
-    
-  }
-  
   // Send an API response.
   function response() {
     
