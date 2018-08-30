@@ -242,6 +242,12 @@
     width: 100%;
     
     @include breakpoint( screen('large') ) { min-width: 150px; };
+    
+    &.disabled {
+      
+      #{$all-verbage-inputs} { color: color('grey'); }
+      
+    }
 
   }
     

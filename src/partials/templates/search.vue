@@ -98,9 +98,9 @@
       
     </div>
     
-    <div class="select field">
+    <div class="select field" :class="{disabled: !field}">
       <select v-model="field" @change="index(); autofill().reset()">
-        <option :value="null">Any</option>
+        <option :value="null" disabled>Select a Field</option>
         <option :value="'recipient'">Recipient</option>
         <option :value="'repository'">Repository</option>
         <option :value="'language'">Language</option>
@@ -113,7 +113,7 @@
     
       <button class="button icon icon-block-left btn-search primary" 
               @click="search" 
-              :disabled="query.data.length === 0 && !query.input">
+              :disabled="(query.data.length === 0 && !query.input) || !field">
         <span class="icon fa-search"></span>
         Search
       </button>

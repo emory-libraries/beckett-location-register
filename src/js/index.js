@@ -1911,6 +1911,8 @@ $.when(
 
     methods: $.extend({
       
+      
+      
       search() {
    
         // Reset API features.
@@ -1926,7 +1928,6 @@ $.when(
         // Trigger the search event.
         event.trigger('search');
 
-        
       },
       
       index() {
