@@ -1,8 +1,5 @@
 <?php
 
-// Silence errors for production.
-error_reporting(0);
-
 // Increase memory limit to handle large files.
 ini_set('memory_limit', '1000M');
 
@@ -19,6 +16,20 @@ date_default_timezone_set('America/New_York');
 define('ROOT', dirname(__DIR__));
 define('DEVELOPMENT', true);
 define('LOCALDB', false);
+
+// Silence errors for production.
+if( !DEVELOPMENT ) {
+  
+  error_reporting(0);
+  ini_set('display_errors', 0);
+    
+}
+else {
+  
+  error_reporting(E_ALL);
+  ini_set('display_errors', 1);
+    
+}
 
 // Autoload classes.
 include 'autoload.php';
