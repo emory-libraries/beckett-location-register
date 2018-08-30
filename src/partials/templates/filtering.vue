@@ -250,7 +250,7 @@
 
           <div class="group" v-if="canFilter('location.regularized.from') || hasApplied('location.regularized.from')">
 
-            <label>Regularized, Addressed From</label>
+            <label>Addressed From (regularized)</label>
 
             <div class="field" v-if="canFilter('location.regularized.from.address') || hasApplied('location.regularized.from.address')">
 
@@ -374,7 +374,7 @@
 
           <div class="group" v-if="canFilter('location.regularized.to') || hasApplied('location.regularized.to')">
 
-            <label>Regularized, Addressed To</label>
+            <label>Addressed To (regularized)</label>
 
             <div class="field" v-if="canFilter('location.regularized.to.address') || hasApplied('location.regularized.to.address')">
 
