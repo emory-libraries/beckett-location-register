@@ -223,7 +223,7 @@
         "endpoint": "search/repository/:query",
         "model": "default",
         "match": {
-          ":query": "repository"
+          ":query": "repository.primary.repo"
         }
       },
       {
