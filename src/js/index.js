@@ -1088,7 +1088,7 @@ $.when(
           'location.regularized.to.city': [undefined],
           'location.regularized.to.country': [undefined],
           'recipient': [undefined],
-          'repository': [undefined],
+          'repository.primary.repo': [undefined],
           'language': [undefined]
         };
         
@@ -1287,7 +1287,7 @@ $.when(
       canFilter( key ) {
         
         // Capture fields.
-        const fields = this.$api.indexing;
+        const fields = this.$api.indexing; 
         
         // Initialize a method for validating filter fields.
         const validate = (field) => { 
@@ -1344,7 +1344,7 @@ $.when(
                    this['location.regularized.to']();
           },
           'recipient': validate('recipient'),
-          'repository': validate('repository'),
+          'repository.primary.repo': validate('repository.primary.repo'),
           'language': validate('language'),
           'any'() {
             return this.date() ||

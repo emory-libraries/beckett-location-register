@@ -532,23 +532,23 @@
 
           </div>
 
-          <div class="field" v-if="canFilter('repository') || hasApplied('repository')">
+          <div class="field" v-if="canFilter('repository.primary.repo') || hasApplied('repository.primary.repo')">
 
             <label>Repository</label>
             
             <div class="filter-group">
               
-              <div class="applied-group" v-if="hasApplied('repository')">
+              <div class="applied-group" v-if="hasApplied('repository.primary.repo')">
 
                   <div class="applied-field" 
-                       v-for="(applied, index) in filters.applied['repository']">
+                       v-for="(applied, index) in filters.applied['repository.primary.repo']">
 
                     <div class="applied-text">
                       {{!isset(applied) ? '(Blank)' : applied}}
                     </div>
 
                     <button class="button applied-remove icon"
-                            @click="removeFilter('repository', index)">
+                            @click="removeFilter('repository.primary.repo', index)">
                       <span class="icon fa-close"></span>
                     </button>
 
@@ -556,13 +556,13 @@
 
                 </div>
 
-              <div class="select" v-if="canFilter('repository')">
-                <select v-model="filters.selected['repository']" 
+              <div class="select" v-if="canFilter('repository.primary.repo')">
+                <select v-model="filters.selected['repository.primary.repo']" 
                         multiple
-                        @change="validate('repository').multiselect()">
+                        @change="validate('repository.primary.repo').multiselect()">
                   <option :value="undefined">Any</option>
                   <option :value="value" 
-                          v-for="value in $api.indexing.repository">
+                          v-for="value in $api.indexing.repository.primary.repo">
                     {{!isset(value) ? '(Blank)' : value}}
                   </option>
                 </select>
