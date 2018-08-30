@@ -126,7 +126,7 @@ trait GET {
     else { $data = $this->csv; }
     
     // Save progress thus far.
-    $this->__setProgress($this->process, 10);
+    $this->progress->setProgress($this->process, 10);
 
     // Handle aggregate data requests.
     if( $aggregate ) {
@@ -135,7 +135,7 @@ trait GET {
       $data = array_map( 'array_flatten', $data );
       
       // Save progress thus far.
-      $this->__setProgress($this->process, 25);
+      $this->progress->setProgress($this->process, 25);
 
       // Loop through the data set.
       foreach($data as $item) {
@@ -154,7 +154,7 @@ trait GET {
       }
       
       // Save progress thus far.
-      $this->__setProgress($this->process, 55);
+      $this->progress->setProgress($this->process, 55);
 
       // Only keep unique values.
       $this->data = array_map( 'array_values', array_map( 'array_unique', $this->data ) );
@@ -167,13 +167,13 @@ trait GET {
       });
       
       // Save progress thus far.
-      $this->__setProgress($this->process, 70);
+      $this->progress->setProgress($this->process, 70);
       
       // Expand and typify the aggregate data.
       $this->data = $this->__typify( array_expand($this->data) );
       
       // Save progress thus far.
-      $this->__setProgress($this->process, 90);
+      $this->progress->setProgress($this->process, 90);
       
     }
     
@@ -227,7 +227,7 @@ trait GET {
         ];
         
         // Save progress thus far.
-        $this->__setProgress($this->process, 25);
+        $this->progress->setProgress($this->process, 25);
 
         // Compare endpoints.
         foreach( $target as $index => $pattern ) {
@@ -364,7 +364,7 @@ trait GET {
         }
         
         // Save progress thus far.
-        $this->__setProgress($this->process, 55);
+        $this->progress->setProgress($this->process, 55);
 
       }
       
@@ -372,7 +372,7 @@ trait GET {
       $this->data = $this->__typify( $this->data );
       
       // Save progress thus far.
-      $this->__setProgress($this->process, 65);
+      $this->progress->setProgress($this->process, 65);
 
       // Enable features.
       if( !empty($this->query) ) { 
@@ -404,7 +404,7 @@ trait GET {
         }, $params);
         
         // Save progress thus far.
-        $this->__setProgress($this->process, 75);
+        $this->progress->setProgress($this->process, 75);
 
         // Loop through features.
         foreach( $params as $feature => $settings ) { 
@@ -415,7 +415,7 @@ trait GET {
         }
         
         // Save progress thus far.
-        $this->__setProgress($this->process, 90);
+        $this->progress->setProgress($this->process, 90);
 
       }
       
@@ -425,7 +425,7 @@ trait GET {
     if( !$this->error ) $this->__status( 200 );
     
     // Save progress thus far.
-    $this->__setProgress($this->process, 100);
+    $this->progress->setProgress($this->process, 100);
     
   }
   
@@ -443,17 +443,11 @@ trait GET {
       
     }
     
-    // Get the process ID.
-    $id = $this->params[1]; 
-    
-    // Attempt to get the progress for the given ID.
-    $progress = $this->__getProgress($id);
-
     // Set the status.
     $this->__status( 200 );
     
-    // Return the progress.
-    $this->data = $progress;
+    // Attempt to get the progress for the given ID.
+    $this->data = $this->progress->getProgress($this->params[1]);
     
   }
   
@@ -907,6 +901,7 @@ class API {
   
   protected $cache;
   protected $config;
+  protected $progress;
   protected $path = '';
   protected $csv = [];
   protected $error = false;
@@ -950,6 +945,9 @@ class API {
     
     // Send initial headers.
     $this->__headers();
+    
+    // Initialize the progress handler.
+    $this->progress = new Progress( $this->config );
     
     // Expedite the handling of progress requests.
     if( $this->params[0] == 'progress' ) $this->PROGRESS();

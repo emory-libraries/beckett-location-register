@@ -713,7 +713,7 @@ $.when(
             // Check the progress thus far.
             check();
             
-          });
+          }).fail((error) => console.log(error));
           
         };
                        
@@ -1625,10 +1625,10 @@ $.when(
         this.reset();
 
         // Save response data.
-        this.data = data;
+        this.data = data; 
 
         // Handle any errors.
-        if( this.data.length === 0 ) this.error = {message: 'No Results Found', state: 'danger'};
+        if( !isset(this.data) || this.data.length === 0 ) this.error = {message: 'No Results Found', state: 'danger'};
         
         // Recognize when filters have been applied.
         this.filtering = !Object.isEmpty(this.$api.filter);

@@ -34,16 +34,16 @@
       
       </div>
     
-      <filtering :enabled="data.length > 0 || filtering"></filtering>
+      <filtering :enabled="(data && data.length > 0) || filtering"></filtering>
     
-      <paging :enabled="data.length > 0"></paging>
+      <paging :enabled="data && data.length > 0"></paging>
       
     </div>
     
     <div class="alert" :class="error.state" v-if="error.message">{{error.message}}</div>
     
     <table :density="$api.density" 
-           v-if="data.length > 0"
+           v-if="data && data.length > 0"
            class="striped highlight">
       
       <thead>
