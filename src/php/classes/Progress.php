@@ -22,8 +22,17 @@ class Progress {
   // Get a process' progress.
   public function getProgress( $pid ) {
     
+    // Initialize an default response.
+    $progress = ['progress' => 0, 'status' => 'Process not yet registered.'];
+    
     // Retrieve the progress for the given process ID.
-    if( array_key_exists($pid, $this->progress) ) return $this->progress[$pid];
+    if( array_key_exists($pid, $this->progress) ) $progress = $this->progress[$pid];
+    
+    // Automatically clear progress data once a process has completed.
+    if( $progress['progress'] === 100 ) $this->clearProgress($pid);
+    
+    // Return the progress data.
+    return $progress;
     
   }
   
