@@ -399,7 +399,8 @@ $.when(
       },
       pid: {
         base: 36,
-        length: 16
+        length: 16,
+        blacklist: ['#', '&', '+', '.', '[', ']', '?', '=', '%', ';']
       }
     },
     
@@ -565,12 +566,15 @@ $.when(
           
           // Generate a unique process ID.
           pid() { 
+            
+            // Initialize blacklist.
+            const blacklist = new RegExp(self.pid.blacklist.map((char) => `\\${char}`).join('|'), 'g');
           
             // Get the timestamp.
             const timestamp = Date.now().toString(self.pid.base);
             
             // Get a random string.
-            const random = Math.random().toString(self.pid.base);
+            const random = Math.random().toString(self.pid.base).replace(blacklist, '');
             
             // Merge the two and randomize further.
             return timestamp.split('').concat(random.split('')).shuffle().join('').substr(0, self.pid.length);
