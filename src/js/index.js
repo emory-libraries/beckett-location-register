@@ -713,7 +713,7 @@ $.when(
             // Check the progress thus far.
             check();
             
-          }).fail((error) => console.log(error));
+          });
           
         };
                        
