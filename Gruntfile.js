@@ -552,5 +552,11 @@ module.exports = function( grunt ) {
     'includes:dist',
     'replace:dist' 
   ]);
+  grunt.registerTask('debug:js', [
+    'babel:dist',
+    'uglify:dist',
+    'clean:unminjs',
+    'replace:dist'
+  ]);
   
 };
