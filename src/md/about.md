@@ -1,5 +1,41 @@
-# About the Project
+# About the Location Register
 
-*The Letters of Samuel Beckett* archive houses the transcriptions and translations of every known letter penned by the Irish writer Samuel Beckett. Representing more than thirty years of work, the task of gathering these letters entailed accessing archives and private collections scattered across the globe. With the publication of the final printed volume of *The Letters of Samuel Beckett* in 2016, the question arose of what to do with the archive, especially since it is not open to the public and because the rights to the content of many of the letters are held by other institutions. *The Letters of Samuel Beckett* database project was born out of a desire to make the metadata and content of these letters accessible to researchers and to the wider public, thereby preserving the cumulative knowledge and collective efforts that have gone into creating the original analogue archive.
+The Location Register allows users to search or browse the metadata of all Beckett letters in American Public Archives. Users can expect to find metadata about the letters, which includes but is not limited to recipients, physical descriptions, the addresses sent to and from, languages, repositories, collections, and previous publications.
 
-By utilizing this database, visitors are able to view the name of each letter’s recipient, the location from which and to which each letter was sent, and the name of the archive or private collection that currently holds the letter. In addition, key entities—person, place, organization, production, directing, publication, translating, and writing—have been tagged within the text of each letter, thus allowing researchers to gain limited access to this content. Visitors to the database site can also read biographies of letter recipients and learn about both the unique challenges and interesting anecdotes that the project has generated.
+## Using the Location Register
+
+Users may choose to search or browse the content of the Location Register. After performing a search or opting to browse, users can then view the metadata of the letters given in the results table, or they may wish to further narrow down their results by filtering.
+
+### Searching the Letters
+
+1. To initiate a search, enter a search query into the search box.
+
+2. Select a field from the dropdown list upon which you wish to search.
+
+3. Click the "Search" button, and wait for the results to load.
+
+### Browsing the Letters
+  
+1. To browse all letters, click the "Browse" button in the search area.
+
+2. Alternatively, click the "List" option in the navigation menu.
+
+3. Allow all records to be populated within the results table.
+
+### Filtering the Letters
+
+1. To narrow down the results shown in the table, click the "Filter" button.
+
+2. A menu will open, which will allow you to filter the data further.
+
+3. Select the filters you wish to use, then click the "Apply" button at the bottom of the menu.
+
+4. A filtered subset of the previous results will be displayed in the table.
+
+### Viewing a Letter
+  
+1. After searching or browsing, users will be presented with a table of results.
+
+2. To view the metadata for a given letter, simply click the record within the table.
+
+3. Another page will open displaying the letter's metadata.
