@@ -4,11 +4,11 @@ const ROOT = location.protocol + '//' + location.host + PATH;
 
 // Load meta data.
 $.when(
-  $.getJSON('meta.json').then((data) => data),
-  $.getJSON('router.json').then((data) => data),
-  $.getJSON('glossary.json').then((data) => data),
-  $.getJSON('transliteration.json').then((data) => data),
-  $.getJSON('abbr.json').then((data) => data)
+  $.getJSON(`${ROOT}/meta.json`).then((data) => data),
+  $.getJSON(`${ROOT}/router.json`).then((data) => data),
+  $.getJSON(`${ROOT}/glossary.json`).then((data) => data),
+  $.getJSON(`${ROOT}/transliteration.json`).then((data) => data),
+  $.getJSON(`${ROOT}/abbr.json`).then((data) => data)
 ).done((META, ROUTER, GLOSSARY, TRANSLITERATION, ABBR) => { 
   
   // Helper functions.
