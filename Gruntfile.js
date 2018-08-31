@@ -219,7 +219,7 @@ module.exports = function( grunt ) {
               replacement: replacement({
                 sources: config.css, 
                 path: PATHS.dist.css.replace('dist/', ''),  
-                template: '<link rel="stylesheet" href=":file">',
+                template: '<link rel="stylesheet" href="/:file">',
                 ext: '.min.css'
               })
             },
@@ -228,7 +228,7 @@ module.exports = function( grunt ) {
               replacement: replacement({
                 sources: config.js, 
                 path: PATHS.dist.js.replace('dist/', ''),  
-                template: '<script src=":file"></script>',
+                template: '<script src="/:file"></script>',
                 ext: '.min.js'
               })
             },
@@ -237,7 +237,7 @@ module.exports = function( grunt ) {
               replacement: replacement({
                 sources: config.dependencies.css, 
                 path: PATHS.dist.dependencies.css.replace('dist/', ''),  
-                template: '<link rel="stylesheet" href=":file">',
+                template: '<link rel="stylesheet" href="/:file">',
                 ext: '.min.css'
               })
             },
@@ -246,7 +246,7 @@ module.exports = function( grunt ) {
               replacement: replacement({
                 sources: config.dependencies.js, 
                 path: PATHS.dist.dependencies.js.replace('dist/', ''),  
-                template: '<script src=":file"></script>',
+                template: '<script src="/:file"></script>',
                 ext: '.min.js'
               })
             },
@@ -523,7 +523,7 @@ module.exports = function( grunt ) {
   grunt.loadNpmTasks('grunt-includes');
   
   grunt.registerTask('default', ['dev']);
-   grunt.registerTask('dev:startup', [
+  grunt.registerTask('dev:startup', [
     'clean:dev',
     'copydeps:dev',
     'copy:dev',
