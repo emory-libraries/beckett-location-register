@@ -77,4 +77,4 @@ Users may choose to search or browse the content of the Location Register. After
     
 - **Another Hand**
 
-    If an address has been changed by someone other than Beckett, that change  is presented in italics, preceded by AH. 
+    If an address has been changed by someone other than Beckett, that change  is presented in italics, preceded by `AH`. 
