@@ -24,6 +24,16 @@
           <td v-html="descriptionFormatted"></td>
         </tr>
         
+        <tr>
+          <th scope="row">Envelope</th>
+          <td>{{letter.envelope ? 'Yes' : 'No'}}</td>
+        </tr>
+        
+        <tr>
+          <th scope="row">Postmark</th>
+          <td>{{letter.postmark}}</td>
+        </tr>
+        
          <tr>
           <th scope="row">Addressed To (actual)</th>
           <td>{{letter.location.addressed.to}}</td>
@@ -77,16 +87,6 @@
         <tr>
           <th scope="row">Language</th>
           <td>{{letter.language}}</td>
-        </tr>
-        
-        <tr>
-          <th scope="row">Envelope</th>
-          <td>{{letter.envelope ? 'Yes' : 'No'}}</td>
-        </tr>
-        
-        <tr>
-          <th scope="row">Postmark</th>
-          <td>{{letter.postmark}}</td>
         </tr>
         
         <tr v-if="letter.image.postcard">
