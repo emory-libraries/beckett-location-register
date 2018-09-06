@@ -616,7 +616,8 @@ $.when(
             url: this.utils().url(pid, query),
             method: method,
             data: data,
-            context: this
+            context: this,
+            cache: false
           }).always((response) => {
             
             // Capture response data.
