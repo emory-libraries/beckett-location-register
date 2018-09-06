@@ -7,7 +7,6 @@
   "physical": [
     {"abbr": "C", "desc": "card"},
     {"abbr": "Check", "desc": "check"},
-    {"abbr": "CSI", "desc": "(?)"},
     {"abbr": "L", "desc": "letter"},
     {"abbr": "MS", "desc": "manuscript"},
     {"abbr": "MSS", "desc": "manuscripts"},
