@@ -53,6 +53,7 @@
         "pen": "Autograph or Typed",
         "physical": "PhysDes",
         "signature": "initialed or signed",
+        "type": "phys descr detail",
         "code": "{Autograph or Typed}{PhysDes}{initialed or signed}"
       },
       "leaves": "leaves",

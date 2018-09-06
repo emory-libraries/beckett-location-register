@@ -1833,12 +1833,13 @@ $.when(
         let d = '';
 
         // Prepare to capture description data.
-        let a, b, c;
+        let a, b, c, t;
 
         // Extract the description data.
         if( data.pen ) a = ABBR.pen.filter((abbr) => abbr.abbr.toLowerCase() == data.pen.toLowerCase())[0];
         if( data.physical ) b = ABBR.physical.filter((abbr) => abbr.abbr.toLowerCase() == data.physical.toLowerCase())[0];
         if( data.signature ) c = ABBR.signature.filter((abbr) => abbr.abbr.toLowerCase() == data.signature.toLowerCase())[0];
+        if( data.type ) t = data.type;
 
         // Build the description.
         if( a ) d += a.desc;
@@ -1846,6 +1847,8 @@ $.when(
         if( b ) d += b.desc; 
         if( b && c ) d += ', ';
         if( c ) d += c.desc;
+        if( (a || b || c) && t ) d += '; ';
+        if( t ) d += t;
         if( isset(d) ) d = `(${d})`;
 
         // Return the physical description explanation in parentheses.
