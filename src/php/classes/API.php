@@ -911,7 +911,7 @@ class API {
     503 => 'Service Unavailable'
   ];
   
-  private $caching = true;
+  private $caching = false;
   
   protected $cache;
   protected $config;
