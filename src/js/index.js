@@ -1916,6 +1916,9 @@ $.when(
     methods: $.extend({
       
       search() {
+        
+        // Exit if no search field has been selected.
+        if( !isset(this.field) ) return;
    
         // Reset API features.
         this.$api.defaults(['filter', 'sort', 'indexing']);
