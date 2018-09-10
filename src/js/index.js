@@ -1909,7 +1909,8 @@ $.when(
           ands: /\+[\"\'].+?[\"|\']|\+.+?(?= |\+|\-|\~|$)/g,
           nots: /\-[\"\'].+?[\"|\']|\-.+?(?= |\+|\-|\~|$)/g,
           ors: /\~[\"\'].+?[\"|\']|\~.+?(?= |\+|\-|\~|$)/g
-        }
+        },
+        alerts: []
       };
     },
 
@@ -1917,8 +1918,19 @@ $.when(
       
       search() {
         
-        // Exit if no search field has been selected.
-        if( !isset(this.field) ) return;
+        // Clear all alerts.
+        this.alert().dismissAll();
+        
+        // Ignore searches that are missing a field.
+        if( !isset(this.field) ) {
+          
+          // Alert the user of the error.
+          this.alert().log('danger', 'Select a field to search.');
+          
+          // Exit.
+          return;
+          
+        }
    
         // Reset API features.
         this.$api.defaults(['filter', 'sort', 'indexing']);
@@ -2165,6 +2177,9 @@ $.when(
       
       save() {
         
+        // Clear all alerts.
+        this.alert().dismissAll();
+        
         // Attempt to search when given empty inputs.
         if( !isset(this.query.input) ) {
           
@@ -2268,6 +2283,9 @@ $.when(
       },
       
       browse() {
+        
+        // Clear all alerts.
+        this.alert().dismissAll();
         
         // Reset API features.
         this.$api.defaults(['filter', 'sort', 'indexing']);
@@ -2378,6 +2396,36 @@ $.when(
         
         // Merge the query string parameters, then repopulate the list.
         this.$api.auto(query).always((response) => event.trigger('list', response.data));
+        
+      },
+      
+      alert() {
+        
+        // Capture context.
+        const self = this;
+        
+        // Return helper methods.
+        return {
+          
+          log( type, message ) {
+            
+            self.alerts.push({type, message});
+            
+          },
+          
+          dismiss( index ) {
+            
+            self.alerts.splice(index, 1);
+            
+          },
+          
+          dismissAll() {
+            
+            self.alerts = [];
+            
+          }
+          
+        };
         
       }
       

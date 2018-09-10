@@ -6,12 +6,13 @@
   
   padding: $padding;
   display: grid;
-  grid-template-areas: "mode"
+  grid-template-areas: "alerts"
+                       "mode"
                        "box"
                        "dropdown"
                        "buttons";
   grid-template-columns: 100%;
-  grid-template-rows: ($controls-height / 2) repeat(3, $controls-height);
+  grid-template-rows: auto ($controls-height / 2) repeat(3, $controls-height);
   grid-auto-rows: $controls-height;
   grid-gap: $padding;
   background-color: color('white', 'off');
@@ -30,6 +31,27 @@
   .buttons,
   #{$all-buttons} { 
     height: $controls-height; 
+  }
+  
+  .search-alerts {
+    grid-area: alerts;
+    
+    .alert { padding-right: (25px + (10px * 2)); }
+    
+    .btn-dismiss {
+      @include size( 25px );
+      background-color: color('black', 'off');
+      color: color('white');
+      @include on-hover-focus('opacity', .25, .5);
+      margin-left: auto;
+      border-radius: 50%;
+      padding: 0;
+      line-height: 15px;
+      @include position( null 10px, absolute );
+      @include absolute-center-within-container-y;
+      transition: $transition-all;
+    }
+    
   }
   
   .search-toggle {

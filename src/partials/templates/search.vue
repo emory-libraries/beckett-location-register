@@ -2,6 +2,22 @@
   
   <div class="search">
     
+    <div class="search-alerts">
+      
+      <transition name="fade">
+        
+        <div class="alert" :class="error.type" v-for="(error, index) in alerts">
+
+          {{error.message}}
+
+          <button class="btn-dismiss fa-close" @click="alert().dismiss(index)"></button>
+
+        </div>
+        
+      </transition>
+    
+    </div>
+    
     <div class="search-toggle">
       
       <div class="label">Search Mode:</div>
