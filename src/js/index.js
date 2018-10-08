@@ -595,8 +595,8 @@ $.when(
       memory( method, args ) { this.history.push({method, args}); },
     
       // Execute a request on the API.
-      request( method, endpoint, query = true, data = {} ) { 
-      
+      request( method, endpoint, query = true, data = {}, loading = this.loading ) { 
+
         // Validate the endpoint.
         if( this.utils().validate(method, endpoint) ) {
 
@@ -605,7 +605,7 @@ $.when(
           this.endpoint = endpoint;
 
           // Start loading.
-          if( this.loading ) event.trigger('loading', true);
+          if( loading ) event.trigger('loading', true);
           
           // Generate a unique ID for the request.
           const pid = this.utils().pid();
@@ -649,7 +649,7 @@ $.when(
             response.query = query ? this.utils().query() : {};
                                    
             // End the loading animation.
-            if( this.loading ) setTimeout(() => {
+            if( loading ) setTimeout(() => {
               
               event.trigger('loading', false);
               
@@ -765,19 +765,8 @@ $.when(
       // Perform an `aggregate` request on the API.
       aggregate( field = '' ) {
 
-        // Capture initial loading value.
-        const loading = this.loading;
-
-        // Temporarily disable loading.
-        if( loading ) this.loading = false;
-
-        // Execute the request.
-        return this.request('GET', `index/${field}`).always(() => {
-
-          // Reset the loading value.
-          this.loading = loading;
-
-        });
+        // Execute the request without loading.
+        return this.request('GET', `index/${field}`, true, {}, false);
 
       },
     
