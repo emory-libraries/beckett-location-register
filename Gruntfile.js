@@ -188,11 +188,11 @@ module.exports = function( grunt ) {
             },
             {
               match: 'base',
-              replacement: '<base href="//localhost/beckett-location-register/dev/">'
+              replacement: '<base href="/">'
             }, 
             {
               match: 'path',
-              replacement: '/beckett-location-register/dev'
+              replacement: '/'
             }
           ]
         },
