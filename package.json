@@ -22,7 +22,7 @@
     "grunt-contrib-watch": "^1.0.0",
     "grunt-copy-deps": "^1.3.0",
     "grunt-dart-sass": "^1.0.0",
-    "grunt-includes": "github:laurenhamel/grunt-includes",
+    "grunt-includes": "^1.1.0",
     "grunt-postcss": "^0.9.0",
     "grunt-replace": "^1.0.1"
   },
