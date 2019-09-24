@@ -1,6 +1,6 @@
 # About the Location Register
 
-The Location Register allows users to search or browse the metadata of all Beckett letters in American Public Archives. Users can expect to find metadata about the letters, which includes but is not limited to recipients, physical descriptions, the addresses sent to and from, languages, repositories, collections, and previous publications.
+The Location Register allows users to search or browse the metadata of all Beckett letters in Public Archives. Users can expect to find metadata about the letters, which includes but is not limited to recipients, physical descriptions, the addresses sent to and from, languages, repositories, collections, and previous publications.
 
 
 ## Using the Location Register
